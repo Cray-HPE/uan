@@ -1,0 +1,3 @@
+{% if imported_networks.networks.node_management.blocks.ipv4[1].network is defined %}
+{{ imported_networks.networks.node_management.blocks.ipv4[1].network | ipaddr('network') }} {{ imported_networks.networks.node_management.blocks.ipv4[0].gateway }} {{ imported_networks.networks.node_management.blocks.ipv4[1].network | ipaddr('netmask') }} -
+{% endif %}

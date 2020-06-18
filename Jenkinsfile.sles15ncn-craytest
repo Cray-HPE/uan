@@ -1,0 +1,10 @@
+@Library("dst-shared") _
+rpmBuild (
+    specfile: "uan-crayctldeploy-tests.spec",
+    channel: "casmcms-builds",
+    slack_notify: ['SUCCESS','FAILURE'],
+    product: "ct-tests",
+    target_node: "ncn",
+    fanout_params: ["sle15sp1"],
+    recv_triggers: ["cme-premium-cf"]
+)

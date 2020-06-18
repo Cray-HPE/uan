@@ -1,0 +1,33 @@
+---
+vars_yml_src_server: ncn-w001
+# Check interfaces in this order.
+uan_can_device_list: 
+  - eth2
+  - eth3
+  - eth4
+  - eth5
+  - eth0
+
+rt_tables:
+  - pref: '1'
+    name: rt_smnet
+  - pref: '2'
+    name: rt_mtl
+  - pref: '3'
+    name: rt_can
+
+bootproto: '' 
+device: ''
+dhcp_hostname: ''
+ethtool_opts: ''
+gateway: ''
+hwaddr: ''
+ipaddr: ''
+master: ''
+mtu: ''
+peerdns: ''
+prefixlen: ''
+slave: ''
+srcaddr: ''
+startmode: ''
+userctl: ''

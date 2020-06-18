@@ -1,0 +1,131 @@
+# Copyright 2020, Cray Inc. All Rights Reserved.
+---
+
+- name: Configure CAN v2 on UANs
+  block:
+
+  - name: Ensure list of UAN network devices are UP
+    shell: "ip link set dev {{ item }} up"
+    register: cmd_out
+    failed_when: cmd_out.rc not in [0, 1]
+    loop: "{{ uan_can_device_list }}"
+
+  - name: Check UAN network devices for cable connections
+    shell: "cat /sys/class/net/{{ item }}/carrier"
+    failed_when: uan_links.rc not in [0, 1]
+    register: uan_links
+    loop: "{{ uan_can_device_list }}"
+
+  - name: Set uan_can_device
+    set_fact:
+      uan_can_device: "{{ item.item }}"
+    when: item.stdout == "1" and uan_can_device is not defined
+    loop: "{{ uan_links.results }}"
+
+  - name: Get NMN IP
+    set_fact:
+      nmn_ip: "{{ item.address }}"
+    when: item.label == ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-nmn'
+    loop: "{{ imported_networks.networks.node_management.blocks.ipv4[0].subnets[0].reserved | list }}"
+
+  - name: Get last octet of NMN IP
+    set_fact: octet={{ nmn_ip.split('.')[3] }}
+
+  # Uses the nth IP of the customer_access_network subnet where n is the last octet of the NMN IP
+  - name: Get CAN IP
+    set_fact:
+        can_ip: "{{ imported_customer_var.customer_access_network | ipaddr(octet|int) | ipaddr('address') }}"
+
+  - name: Get CAN Prefix
+    set_fact:
+        can_prefix: "{{ imported_customer_var.customer_access_network | ipaddr('prefix') }}"
+
+  - debug:
+      msg: "CAN IP - {{ can_ip }}"
+
+  - name: Configure ifcfg-vlan007
+    template:
+      src: ifcfg-vlan007-v2.j2
+      dest: /etc/sysconfig/network/ifcfg-vlan007
+      mode: 0644
+
+  - name: Configure iproute2 tables
+    lineinfile:
+      path: /etc/iproute2/rt_tables
+      regexp: '^{{ item.pref }}\s+{{ item.name }}'
+      line: "{{ item.pref }}       {{ item.name }}"
+    loop: "{{ rt_tables }}"
+
+  - name: Configure ifroute-vlan007
+    template:
+      src: ifroute-vlan007-v2.j2
+      dest: /etc/sysconfig/network/ifroute-vlan007
+      owner: root
+      mode: 0600
+
+  - name: Configure ifroute-eth0 for mountain nodes
+    template:
+      src: ifroute-eth0-v2.j2
+      dest: /etc/sysconfig/network/ifroute-eth0
+      owner: root
+      mode: 0600
+
+  - name: Ensure wicked script directories exist
+    file:
+      path: "/etc/wicked/scripts/{{ item }}"
+      state: directory
+    loop: [ "post-up", "post-down" ]
+
+  - name: Configure can-up.sh
+    template:
+      src: can-up.j2
+      dest: "/etc/wicked/scripts/post-up/can-up.sh"
+      owner: root
+      mode: 0755
+
+  - name: Configure can-down.sh
+    template:
+      src: can-down.j2
+      dest: "/etc/wicked/scripts/post-down/can-down.sh"
+      owner: root
+      mode: 0755
+
+  - name: Add route for local services
+    command: "ip route add {{ nmn_svc[0].network }} via {{ nmn_vlan2[0].gateway }} dev eth0"
+    changed_when: result.rc != 0 or result.rc == 2
+    failed_when: result.rc != 0 and result.rc != 2
+    register: result
+
+  - name: Tell DHCP client to not set default gateway
+    lineinfile:
+      path: /etc/sysconfig/network/dhcp
+      regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
+      line: DHCLIENT_SET_DEFAULT_ROUTE="no"
+
+  - name: Remove existing default route
+    command: "ip route delete default"
+    changed_when: result.rc != 0 or result.rc == 2
+    failed_when: result.rc != 0 and result.rc != 2
+    register: result
+
+  - name: Restart vlan007 interface to set the interface config and routes
+    shell: "wicked ifdown vlan007;sleep 5;wicked ifup vlan007"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+
+  - name: Check that we have the default route we are expecting
+    shell: "ip route | grep default | grep -q '{{ imported_customer_var.customer_access_gateway }}'"
+    failed_when: result.rc != 0
+    register: result
+
+  - name: Check that the vlan007 interface has the expected IP
+    shell: "ip addr show vlan007 | grep -q {{ can_ip }}/{{ can_prefix }}"
+    failed_when: result.rc != 0
+    register: result
+
+  when:
+    - imported_customer_var.customer_access_network is defined
+    - imported_customer_var.customer_access_gateway is defined
+    - imported_networks.networks.node_management is defined
+

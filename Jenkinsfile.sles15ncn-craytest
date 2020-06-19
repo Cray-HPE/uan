@@ -1,6 +1,6 @@
 @Library("dst-shared") _
 rpmBuild (
-    specfile: "uan-craytests.spec",
+    specfile: "uan-crayctldeploy-tests.spec",
     channel: "casmcms-builds",
     slack_notify: ['SUCCESS','FAILURE'],
     product: "ct-tests",

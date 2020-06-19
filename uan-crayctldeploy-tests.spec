@@ -4,10 +4,10 @@
 #
 %define test_dir /opt/cray/tests
 
-Name: uan-craytests
+Name: uan-crayctldeploy-tests
 License: Cray Software License Agreement
 Summary: User Access Node post-install tests
-Version: %(cat .rpm_version_uan-craytests)
+Version: %(cat .rpm_version_uan-crayctldeploy-tests)
 Release: %(echo ${BUILD_METADATA})
 Source: %{name}-%{version}.tar.bz2
 Vendor: Cray Inc.

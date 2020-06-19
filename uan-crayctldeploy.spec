@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Thu Jun 18 2020 0.4.1
+- Configure /etc/nscd.conf to work with sssd
 * Wed Jun 03 2020 0.1.52
 - Add UAN tests
 * Wed Jun 03 2020 0.1.51

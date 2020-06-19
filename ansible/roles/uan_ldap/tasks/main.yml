@@ -51,6 +51,17 @@
         - nss_ldap
       state: present 
 
+  - name: Make nscd.conf compatible with sssd
+    replace:
+      path: /etc/nscd.conf
+      regexp: '(^[ \t]+enable\-cache[ \t]+{{ item }}[ \t]+)yes'  
+      replace: '\1no'
+    with_items:
+      - passwd
+      - group
+      - netgroup
+      - services
+
   - name: Generate sssd.conf
     template:
       src: sssd.conf.j2

@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Mon Jul 13 2020 0.2.6
+- Only configure /etc/hosts if DNS is not available
 * Thu Jul 09 2020 0.2.5
 - Fix 1.3 branch to not pull master code
 * Thu Jul 02 2020 0.2.4

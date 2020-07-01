@@ -121,14 +121,26 @@
 - debug:
     var: uan_bos_session.response.links[0].href
 
-- name: Wait for session to complete
-  authorized:
-    endpoint: "bos/v1/session/{{ uan_bos_session.response.links[0].href }}"
-    method: get
-  register: bos_result
-  retries: 240
-  delay: 5
-  until:
-  - bos_result.response.stage is defined
-  - bos_result.response.stage == 'Done'
-
+- name: Monitor BOS session 
+  block:
+    - name: Watching BOS session status endpoint
+      authorized:
+        endpoint: "bos//v1/session/{{ uan_bos_session.response.links[0].href }}/status"
+        method: get
+      register: uan_bos_session_status
+      retries: 240
+      delay: 5
+      until:
+        - uan_bos_session_status.response.metadata.complete is defined 
+        - uan_bos_session_status.response.metadata.complete == true
+  rescue:
+    - name: Waiting for session to complete (status endpoint unavailable)
+      authorized:
+        endpoint: "bos/v1/session/{{ uan_bos_session.response.links[0].href }}"
+        method: get
+      register: bos_result
+      retries: 240
+      delay: 5
+      until:
+        - bos_result.response.stage is defined
+        - bos_result.response.stage == 'Done'

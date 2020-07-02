@@ -43,6 +43,14 @@
   - debug:
       msg: "CAN IP - {{ can_ip }}"
 
+  - name: Configure ifcfg-eth0
+    copy:
+      src: ifcfg-eth0
+      dest: /etc/sysconfig/network/ifcfg-eth0
+      owner: root
+      group: root
+      mode: '0644'
+
   - name: Configure ifcfg-vlan007
     template:
       src: ifcfg-vlan007-v2.j2
@@ -63,7 +71,7 @@
       owner: root
       mode: 0600
 
-  - name: Configure ifroute-eth0 for mountain nodes
+  - name: Configure ifroute-eth0
     template:
       src: ifroute-eth0-v2.j2
       dest: /etc/sysconfig/network/ifroute-eth0
@@ -90,12 +98,6 @@
       owner: root
       mode: 0755
 
-  - name: Add route for local services
-    command: "ip route add {{ nmn_svc[0].network }} via {{ nmn_vlan2[0].gateway }} dev eth0"
-    changed_when: result.rc != 0 or result.rc == 2
-    failed_when: result.rc != 0 and result.rc != 2
-    register: result
-
   - name: Tell DHCP client to not set default gateway
     lineinfile:
       path: /etc/sysconfig/network/dhcp
@@ -108,11 +110,14 @@
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  - name: Restart vlan007 interface to set the interface config and routes
-    shell: "wicked ifdown vlan007;sleep 5;wicked ifup vlan007"
+  - name: Restart vlan007  and eth0 interfaces to set the interface config and routes
+    shell: "wicked ifdown {{ item }};sleep 5;wicked ifup {{ item }}"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
+    with_items:
+      - vlan007
+      - eth0
 
   - name: Check that we have the default route we are expecting
     shell: "ip route | grep default | grep -q '{{ imported_customer_var.customer_access_gateway }}'"

@@ -123,7 +123,7 @@
 
 - name: Monitor BOS session 
   block:
-    - name: Watching BOS session status endpoint
+    - name: Watching BOS session status endpoint, if endpoint is available
       authorized:
         endpoint: "bos//v1/session/{{ uan_bos_session.response.links[0].href }}/status"
         method: get
@@ -131,7 +131,6 @@
       retries: 240
       delay: 5
       until:
-        - uan_bos_session_status.response.metadata.complete is defined 
         - uan_bos_session_status.response.metadata.complete == true
   rescue:
     - name: Waiting for session to complete (status endpoint unavailable)

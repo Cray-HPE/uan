@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Thu Jul 02 2020 0.4.3
+- Get Application node xnames from SLS, if possible
 * Tue Jun 30 2020 0.4.2
 - Configure eth0 routes for mountain and local services
 * Thu Jun 18 2020 0.4.1

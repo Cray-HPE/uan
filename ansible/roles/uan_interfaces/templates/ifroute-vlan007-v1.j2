@@ -1,0 +1,4 @@
+{% if imported_networks.networks.customer_access.blocks.ipv4[0].gateway is defined %}
+default {{ imported_networks.networks.customer_access.blocks.ipv4[0].gateway }} 255.255.255.255 -  table 3
+default {{ imported_networks.networks.customer_access.blocks.ipv4[0].gateway }} - vlan007 src {{ external_can_ip }}
+{% endif %}

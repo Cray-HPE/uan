@@ -1,0 +1,7 @@
+---
+- hosts: bis[0]
+  gather_facts: no
+  tasks:
+    - import_role:
+        name: uan_bootstrap
+      when: groups["uan"] is defined and (groups["uan"] | length > 0)

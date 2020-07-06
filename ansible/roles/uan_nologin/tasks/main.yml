@@ -1,0 +1,20 @@
+# Copyright 2020, Cray Inc. All Rights Reserved.
+---
+- block:
+
+  - name: Block user logins
+    file:
+      path: /etc/nologin
+      owner: root
+      group: root
+      mode: 0644
+      state: touch
+    when: uan_nologin
+
+  - name: Allow user logins
+    file:
+      path: /etc/nologin
+      state: absent
+    when: not uan_nologin
+
+  when: not cray_cfs_image

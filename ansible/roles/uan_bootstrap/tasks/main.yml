@@ -1,0 +1,145 @@
+---
+- name: Get UAN BMC hostnames
+  set_fact:
+    uan_bmcs: "{{ groups.uan | map('regex_replace', '([A-Za-z]+)(\\d+)-nmn', '\\1\\2-mgmt') | list }}"
+
+- name: Configure UAN network boot
+  no_log: true
+  ipmi_boot:
+    name: "{{ item }}"
+    user: "{{ uan_ipmi_user }}"
+    password: "{{ bmc_root_password }}"
+    bootdev: network
+    uefiboot: yes
+  loop: "{{ uan_bmcs }}"
+
+- name: Power off our UANs for discovery
+  no_log: true
+  ipmi_power:
+    name: "{{ item }}"
+    user: "{{ uan_ipmi_user }}"
+    password: "{{ bmc_root_password }}"
+    state: off
+  loop: "{{ uan_bmcs }}"
+
+- name: Boot our UANs for discovery
+  no_log: true
+  ipmi_power:
+    name: "{{ item }}"
+    user: "{{ uan_ipmi_user }}"
+    password: "{{ bmc_root_password }}"
+    state: on
+  loop: "{{ uan_bmcs }}"
+
+- name: Find UAN entries in /etc/hosts
+  shell: grep {{ item }} /etc/hosts
+  loop: "{{ groups.uan }}"
+  register: uan_entries
+
+- name: Get UAN xnames from uan_entries
+  set_fact:
+    uan_xname: "{{ item.stdout_lines | regex_replace('^(.*)(x[0-9]+c[0-9]+s[0-9]+b[0-9]+n[0-9]+)(.*)$', '\\2') }}"
+  register: uan_xnames
+  loop: "{{ uan_entries.results }}"
+
+- name: Wait for the UANs to be discovered (20-60 minutes)
+  authorized:
+    method: get
+    endpoint: "smd/hsm/v1/Inventory/ComponentEndpoints/{{ item }}"
+  register: uan_discovery
+  until: uan_discovery.failed == false
+  retries: 180
+  delay: 30
+  loop: "{{ uan_xnames.results | map(attribute='ansible_facts.uan_xname') | list }}"
+
+- name: Restart conman pod
+  shell: "kubectl delete pods -A -l {{ conman_label }}"
+
+- name: Restart cray-cps-cm-pm pods
+  shell: "kubectl delete pods -A -l {{ cps_cm_pm_label }}"
+
+- name: "Get UAN base BOS session template - {{ uan_bos_base_template }}"
+  authorized:
+    method: get
+    endpoint: "bos/v1/sessiontemplate/{{ uan_bos_base_template }}"
+  register: bos_resp
+
+- name: "Construct uan_session_boot_set from {{ uan_base_boot_set }} boot set"
+  set_fact:
+    uan_session_boot_set: "{{ bos_resp.response.boot_sets[uan_base_boot_set] }}"
+  
+- name: Create S3 BOS uan boot_set
+  set_fact:
+    uan_boot_set:
+      boot_ordinal: "{{ uan_boot_ordinal }}"
+      kernel_parameters: "{{ uan_kernel_parameters }}"
+      network: "{{ uan_network }}"
+      node_list: "{{ uan_xnames.results | map(attribute='ansible_facts.uan_xname') | list }}"
+      rootfs_provider: "{{ uan_session_boot_set.rootfs_provider | default( uan_rootfs_provider ) }}"
+      rootfs_provider_passthrough: "{{ uan_session_boot_set.rootfs_provider_passthrough | default( uan_rootfs_provider_passthrough ) }}"
+      etag: "{{ uan_session_boot_set.etag | default('') }}"
+      path: "{{ uan_session_boot_set.path }}"
+      type: "{{ uan_session_boot_set.type }}"
+  when: uan_session_boot_set.type is defined and uan_session_boot_set.type|lower == "s3"
+
+- name: Create non-S3 BOS uan boot_set
+  set_fact:
+    uan_boot_set:
+      boot_ordinal: "{{ uan_boot_ordinal }}"
+      kernel_parameters: "{{ uan_kernel_parameters }}"
+      network: "{{ uan_network }}"
+      node_list: "{{ uan_xnames.results | map(attribute='ansible_facts.uan_xname') | list }}"
+      rootfs_provider: "{{ uan_session_boot_set.rootfs_provider | default( uan_rootfs_provider ) }}"
+      rootfs_provider_passthrough: "{{ uan_session_boot_set.rootfs_provider_passthrough | default( uan_rootfs_provider_passthrough ) }}"
+      ims_image_id: "{{ uan_session_boot_set.ims_image_id }}"
+  when: uan_session_boot_set.type is not defined
+
+- name: Create UAN BOS session template
+  authorized:
+    endpoint: bos/v1/sessiontemplate
+    method: post
+    body:
+       name: "{{ uan_bos_name }}"
+       description: "{{ uan_bos_description }}"
+       cfs: 
+         clone_url: "{{ uan_cfs_url }}"
+         branch: "{{ uan_cfs_branch }}"
+       enable_cfs: "{{ uan_enable_cfs }}"
+       partition: "{{ uan_partition }}"
+       boot_sets:
+         uan: "{{ uan_boot_set }}"
+
+- name: Boot UANs with BOS
+  authorized:
+    endpoint: bos/v1/session
+    method: post
+    body:
+      templateUuid: "{{ uan_bos_name }}"
+      operation: reboot
+  register: uan_bos_session
+
+- debug:
+    var: uan_bos_session.response.links[0].href
+
+- name: Monitor BOS session 
+  block:
+    - name: Watching BOS session status endpoint, if endpoint is available
+      authorized:
+        endpoint: "bos//v1/session/{{ uan_bos_session.response.links[0].href }}/status"
+        method: get
+      register: uan_bos_session_status
+      retries: 240
+      delay: 5
+      until:
+        - uan_bos_session_status.response.metadata.complete == true
+  rescue:
+    - name: Waiting for session to complete (status endpoint unavailable)
+      authorized:
+        endpoint: "bos/v1/session/{{ uan_bos_session.response.links[0].href }}"
+        method: get
+      register: bos_result
+      retries: 240
+      delay: 5
+      until:
+        - bos_result.response.stage is defined
+        - bos_result.response.stage == 'Done'

@@ -1,0 +1,178 @@
+---
+- block:
+  - name: Copy hosts file
+    synchronize:
+      src: /etc/hosts
+      dest: /etc/hosts
+    delegate_to: "{{ groups['bis'][0] }}"
+    when: "'bis' in groups"
+
+  - name: Cleanup /etc/hosts
+    lineinfile:
+      dest: /etc/hosts
+      regex: "{{ item }}"
+      state: absent
+    loop:
+      - "sw-spine"
+      - "sw-leaf"
+      - "nid"
+      - "ncn"
+      - "-mgmt"
+      - "-hsn"
+      - "-hmn"
+      - "-bis"
+      - "x5000"
+      - "10.254"
+      - "mgmt-plane-nmn"
+
+# -----------------------------------------------------------------------------
+# TODO: remove this section when a sufficient resolution to CASMCMS-4156 comes about
+  - name: WAR create temporary workarea for networks.yml
+    tempfile:
+      state: directory
+      suffix: networks_yml
+      path: "/tmp"
+    register: networks_yml_dir
+    run_once: true
+
+  - name: WAR copy networks.yml from NCN host to Ansible master
+    fetch:
+      src: /etc/ansible/hosts/group_vars/all/networks.yml
+      dest: "{{ networks_yml_dir.path }}/networks.yml"
+      flat: yes
+    delegate_to: "{{ networks_yml_src_server }}"
+    run_once: true
+
+  - name: WAR read in variables from networks.yml
+    include_vars:
+      file: "{{ networks_yml_dir.path }}/networks.yml"
+      name: imported_networks
+
+  - name: WAR remove temporary workarea
+    file:
+      state: absent
+      path: "{{ networks_yml_dir.path }}"
+    run_once: true
+
+  - name: WAR Add required name resolution entry
+    lineinfile:
+      dest: /etc/sysconfig/network/config
+      regex: '^NETCONFIG_DNS_STATIC_SERVERS=(.*)$'
+      line: 'NETCONFIG_DNS_STATIC_SERVERS={{ imported_networks.networks.node_management.blocks.ipv4[0].subnets[0].dns }}'
+      backrefs: yes
+# -----------------------------------------------------------------------------
+  - name: Check if {{ uan_disk }} exists
+    stat: 
+      path: "{{ uan_disk }}"
+    register: uan_disk_stat
+
+  - block:
+    - name: Check if swap and scratch are mounted
+      shell: "df | grep {{ item }} | rev | cut -d' ' -f 1 | rev"
+      register: fs_check
+      loop: [ "{{ uan_disk }}1", "{{ uan_disk }}2" ]
+
+    - name: Quiesce filesystem, if mounted
+      shell: "fuser -km {{ item.stdout }}"
+      ignore_errors: yes
+      when: item.stdout != '' and item.stdout not in ['/scratch', '/swap']
+      loop: "{{ fs_check.results }}"
+
+    - name: Unmount filesystem, if mounted
+      shell: "umount -l {{ item.stdout }}"
+      when: item.stdout != '' and item.stdout not in ['/scratch', '/swap']
+      loop: "{{ fs_check.results }}"
+
+    - name: Remove from fstab
+      mount:
+        path: "{{ item.stdout }}"
+        state: absent
+      when: item.stdout != '' and item.stdout not in ['/scratch', '/swap']
+      loop: "{{ fs_check.results }}"
+
+    - name: Create swap partition
+      parted:
+        device: "{{ uan_disk }}"
+        number: 1
+        state: present
+        part_end: "50%"
+
+    - name: Create scratch partition
+      parted:
+        device: "{{ uan_disk }}"
+        number: 2
+        state: present
+        part_start: "50%"
+
+    - name: Create filesystem for swap and scratch
+      filesystem:
+        fstype: ext4
+        dev: "{{ item[0] }}"
+        force: yes
+      when: item[1].stdout == ''
+      with_nested:
+        - [ "{{ uan_disk }}1", "{{ uan_disk }}2" ]
+        - "{{ fs_check.results }}"
+
+    - name: Mount swap
+      mount:
+        path: "{{ uan_swap }}"
+        src: "{{ uan_disk }}1"
+        fstype: ext4
+        state: mounted
+
+    - name: Mount scratch
+      mount:
+        path: "{{ uan_scratch }}"
+        src: "{{ uan_disk }}2"
+        fstype: ext4
+        state: mounted
+
+    - name: Create swap space
+      command: "{{ swap_dd_command }}"
+      args:
+        creates: "{{ uan_swap }}/{{ swap_file }}"
+      register: swap_file_create
+
+    - name: Set permissions on swap file.
+      file:
+        path: "{{ uan_swap }}/{{ swap_file }}"
+        owner: root
+        group: root
+        mode: 0600
+      when: swap_file_create is changed
+
+    - name: Make swap file
+      command: mkswap "{{ uan_swap }}/{{ swap_file }}"
+      when: swap_file_create is changed
+
+    - name: Add to fstab
+      lineinfile:
+        dest: /etc/fstab
+        regexp: "{{ uan_swap }}/{{ swap_file }}"
+        line: "{{ uan_swap }}/{{ swap_file }} none swap sw 0 0"
+
+    - name: Turn swap on
+      command: swapon -a
+
+    - name: Set swappiness
+      sysctl:
+        name: vm.swappiness
+        value: "{{ swap_swappiness }}"
+
+    when: uan_disk_stat.stat.isblk is defined and uan_disk_stat.stat.isblk == True
+
+  - name: Install additional UAN RPMs
+    zypper:
+      name: "{{ uan_rpms }}"
+      disable_gpg_check: yes
+      state: present
+    when: ansible_distribution == "SLES"
+
+  - name: Start the cray-switchboard-sshd service
+    systemd:
+      state: started
+      enabled: yes
+      name: cray-switchboard-sshd
+
+  when: not cray_cfs_image

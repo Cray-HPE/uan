@@ -1,0 +1,22 @@
+#### this file managed by Ansible ####
+
+# Local changes *may* be deleted
+
+[sssd]
+  config_file_version = 2
+  services = nss, pam
+  domains = {{ imported_customer_var.domain }} 
+
+[nss]
+  filter_users = root, crayadm
+  filter_groups = root
+
+[pam]
+
+[domain/{{ imported_customer_var.domain }}]
+  ldap_search_base={{ imported_customer_var.search_base }}
+  ldap_uri={% for item in imported_customer_var.ldap_servers %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
+  id_provider = ldap
+  auth_provider = ldap
+  ldap_tls_reqcert = allow
+  ldap_schema = rfc2307

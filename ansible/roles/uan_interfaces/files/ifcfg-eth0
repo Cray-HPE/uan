@@ -1,0 +1,3 @@
+BOOTPROTO='dhcp'
+ONBOOT='yes'
+STARTMODE='auto'

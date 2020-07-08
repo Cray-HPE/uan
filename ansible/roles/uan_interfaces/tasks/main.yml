@@ -1,0 +1,86 @@
+# Copyright 2020, Cray Inc. All Rights Reserved.
+---
+- block:
+# -----------------------------------------------------------------------------
+# TODO: remove this section when a sufficient resolution to CASMCMS-4156 comes about
+  - name: WAR create temporary workarea for networks.yml
+    tempfile:
+      state: directory
+      suffix: networks_yml
+      path: "/tmp"
+    register: networks_yml_dir
+    run_once: true
+
+  - name: WAR copy networks.yml from NCN host to Ansible master
+    fetch:
+      src: /etc/ansible/hosts/group_vars/all/networks.yml
+      dest: "{{ networks_yml_dir.path }}/networks.yml"
+      flat: yes
+    delegate_to: "{{ vars_yml_src_server }}"
+    run_once: true
+
+  - name: WAR read in variables from networks.yml
+    include_vars:
+      file: "{{ networks_yml_dir.path }}/networks.yml"
+      name: imported_networks
+    run_once: true
+
+  - name: WAR remove temporary workarea
+    file:
+      state: absent
+      path: "{{ networks_yml_dir.path }}"
+    run_once: true
+
+  - name: WAR create temporary workarea for customer_var.yml
+    tempfile:
+      state: directory
+      suffix: customer_var_yml
+      path: "/tmp"
+    register: customer_var_yml_dir
+    run_once: true
+
+  - name: WAR copy customer_var.yml from NCN host to Ansible master
+    fetch:
+      src: /opt/cray/crayctl/ansible_framework/customer_runbooks/customer_var.yml
+      dest: "{{ customer_var_yml_dir.path }}/customer_var.yml"
+      flat: yes
+    delegate_to: "{{ vars_yml_src_server }}"
+    run_once: true
+
+  - name: WAR read in variables from customer_var.yml
+    include_vars:
+      file: "{{ customer_var_yml_dir.path }}/customer_var.yml"
+      name: imported_customer_var
+    run_once: true
+
+  - name: WAR remove temporary workarea
+    file:
+      state: absent
+      path: "{{ customer_var_yml_dir.path }}"
+    run_once: true
+
+  - name: Get network facts 
+    set_fact:
+      nmn_svc: "{{ imported_networks.networks.node_management.blocks.ipv4 | selectattr('label','match','services') | list }}"
+      nmn_vlan2: "{{ imported_networks.networks.node_management.blocks.ipv4 | selectattr('label','match','river') | list }}"
+      can_version: "{{ imported_networks.can_version }}"
+# -----------------------------------------------------------------------------
+
+  - debug:
+      msg: "Customer Access Network - {{ imported_customer_var.customer_access_network }}"
+
+# Configure CAN v1 - Maps between external and internal (10.7.0.0/16) subnets
+  - include_tasks: can-v1.yml
+    when:
+      - can_version is not defined or can_version == "v1"
+
+# Configure CAN v2 - Uses external subnet on vlan007
+  - include_tasks: can-v2.yml
+    when:
+      - can_version is defined
+      - can_version == "v2"
+
+  # Configure Customer defined interfaces, routes, and rules
+  - include_tasks: customer_interfaces.yml
+
+  when: not cray_cfs_image

@@ -31,16 +31,28 @@
     state: on
   loop: "{{ uan_bmcs }}"
 
-- name: Find UAN entries in /etc/hosts
-  shell: grep {{ item }} /etc/hosts
-  loop: "{{ groups.uan }}"
-  register: uan_entries
-
-- name: Get UAN xnames from uan_entries
-  set_fact:
-    uan_xname: "{{ item.stdout_lines | regex_replace('^(.*)(x[0-9]+c[0-9]+s[0-9]+b[0-9]+n[0-9]+)(.*)$', '\\2') }}"
-  register: uan_xnames
-  loop: "{{ uan_entries.results }}"
+- name: Get xnames for Application role nodes
+  block:
+    - authorized:
+        endpoint: "sls/v1/search/hardware?extra_properties.Role=Application"
+        method: get
+      register: sls
+    - name: Searching SLS for Application nodes
+      set_fact:
+        uan_xname: "{{ item.Xname }}"
+      register: uan_xnames
+      loop: "{{ sls.response }}"
+      when: sls.response is defined
+  rescue:
+    - name: SLS not available, looking for entries in /etc/hosts
+      shell: grep {{ item }} /etc/hosts
+      loop: "{{ groups.uan }}"
+      register: uan_entries
+    - name: Get UAN xnames from uan_entries
+      set_fact:
+        uan_xname: "{{ item.stdout_lines | regex_replace('^(.*)(x[0-9]+c[0-9]+s[0-9]+b[0-9]+n[0-9]+)(.*)$', '\\2') }}"
+      register: uan_xnames
+      loop: "{{ uan_entries.results }}"
 
 - name: Wait for the UANs to be discovered (20-60 minutes)
   authorized:

@@ -133,25 +133,39 @@
 - debug:
     var: uan_bos_session.response.links[0].href
 
-- name: Monitor BOS session 
+- name: Monitor BOS session
   block:
-    - name: Watching BOS session status endpoint, if endpoint is available
+    - name: Watching BOS session status endpoint for completion, if endpoint is available
       authorized:
-        endpoint: "bos//v1/session/{{ uan_bos_session.response.links[0].href }}/status"
+        endpoint: "bos/{{ uan_bos_session.response.links[0].href }}/status"
         method: get
       register: uan_bos_session_status
       retries: 240
       delay: 5
+      when: uan_bos_session_status.response.metadata.complete is defined
       until:
         - uan_bos_session_status.response.metadata.complete == true
-  rescue:
-    - name: Waiting for session to complete (status endpoint unavailable)
+
+    - name: Get session template (status endpoint unavailable)
       authorized:
-        endpoint: "bos/v1/session/{{ uan_bos_session.response.links[0].href }}"
+        endpoint: "bos/{{ uan_bos_session.response.links[0].href }}"
         method: get
       register: bos_result
+      when:
+        - uan_bos_session_status.response.metadata.complete is not defined
+
+    - name: INFO UAN template UUID
+      debug:
+        var: bos_result.response.templateUuid
+
+    - name: Watching BOS session status for completion
+      authorized:
+        endpoint: "bos/{{ uan_bos_session.response.links[0].href }}/status/{{ bos_result.response.templateUuid }}"
+        method: get
+      register: uan_bos_status
       retries: 240
       delay: 5
+      when: uan_bos_session_status.response.metadata.complete is not defined
       until:
-        - bos_result.response.stage is defined
-        - bos_result.response.stage == 'Done'
+        - uan_bos_status.response.metadata.complete is defined
+        - uan_bos_status.response.metadata.complete

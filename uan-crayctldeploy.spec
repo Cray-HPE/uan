@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Wed Jul 15 2020 0.4.6
+- Fix logic controlling use of BOS status endpoint
 * Tue Jul 07 2020 0.4.5
 - Only configure /etc/hosts if DNS is not available
 * Wed Jul 06 2020 0.4.4

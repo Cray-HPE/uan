@@ -1,11 +1,10 @@
-#### this file managed by Ansible ####
-
+#### {{ ansible_managed }} ####
 # Local changes *may* be deleted
 
 [sssd]
   config_file_version = 2
   services = nss, pam
-  domains = {{ imported_customer_var.domain }} 
+  domains = {% for item in uan_ldap_config %}{{ item.domain }}{{ "," if not loop.last else "" }}{% endfor %}
 
 [nss]
   filter_users = root, crayadm
@@ -13,9 +12,10 @@
 
 [pam]
 
-[domain/{{ imported_customer_var.domain }}]
-  ldap_search_base={{ imported_customer_var.search_base }}
-  ldap_uri={% for item in imported_customer_var.ldap_servers %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
+{% for cfg in uan_ldap_config %}
+[domain/{{ cfg.domain }}]
+  ldap_search_base={{ cfg.search_base }}
+  ldap_uri={% for item in cfg.servers %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
   id_provider = ldap
   auth_provider = ldap
   ldap_tls_reqcert = allow
@@ -27,6 +27,9 @@
   enumerate = false 
   ldap_use_tokengroups = false 
 {% endif %}
-{% if imported_customer_var.ldap_chpass_uri is defined %}
-  ldap_chpass_uri={% for item in imported_customer_var.ldap_chpass_uri %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
+{% if cfg.chpass_uri is defined %}
+  ldap_chpass_uri={% for item in cfg.chpass_uri %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
 {% endif %}
+
+{% endfor %}
+

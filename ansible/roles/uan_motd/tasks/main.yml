@@ -1,18 +1,13 @@
-# Copyright 2019 Cray Inc. All Rights Reserved.
+# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Tasks for uan_motd file
 ---
-- block:
-  - name: Get Cray product information
-    shell: "source /etc/opt/cray/release/{{ cray_release_file }} && echo $PRODUCT"
-    register: cray_product
+- name: Append motd content
+  when: uan_motd_content
+  lineinfile:
+    backup: yes
+    create: yes
+    state: present
+    path: /etc/motd
+    insertafter: EOF
+    line: "{{ uan_motd_content }}"
 
-  - name: Get Cray version information
-    shell: "source /etc/opt/cray/release/{{ cray_release_file }} && echo $VERSION"
-    register: cray_version
-
-  - name: Copy motd to UANs
-    template:
-      src: uan-motd.j2
-      dest: /etc/motd
-      mode: 0644
-
-  when: not cray_cfs_image

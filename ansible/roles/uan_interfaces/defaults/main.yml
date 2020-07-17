@@ -1,5 +1,9 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Defaults for uan_interfaces role
 ---
-vars_yml_src_server: ncn-w001
+customer_access_gateway: ""  # ex. 10.102.14.0/24
+customer_access_network: ""  # ex. 10.102.14.20
+customer_access_metallb_address_pool: ""  # ex. 10.102.14.128/25
 
 rt_tables:
   - pref: '1'

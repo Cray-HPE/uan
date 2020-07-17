@@ -1,35 +1,8 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Tasks for uan_ldap role
 ---
 - name: Configure LDAP
   block:
-# -----------------------------------------------------------------------------
-# TODO: remove this section when a sufficient resolution to CASMCMS-4156 comes about
-  - name: WAR create temporary workarea for customer_var.yml
-    tempfile:
-      state: directory
-      suffix: customer_var_yml
-      path: "/tmp"
-    register: customer_var_yml_dir
-    run_once: true
-
-  - name: WAR copy customer_var.yml from NCN host to Ansible master
-    fetch:
-      src: /opt/cray/crayctl/ansible_framework/customer_runbooks/customer_var.yml
-      dest: "{{ customer_var_yml_dir.path }}/customer_var.yml"
-      flat: yes
-    delegate_to: "{{ vars_yml_src_server }}"
-    run_once: true
-
-  - name: WAR read in variables from customer_var.yml
-    include_vars:
-      file: "{{ customer_var_yml_dir.path }}/customer_var.yml"
-      name: imported_customer_var
-    run_once: true
-
-  - name: WAR remove temporary workarea
-    file:
-      state: absent
-      path: "{{ customer_var_yml_dir.path }}"
-    run_once: true
 
   - name: Set ldap_port
     set_fact:
@@ -38,29 +11,24 @@
   - name: Override ldap_port if ldaps://
     set_fact:
       ldap_port: 636
-    when: imported_customer_var.ldap_servers[0] is regex('^ldaps://')
-    
+    when: item.1 is regex('^ldaps://')
+    with_subelements:
+      - "{{ uan_ldap_config }}"
+      - servers
+
   - name: Make sure we access the ldap servers first
     wait_for:
-      host: "{{ item | regex_replace('^ldaps?://', '') }}"
+      host: "{{ item.1 | regex_replace('^ldaps?://', '') }}"
       port: "{{ ldap_port }}"
       state: started
       delay: 0
       timeout: 3
-    loop: "{{ imported_customer_var.ldap_servers }}"
-
-  - name: Install sssd and related packages
-    zypper:
-      name: 
-        - sssd
-        - sssd-ldap
-        - sssd-krb5-common
-        - sssd-tools
-        - pam_ldap
-        - nss_ldap
-      state: present 
+    with_subelements:
+      - "{{ uan_ldap_config }}"
+      - servers
 
   - name: Make nscd.conf compatible with sssd
+    when: cray_cfs_image|default(false)
     replace:
       path: /etc/nscd.conf
       regexp: '(^[ \t]+enable\-cache[ \t]+{{ item }}[ \t]+)yes'  
@@ -72,6 +40,7 @@
       - services
 
   - name: Generate sssd.conf
+    when: cray_cfs_image|default(false)
     template:
       src: sssd.conf.j2
       dest: /etc/sssd/sssd.conf
@@ -80,27 +49,32 @@
       mode: 0600
 
   - name: Configure pam to use sss and enable mkhomedir
+    when: not cray_cfs_image|default(false)
     command: "pam-config -a --sss --mkhomedir"
 
   - name: Disable nscd and stop
+    when: not cray_cfs_image|default(false)
     service:
       name: nscd
       state: stopped
       enabled: false
 
   - name: Start and enable sssd
+    when: not cray_cfs_image|default(false)
     service:
       name: sssd
       state: restarted
       enabled: true
 
   - name: Copy over nsswitch.conf
-    copy:
-      src: nsswitch.conf
+    when: cray_cfs_image|default(false)
+    template:
+      src: nsswitch.conf.j2
       dest: /etc/nsswitch.conf
       backup: yes
 
   - name: Generate new access.conf
+    when: cray_cfs_image|default(false)
     template:
       src: templates/access.conf.j2
       dest: /etc/security/access.conf
@@ -110,7 +84,4 @@
       mode: 0644
 
   when:
-    - imported_customer_var.ldap_servers is defined
-    - imported_customer_var.domain is defined
-    - imported_customer_var.search_base is defined
-    - not cray_cfs_image
+    - uan_ldap_config

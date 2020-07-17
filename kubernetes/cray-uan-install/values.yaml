@@ -1,0 +1,130 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+#
+#   @***@ variables in this file are sed replaced using this repository's
+#   runBuildPrep.sh script.
+#
+cray-import-config:
+  config_image:
+    name: "@config_image_name@"
+    tag: "@config_image_tag@"
+
+  import_job:
+    CF_IMPORT_PRODUCT_NAME: "@product_name@"
+    CF_IMPORT_PRODUCT_VERSION: "@product_version@"
+    CF_IMPORT_GITEA_REPO: "@product_name@-config-management"
+
+#### EVERYTHING BELOW THIS POINT IS A WORKAROUND ####
+
+# FIXME TODO CASMCMS-5737
+# The following is necessary to populate the node HSN information
+# while the Slingshot installer is in development. Remove with
+# CASMCMS-5737 after SSHOTMGP-2729 is complete.
+# What it do: run nhi_to_cfs.py on the contents of /opt/cray/crayctl/files/node_hsn_interface.yaml
+# located on ncn-w001 (yuck) and put it in /shared/host_vars, which is copied
+# to /content/host_vars and imported via the cf-gitea-import container into
+# gitea. This should all be removed and replaced by ansible tasks that pull the
+# pertinent HSN interface info for the target node.
+
+# FIXME TODO CASMCMS-5645
+# Values for the customer network are still being pulled from the ncn-w001 (yuck)
+# filesystem. This requires an initContainer to pull the file and place it in
+# the group_vars before the main container imports it into Gitea. This info
+# should instead be pulled from SLS during configuration.
+
+# FIXME TODO CASMCMS-5660
+# Values for the Mountain NMN are still being pulled from networks.yml on
+# ncn-w001 (yuck). This requires an initContainer to pull the file and place
+# it in the group_vars before the main container imports it into Gitea. This
+# info should instead be pulled from something like SLS during configuration.
+
+# FIXME TODO CASMCMS-5755
+# The ssh-keys role copies /etc/ssh/*key* files to the node during image
+# customization. During the cme-premium-deployment Ansible playbook during
+# system Stage 5 install, these files are copied from ncn-w001 and placed into
+# a location where they are imported into Gitea for the ssh-keys role to
+# further copy them to the image/node.
+
+    nodeSelector:
+      kubernetes.io/hostname: ncn-w001  ## FIXME CASMCMS-5737 CASMCMS-5645 CASMCMS-5755
+
+    additionalVolumes:
+    - name: war-ncmp-nhi-to-cfs-dir     ## FIXME CASMCMS-5737
+      hostPath:
+        path: /opt/cray/crayctl/files
+        type: Directory
+    - name: war-ssh-keys-to-cfs-dir     ## FIXME CASMCMS-5755
+      hostPath:
+        path: /etc/ssh
+        type: Directory
+    - name: war-ssh-pubkey-to-cfs-dir   ## FIXME CASMCMS-5755
+      hostPath:
+        path: /root/.ssh
+        type: Directory
+    - name: war-customer-var-to-cfs-dir ## FIXME CASMCMS-5645
+      hostPath:
+        path: /opt/cray/crayctl/ansible_framework/customer_runbooks
+        type: Directory
+    - name: war-networks-yml-to-cfs-dir ## FIXME CASMCMS-5660
+      hostPath:
+        path: /etc/ansible/hosts/group_vars/all
+        type: Directory
+
+    initContainers:
+    - name: ncmp-nhi-to-cfs             ## FIXME CASMCMS-5737
+      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
+      command:
+      - bin/sh
+      - -c
+      - |
+        python3 /content/roles/ncmp_nhi_to_cfs/files/nhi_to_cfs.py -nhif /tmp/nhi/node_hsn_interface.yaml -cfsp /shared/host_vars -intf all
+      volumeMounts:
+      - mountPath: /tmp/nhi
+        name: war-ncmp-nhi-to-cfs-dir
+      - mountPath: /shared
+        name: config-overlay
+
+    - name: ssh-keys-to-cfs             ## FIXME CASMCMS-5755
+      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
+      command:
+      - bin/sh
+      - -c
+      - |
+        mkdir -p /shared/roles/ssh-keys/templates && \
+        cp -a /tmp/root/.ssh/id_rsa.pub /shared/roles/ssh-keys/templates/authorized_keys.j2 && \
+        for k in $(ls /tmp/host-ssh/ssh_host_*_key*); do cp -a $k /shared/roles/ssh-keys/templates/$(basename $k).j2; done;
+      volumeMounts:
+      - mountPath: /tmp/host-ssh
+        name: war-ssh-keys-to-cfs-dir
+      - mountPath: /tmp/root/.ssh
+        name: war-ssh-pubkey-to-cfs-dir
+      - mountPath: /shared
+        name: config-overlay
+
+    - name: customer-var-to-cfs         ## FIXME CASMCMS-5645
+      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
+      command:
+      - bin/sh
+      - -c
+      - |
+        mkdir -p /shared/group_vars/Application && \
+        grep customer_access /tmp/customer_runbooks/customer_var.yml > /shared/group_vars/Application/customer_var.yml
+      volumeMounts:
+      - mountPath: /tmp/customer_runbooks
+        name: war-customer-var-to-cfs-dir
+      - mountPath: /shared
+        name: config-overlay
+
+    - name: networks-yml-to-cfs         ## FIXME CASMCMS-5660
+      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
+      command:
+      - bin/sh
+      - -c
+      - |
+        mkdir -p /shared/group_vars/Application && \
+        cp -a /tmp/networks/networks.yml /shared/group_vars/Application/networks.yml
+      volumeMounts:
+      - mountPath: /tmp/networks
+        name: war-networks-yml-to-cfs-dir
+      - mountPath: /shared
+        name: config-overlay
+

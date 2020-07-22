@@ -135,16 +135,26 @@
 
 - name: Monitor BOS session
   block:
-    - name: Watching BOS session status endpoint for completion, if endpoint is available
+    - name: Get BOS session status
       authorized:
         endpoint: "bos/{{ uan_bos_session.response.links[0].href }}/status"
         method: get
       register: uan_bos_session_status
+      retries: 6
+      delay: 5
+      until:
+        - uan_bos_session_status is not failed
+
+    - name: Watching BOS session status for completion
+      authorized:
+        endpoint: "bos/{{ uan_bos_session.response.links[0].href }}/status"
+        method: get
+      register: uan_bos_session_status_retry
       retries: 240
       delay: 5
       when: uan_bos_session_status.response.metadata.complete is defined
       until:
-        - uan_bos_session_status.response.metadata.complete == true
+        - uan_bos_session_status_retry.response.metadata.complete == true
 
     - name: Get session template (status endpoint unavailable)
       authorized:
@@ -157,8 +167,9 @@
     - name: INFO UAN template UUID
       debug:
         var: bos_result.response.templateUuid
+      when: bos_result.response.templateUuid is defined
 
-    - name: Watching BOS session status for completion
+    - name: Watching BOS session status for completion when status endpoint is not available
       authorized:
         endpoint: "bos/{{ uan_bos_session.response.links[0].href }}/status/{{ bos_result.response.templateUuid }}"
         method: get

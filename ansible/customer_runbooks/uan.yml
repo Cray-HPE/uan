@@ -2,6 +2,11 @@
 - hosts: bis[0]
   gather_facts: no
   tasks:
+    - name: Get xnames for Application role nodes
+      authorized:
+        endpoint: "sls/v1/search/hardware?extra_properties.Role=Application"
+        method: get
+      register: sls
     - import_role:
         name: uan_bootstrap
-      when: groups["uan"] is defined and (groups["uan"] | length > 0)
+      when: sls.response[0].Xname is defined

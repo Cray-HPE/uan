@@ -20,3 +20,13 @@
   auth_provider = ldap
   ldap_tls_reqcert = allow
   ldap_schema = rfc2307
+{% if ldap_port != 389 %}
+  entry_cache_timeout = 60 
+  cache_credentials = true 
+  case_sensitive = true 
+  enumerate = false 
+  ldap_use_tokengroups = false 
+{% endif %}
+{% if imported_customer_var.ldap_chpass_uri is defined %}
+  ldap_chpass_uri={% for item in imported_customer_var.ldap_chpass_uri %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
+{% endif %}

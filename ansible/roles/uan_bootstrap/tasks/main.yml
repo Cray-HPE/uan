@@ -67,8 +67,8 @@
 - name: Restart conman pod
   shell: "kubectl delete pods -A -l {{ conman_label }}"
 
-- name: Restart cray-cps-cm-pm pods
-  shell: "kubectl delete pods -A -l {{ cps_cm_pm_label }}"
+- name: Update DVS
+  shell: "/opt/cray/dvs/default/sbin/dvs_update_map --all-ncn"
 
 - name: "Get UAN base BOS session template - {{ uan_bos_base_template }}"
   authorized:

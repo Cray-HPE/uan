@@ -1,0 +1,4 @@
+{% if imported_customer_var.customer_access_gateway is defined %}
+default {{ imported_customer_var.customer_access_gateway }} 255.255.255.255 - table 3
+{{ imported_customer_var.customer_access_metallb_address_pool }} {{ imported_customer_var.customer_access_gateway }} 255.255.255.255 vlan007 
+{% endif %}

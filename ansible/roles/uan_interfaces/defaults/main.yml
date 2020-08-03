@@ -1,12 +1,5 @@
 ---
 vars_yml_src_server: ncn-w001
-# Check interfaces in this order.
-uan_can_device_list: 
-  - eth2
-  - eth3
-  - eth4
-  - eth5
-  - eth0
 
 rt_tables:
   - pref: '1'
@@ -16,7 +9,7 @@ rt_tables:
   - pref: '3'
     name: rt_can
 
-bootproto: '' 
+bootproto: ''
 device: ''
 dhcp_hostname: ''
 ethtool_opts: ''
@@ -31,3 +24,7 @@ slave: ''
 srcaddr: ''
 startmode: ''
 userctl: ''
+bonding_master: ''
+bonding_module_opts: ''
+bonding_slave0: ''
+bonding_slave1: ''

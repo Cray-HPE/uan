@@ -47,10 +47,12 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Wed Aug 12 2020 0.4.12
+- Support bonded CAN interfaces
 * Tue Aug 04 2020 0.4.11
 - Increase timeout for BOS status endpoint to appear
 * Mon Jul 27 2020 0.4.10
-- Support LDAP and LDAPS 
+- Support LDAP and LDAPS
 * Fri Jul 24 2020 0.4.9
 - Remove need for uan Ansible inventory group
 * Fri Jul 24 2020 0.4.8
@@ -62,7 +64,7 @@ cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 * Tue Jul 07 2020 0.4.5
 - Only configure /etc/hosts if DNS is not available
 * Wed Jul 06 2020 0.4.4
-- Wait on new BOS status 
+- Wait on new BOS status
 * Thu Jul 02 2020 0.4.3
 - Get Application node xnames from SLS, if possible
 * Tue Jun 30 2020 0.4.2

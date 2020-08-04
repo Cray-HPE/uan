@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Tue Aug 04 2020 0.2.10
+- Increase timeout for BOS status endpoint to appear
 * Fri Jul 24 2020 0.2.9
 - Update DVS rather than restart it
 * Wed Jul 22 2020 0.2.8

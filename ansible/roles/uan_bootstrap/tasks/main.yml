@@ -140,7 +140,7 @@
         endpoint: "bos/{{ uan_bos_session.response.links[0].href }}/status"
         method: get
       register: uan_bos_session_status
-      retries: 6
+      retries: 12
       delay: 5
       until:
         - uan_bos_session_status is not failed

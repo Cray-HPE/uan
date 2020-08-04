@@ -47,8 +47,10 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
-* Mon Jul 27 2020 0.4.9
+* Mon Jul 27 2020 0.4.10
 - Support LDAP and LDAPS 
+* Fri Jul 24 2020 0.4.9
+- Remove need for uan Ansible inventory group
 * Fri Jul 24 2020 0.4.8
 - Update DVS rather than restart it
 * Wed Jul 22 2020 0.4.7

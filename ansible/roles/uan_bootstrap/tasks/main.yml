@@ -1,7 +1,17 @@
 ---
-- name: Get UAN BMC hostnames
+- name: Get xnames for Application role nodes
+  authorized:
+    endpoint: "sls/v1/search/hardware?extra_properties.Role=Application"
+    method: get
+  register: sls
+
+- name: Searching SLS for Application nodes
   set_fact:
-    uan_bmcs: "{{ groups.uan | map('regex_replace', '([A-Za-z]+)(\\d+)-nmn', '\\1\\2-mgmt') | list }}"
+    uan_xname: "{{ item.Xname }}"
+    uan_bmc: "{{ item.Parent }}"
+  register: uan_list
+  loop: "{{ sls.response }}"
+  when: sls.response is defined
 
 - name: Configure UAN network boot
   no_log: true
@@ -11,7 +21,7 @@
     password: "{{ bmc_root_password }}"
     bootdev: network
     uefiboot: yes
-  loop: "{{ uan_bmcs }}"
+  loop: "{{ uan_list.results | map(attribute='ansible_facts.uan_bmc') | list }}"
 
 - name: Power off our UANs for discovery
   no_log: true
@@ -20,7 +30,7 @@
     user: "{{ uan_ipmi_user }}"
     password: "{{ bmc_root_password }}"
     state: off
-  loop: "{{ uan_bmcs }}"
+  loop: "{{ uan_list.results | map(attribute='ansible_facts.uan_bmc') | list }}"
 
 - name: Boot our UANs for discovery
   no_log: true
@@ -29,30 +39,7 @@
     user: "{{ uan_ipmi_user }}"
     password: "{{ bmc_root_password }}"
     state: on
-  loop: "{{ uan_bmcs }}"
-
-- name: Get xnames for Application role nodes
-  block:
-    - authorized:
-        endpoint: "sls/v1/search/hardware?extra_properties.Role=Application"
-        method: get
-      register: sls
-    - name: Searching SLS for Application nodes
-      set_fact:
-        uan_xname: "{{ item.Xname }}"
-      register: uan_xnames
-      loop: "{{ sls.response }}"
-      when: sls.response is defined
-  rescue:
-    - name: SLS not available, looking for entries in /etc/hosts
-      shell: grep {{ item }} /etc/hosts
-      loop: "{{ groups.uan }}"
-      register: uan_entries
-    - name: Get UAN xnames from uan_entries
-      set_fact:
-        uan_xname: "{{ item.stdout_lines | regex_replace('^(.*)(x[0-9]+c[0-9]+s[0-9]+b[0-9]+n[0-9]+)(.*)$', '\\2') }}"
-      register: uan_xnames
-      loop: "{{ uan_entries.results }}"
+  loop: "{{ uan_list.results | map(attribute='ansible_facts.uan_bmc') | list }}"
 
 - name: Wait for the UANs to be discovered (20-60 minutes)
   authorized:
@@ -62,7 +49,7 @@
   until: uan_discovery.failed == false
   retries: 180
   delay: 30
-  loop: "{{ uan_xnames.results | map(attribute='ansible_facts.uan_xname') | list }}"
+  loop: "{{ uan_list.results | map(attribute='ansible_facts.uan_xname') | list }}"
 
 - name: Restart conman pod
   shell: "kubectl delete pods -A -l {{ conman_label }}"
@@ -86,7 +73,7 @@
       boot_ordinal: "{{ uan_boot_ordinal }}"
       kernel_parameters: "{{ uan_kernel_parameters }}"
       network: "{{ uan_network }}"
-      node_list: "{{ uan_xnames.results | map(attribute='ansible_facts.uan_xname') | list }}"
+      node_list: "{{ uan_list.results | map(attribute='ansible_facts.uan_xname') | list }}"
       rootfs_provider: "{{ uan_session_boot_set.rootfs_provider | default( uan_rootfs_provider ) }}"
       rootfs_provider_passthrough: "{{ uan_session_boot_set.rootfs_provider_passthrough | default( uan_rootfs_provider_passthrough ) }}"
       etag: "{{ uan_session_boot_set.etag | default('') }}"
@@ -100,7 +87,7 @@
       boot_ordinal: "{{ uan_boot_ordinal }}"
       kernel_parameters: "{{ uan_kernel_parameters }}"
       network: "{{ uan_network }}"
-      node_list: "{{ uan_xnames.results | map(attribute='ansible_facts.uan_xname') | list }}"
+      node_list: "{{ uan_list.results | map(attribute='ansible_facts.uan_xname') | list }}"
       rootfs_provider: "{{ uan_session_boot_set.rootfs_provider | default( uan_rootfs_provider ) }}"
       rootfs_provider_passthrough: "{{ uan_session_boot_set.rootfs_provider_passthrough | default( uan_rootfs_provider_passthrough ) }}"
       ims_image_id: "{{ uan_session_boot_set.ims_image_id }}"

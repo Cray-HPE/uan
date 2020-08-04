@@ -1,6 +1,6 @@
 #
 # RPM spec file for uan ansible deployment
-# Copyright 2018-2020 Cray Inc. All Rights Reserved.
+# Copyright 2018-2020 Cray Inc.
 #
 %define crayctl_dir /opt/cray/crayctl
 %define ansible_dir %{crayctl_dir}/ansible_framework

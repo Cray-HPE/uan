@@ -31,10 +31,19 @@
       path: "{{ customer_var_yml_dir.path }}"
     run_once: true
 
+  - name: Set ldap_port
+    set_fact:
+      ldap_port: 389
+
+  - name: Override ldap_port if ldaps://
+    set_fact:
+      ldap_port: 636
+    when: imported_customer_var.ldap_servers[0] is regex('^ldaps://')
+    
   - name: Make sure we access the ldap servers first
     wait_for:
-      host: "{{ item | regex_replace('^ldap://', '') }}"
-      port: 389
+      host: "{{ item | regex_replace('^ldaps?://', '') }}"
+      port: "{{ ldap_port }}"
       state: started
       delay: 0
       timeout: 3

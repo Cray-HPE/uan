@@ -1,6 +1,6 @@
 #
 # RPM spec file for uan ansible deployment
-# Copyright 2018-2020 Cray Inc. All Rights Reserved.
+# Copyright 2018-2020 Hewlett Packard Enterprise Development LP
 #
 %define crayctl_dir /opt/cray/crayctl
 %define ansible_dir %{crayctl_dir}/ansible_framework
@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Mon Jul 27 2020 0.4.10
+- Support LDAP and LDAPS 
 * Fri Jul 24 2020 0.4.9
 - Remove need for uan Ansible inventory group
 * Fri Jul 24 2020 0.4.8

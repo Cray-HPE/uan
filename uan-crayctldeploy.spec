@@ -48,7 +48,7 @@ cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
 * Tue Aug 04 2020 0.4.10
-- Remove need for uan Ansible inventory group
+- Increase timeout for BOS status endpoint to appear
 * Fri Jul 24 2020 0.4.9
 - Remove need for uan Ansible inventory group
 * Fri Jul 24 2020 0.4.8

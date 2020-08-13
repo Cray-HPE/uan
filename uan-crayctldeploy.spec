@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Wed Aug 12 2020 0.2.12
+- Support bonded CAN interfaces
 * Tue Aug 04 2020 0.2.11
 - Increase timeout for BOS status endpoint to appear
 * Mon Jul 27 2020 0.2.10

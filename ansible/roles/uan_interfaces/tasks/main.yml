@@ -1,4 +1,4 @@
-# Copyright 2020, Cray Inc. All Rights Reserved.
+# Copyright 2020, Hewlett Packard Enterprise Development LP
 ---
 - block:
 # -----------------------------------------------------------------------------
@@ -59,26 +59,95 @@
       path: "{{ customer_var_yml_dir.path }}"
     run_once: true
 
-  - name: Get network facts 
+  - name: Get network facts
     set_fact:
       nmn_svc: "{{ imported_networks.networks.node_management.blocks.ipv4 | selectattr('label','match','services') | list }}"
       nmn_vlan2: "{{ imported_networks.networks.node_management.blocks.ipv4 | selectattr('label','match','river') | list }}"
-      can_version: "{{ imported_networks.can_version }}"
+      mtl_vlan1: "{{ imported_networks.networks.metal_management.blocks.ipv4 | selectattr('label','match','default') | list }}"
 # -----------------------------------------------------------------------------
 
-  - debug:
-      msg: "Customer Access Network - {{ imported_customer_var.customer_access_network }}"
+  - name: Configure ifcfg-eth0
+    copy:
+      src: ifcfg-eth0
+      dest: /etc/sysconfig/network/ifcfg-eth0
+      owner: root
+      group: root
+      mode: '0644'
 
-# Configure CAN v1 - Maps between external and internal (10.7.0.0/16) subnets
-  - include_tasks: can-v1.yml
-    when:
-      - can_version is not defined or can_version == "v1"
+  - name: Configure iproute2 tables
+    lineinfile:
+      path: /etc/iproute2/rt_tables
+      regexp: '^{{ item.pref }}\s+{{ item.name }}'
+      line: "{{ item.pref }}       {{ item.name }}"
+    loop: "{{ rt_tables }}"
+
+  - name: Configure ifroute-eth0
+    template:
+      src: ifroute-eth0-v2.j2
+      dest: /etc/sysconfig/network/ifroute-eth0
+      owner: root
+      mode: 0600
+
+  - name: Tell DHCP client to not set default gateway
+    lineinfile:
+      path: /etc/sysconfig/network/dhcp
+      regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
+      line: DHCLIENT_SET_DEFAULT_ROUTE="no"
+
+  - name: Remove existing default route
+    command: "ip route delete default"
+    changed_when: result.rc != 0 or result.rc == 2
+    failed_when: result.rc != 0 and result.rc != 2
+    register: result
+
+  - name: Get list of possible CAN interfaces
+    shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|vlan'"
+    register: uan_device_list
+
+  - name: Ensure list of possible CAN interfaces are UP
+    shell: "ip link set dev {{ item }} up"
+    register: cmd_out
+    failed_when: cmd_out.rc not in [0, 1]
+    loop: "{{ uan_device_list.stdout_lines }}"
+
+  - name: List possible CAN intefaces
+    debug:
+      msg: "{{uan_device_list.stdout_lines }}"
+
+  - name: Find the 40Gb devices
+    shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
+    register: uan_device_speed
+    loop: "{{ uan_device_list.stdout_lines }}"
+
+  - name: Initialize list of uan_can_devices
+    set_fact:
+      uan_can_devices: []
+
+  - name: Build list of uan_can_devices
+    set_fact:
+      uan_can_devices: "{{ uan_can_devices }} + ['{{ item.item }}']"
+    when: item.stdout | regex_search('Speed:40000Mb')
+    loop: "{{ uan_device_speed.results }}"
+
+  - name: Set second CAN interface, if it is not connected
+    set_fact:
+      uan_2nd_can_ifname: "{{ item | regex_replace('(.+)(\\d+$)', '\\1') }}{{ item | regex_replace('(.+)(\\d+$)', '\\2') | int +1 }}"
+    when: uan_can_devices | length == 1
+    loop: "{{ uan_can_devices }}"
+
+  - name: Add second CAN interface to uan_can_devices
+    set_fact:
+      uan_can_devices: "{{ uan_can_devices }} + ['{{ uan_2nd_can_ifname }}']"
+    when: uan_can_devices | length == 1
+
+  - name: List uan_can_devices
+    debug:
+      msg: "{{ uan_can_devices }}"
 
 # Configure CAN v2 - Uses external subnet on vlan007
   - include_tasks: can-v2.yml
     when:
-      - can_version is defined
-      - can_version == "v2"
+      - uan_can_devices | length >= 1
 
   # Configure Customer defined interfaces, routes, and rules
   - include_tasks: customer_interfaces.yml

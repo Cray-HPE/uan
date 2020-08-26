@@ -1,6 +1,6 @@
 #
 # RPM spec file for uan post-install tests deployment
-# Copyright 2018-2020 Cray Inc. All Rights Reserved.
+# Copyright 2018-2020 Hewlett Packard Enterprise Development LP
 #
 %define test_dir /opt/cray/tests
 

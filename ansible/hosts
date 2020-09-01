@@ -1,0 +1,5 @@
+# This file is only used if the target definition in CFS is "repo".
+# By default, dynamic inventory is used and this file is ignored.
+#
+# [Application]
+# ... add entries here ...

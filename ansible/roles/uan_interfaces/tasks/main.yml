@@ -1,155 +1,140 @@
-# Copyright 2020, Hewlett Packard Enterprise Development LP
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# uan_interfaces tasks
 ---
-- block:
-# -----------------------------------------------------------------------------
-# TODO: remove this section when a sufficient resolution to CASMCMS-4156 comes about
-  - name: WAR create temporary workarea for networks.yml
-    tempfile:
-      state: directory
-      suffix: networks_yml
-      path: "/tmp"
-    register: networks_yml_dir
-    run_once: true
+- name: Get NMN Services Network info from SLS
+  local_action:
+    module: uri
+    url: http://cray-sls/v1/search/networks?name=MetalLB_NMN
+    method: GET
+  register: sls_nmn_svcs
+  failed_when: sls_nmn_svcs.status != 200
 
-  - name: WAR copy networks.yml from NCN host to Ansible master
-    fetch:
-      src: /etc/ansible/hosts/group_vars/all/networks.yml
-      dest: "{{ networks_yml_dir.path }}/networks.yml"
-      flat: yes
-    delegate_to: "{{ vars_yml_src_server }}"
-    run_once: true
+- name: Set NMN Services CIDR from SLS
+  set_fact:
+    nmn_svcs_cidr: "{{ sls_nmn_svcs.json[0].IPRanges[0] }}"
 
-  - name: WAR read in variables from networks.yml
-    include_vars:
-      file: "{{ networks_yml_dir.path }}/networks.yml"
-      name: imported_networks
-    run_once: true
+- name: Get NMN Network info from SLS
+  local_action:
+    module: uri
+    url: http://cray-sls/v1/search/networks?name=NMN
+    method: GET
+  register: sls_nmn
+  failed_when: sls_nmn.status != 200
 
-  - name: WAR remove temporary workarea
-    file:
-      state: absent
-      path: "{{ networks_yml_dir.path }}"
-    run_once: true
+- name: Set NMN CIDR from SLS
+  set_fact:
+    nmn_cidr: "{{ sls_nmn.json[0].IPRanges[0] }}"
 
-  - name: WAR create temporary workarea for customer_var.yml
-    tempfile:
-      state: directory
-      suffix: customer_var_yml
-      path: "/tmp"
-    register: customer_var_yml_dir
-    run_once: true
+- name: Set NMN gateway
+  set_fact:
+    nmn_gateway: "{{ nmn_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
 
-  - name: WAR copy customer_var.yml from NCN host to Ansible master
-    fetch:
-      src: /opt/cray/crayctl/ansible_framework/customer_runbooks/customer_var.yml
-      dest: "{{ customer_var_yml_dir.path }}/customer_var.yml"
-      flat: yes
-    delegate_to: "{{ vars_yml_src_server }}"
-    run_once: true
+- set_fact:
+    nmn_ip: "{{ ansible_all_ipv4_addresses | ipaddr(nmn_cidr) | first }}"
 
-  - name: WAR read in variables from customer_var.yml
-    include_vars:
-      file: "{{ customer_var_yml_dir.path }}/customer_var.yml"
-      name: imported_customer_var
-    run_once: true
+- name: Get last octet of NMN IP
+  set_fact:
+    octet: "{{ nmn_ip.split('.')[3] }}"
 
-  - name: WAR remove temporary workarea
-    file:
-      state: absent
-      path: "{{ customer_var_yml_dir.path }}"
-    run_once: true
+- name: Get Metal Network info from SLS
+  local_action:
+    module: uri
+    url: http://cray-sls/v1/search/networks?name=Metal
+    method: GET
+  register: sls_mtl
+  failed_when: sls_mtl.status != 200
 
-  - name: Get network facts
-    set_fact:
-      nmn_svc: "{{ imported_networks.networks.node_management.blocks.ipv4 | selectattr('label','match','services') | list }}"
-      nmn_vlan2: "{{ imported_networks.networks.node_management.blocks.ipv4 | selectattr('label','match','river') | list }}"
-      mtl_vlan1: "{{ imported_networks.networks.metal_management.blocks.ipv4 | selectattr('label','match','default') | list }}"
-# -----------------------------------------------------------------------------
+- name: Set Metal Management Network CIDR from SLS
+  set_fact:
+    metal_mgmt_cidr: "{{ sls_mtl.json[0].IPRanges[0] }}"
 
-  - name: Configure ifcfg-eth0
-    copy:
-      src: ifcfg-eth0
-      dest: /etc/sysconfig/network/ifcfg-eth0
-      owner: root
-      group: root
-      mode: '0644'
+- name: Get MTL network prefix
+  set_fact:
+    mtl_vlan1_prefix: "{{ metal_mgmt_cidr | ipaddr('prefix') }}"
 
-  - name: Configure iproute2 tables
-    lineinfile:
-      path: /etc/iproute2/rt_tables
-      regexp: '^{{ item.pref }}\s+{{ item.name }}'
-      line: "{{ item.pref }}       {{ item.name }}"
-    loop: "{{ rt_tables }}"
+- name: Configure ifcfg-eth0
+  copy:
+    src: ifcfg-eth0
+    dest: /etc/sysconfig/network/ifcfg-eth0
+    owner: root
+    group: root
+    mode: '0644'
 
-  - name: Configure ifroute-eth0
-    template:
-      src: ifroute-eth0-v2.j2
-      dest: /etc/sysconfig/network/ifroute-eth0
-      owner: root
-      mode: 0600
+- name: Configure iproute2 tables
+  lineinfile:
+    path: /etc/iproute2/rt_tables
+    regexp: '^{{ item.pref }}\s+{{ item.name }}'
+    line: "{{ item.pref }}       {{ item.name }}"
+  loop: "{{ rt_tables }}"
 
-  - name: Tell DHCP client to not set default gateway
-    lineinfile:
-      path: /etc/sysconfig/network/dhcp
-      regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
-      line: DHCLIENT_SET_DEFAULT_ROUTE="no"
+- name: Configure ifroute-eth0
+  template:
+    src: ifroute-eth0.j2
+    dest: /etc/sysconfig/network/ifroute-eth0
+    owner: root
+    mode: 0600
 
-  - name: Remove existing default route
-    command: "ip route delete default"
-    changed_when: result.rc != 0 or result.rc == 2
-    failed_when: result.rc != 0 and result.rc != 2
-    register: result
+- name: Tell DHCP client to not set default gateway
+  lineinfile:
+    path: /etc/sysconfig/network/dhcp
+    regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
+    line: DHCLIENT_SET_DEFAULT_ROUTE="no"
 
-  - name: Get list of possible CAN interfaces
-    shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|vlan'"
-    register: uan_device_list
+- name: Remove existing default route
+  command: "ip route delete default"
+  changed_when: result.rc != 0 or result.rc == 2
+  failed_when: result.rc != 0 and result.rc != 2
+  register: result
 
-  - name: Ensure list of possible CAN interfaces are UP
-    shell: "ip link set dev {{ item }} up"
-    register: cmd_out
-    failed_when: cmd_out.rc not in [0, 1]
-    loop: "{{ uan_device_list.stdout_lines }}"
+- name: Get list of possible CAN interfaces
+  shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|vlan'"
+  register: uan_device_list
 
-  - name: List possible CAN intefaces
-    debug:
-      msg: "{{uan_device_list.stdout_lines }}"
+- name: Ensure list of possible CAN interfaces are UP
+  shell: "ip link set dev {{ item }} up"
+  register: cmd_out
+  failed_when: cmd_out.rc not in [0, 1]
+  loop: "{{ uan_device_list.stdout_lines }}"
 
-  - name: Find the 40Gb devices
-    shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
-    register: uan_device_speed
-    loop: "{{ uan_device_list.stdout_lines }}"
+- name: List possible CAN intefaces
+  debug:
+    msg: "{{uan_device_list.stdout_lines }}"
 
-  - name: Initialize list of uan_can_devices
-    set_fact:
-      uan_can_devices: []
+- name: Find the 40Gb devices
+  shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
+  register: uan_device_speed
+  loop: "{{ uan_device_list.stdout_lines }}"
 
-  - name: Build list of uan_can_devices
-    set_fact:
-      uan_can_devices: "{{ uan_can_devices }} + ['{{ item.item }}']"
-    when: item.stdout | regex_search('Speed:40000Mb')
-    loop: "{{ uan_device_speed.results }}"
+- name: Initialize list of uan_can_devices
+  set_fact:
+    uan_can_devices: []
 
-  - name: Set second CAN interface, if it is not connected
-    set_fact:
-      uan_2nd_can_ifname: "{{ item | regex_replace('(.+)(\\d+$)', '\\1') }}{{ item | regex_replace('(.+)(\\d+$)', '\\2') | int +1 }}"
-    when: uan_can_devices | length == 1
-    loop: "{{ uan_can_devices }}"
+- name: Build list of uan_can_devices
+  set_fact:
+    uan_can_devices: "{{ uan_can_devices }} + ['{{ item.item }}']"
+  when: item.stdout | regex_search('Speed:40000Mb')
+  loop: "{{ uan_device_speed.results }}"
 
-  - name: Add second CAN interface to uan_can_devices
-    set_fact:
-      uan_can_devices: "{{ uan_can_devices }} + ['{{ uan_2nd_can_ifname }}']"
-    when: uan_can_devices | length == 1
+- name: Set second CAN interface, if it is not connected
+  set_fact:
+    uan_2nd_can_ifname: "{{ item | regex_replace('(.+)(\\d+$)', '\\1') }}{{ item | regex_replace('(.+)(\\d+$)', '\\2') | int +1 }}"
+  when: uan_can_devices | length == 1
+  loop: "{{ uan_can_devices }}"
 
-  - name: List uan_can_devices
-    debug:
-      msg: "{{ uan_can_devices }}"
+- name: Add second CAN interface to uan_can_devices
+  set_fact:
+    uan_can_devices: "{{ uan_can_devices }} + ['{{ uan_2nd_can_ifname }}']"
+  when: uan_can_devices | length == 1
+
+- name: List uan_can_devices
+  debug:
+    msg: "{{ uan_can_devices }}"
 
 # Configure CAN v2 - Uses external subnet on vlan007
-  - include_tasks: can-v2.yml
-    when:
-      - uan_can_devices | length >= 1
+- include_tasks: can-v2.yml
+  when:
+    - uan_can_devices | length >= 1
 
-  # Configure Customer defined interfaces, routes, and rules
-  - include_tasks: customer_interfaces.yml
+# Configure Customer defined interfaces, routes, and rules
+- include_tasks: customer_interfaces.yml
 
-  when: not cray_cfs_image

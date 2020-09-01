@@ -1,4 +1,0 @@
-{{ nmn_svc[0].network | ipaddr('network') }} {{ nmn_vlan2[0].gateway }} {{ nmn_svc[0].network | ipaddr('netmask') }} -
-{% if imported_networks.networks.node_management.blocks.ipv4[1].network is defined %}
-{{ imported_networks.networks.node_management.blocks.ipv4[1].network | ipaddr('network') }} {{ nmn_vlan2[0].gateway }} {{ imported_networks.networks.node_management.blocks.ipv4[1].network | ipaddr('netmask') }} -
-{% endif %}

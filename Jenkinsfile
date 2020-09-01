@@ -1,10 +1,12 @@
-@Library("dst-shared") _
-rpmBuild (
-    specfile: "uan-crayctldeploy.spec",
-    channel: "casmcms-builds",
-    slack_notify: ['SUCCESS','FAILURE'],
-    product: "shasta-premium",
-    target_node: "ncn",
-    fanout_params: ["sle15sp1"],
-    recv_triggers: ["cme-premium-cf"]
-)
+
+@Library('dst-shared@master') _
+
+dockerBuildPipeline {
+    repository = "cray"
+    imagePrefix = "cray"
+    app = "uan-config"
+    name = "uan-config"
+    description = "Cray User Access Node Product Installation"
+    product = "shasta-premium"
+    enableSonar = false
+}

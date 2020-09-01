@@ -1,0 +1,8 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Tasks for uan_packages role
+- name: Install additional UAN RPMs
+  zypper:
+    name: "{{ uan_additional_sles15_packages }}"
+    disable_gpg_check: yes
+    state: present
+  when: ansible_distribution == "SLES"

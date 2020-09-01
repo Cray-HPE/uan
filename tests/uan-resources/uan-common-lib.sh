@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # uan-common-lib.sh - UAN common functions
-# Copyright 2020 Cray Inc. 
+# Copyright 2020 Hewlett Packard Enterprise Development LP
 
 # Global variables
 EXIT_CODE=0

@@ -1,4 +1,4 @@
-# Copyright 2020, Cray Inc. All Rights Reserved.
+# Copyright Hewlett Packard Enterprise Development LP
 ---
 - name: Configure customer defined networks on UAN
   block:

@@ -1,0 +1,7 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Defaults for uan_packages role
+
+# List of additional RPMs to install on UANs. Packages that are required for
+# UANs to function should be preferentially installed during image customization
+# and/or image creation.
+uan_additional_sles15_packages: []

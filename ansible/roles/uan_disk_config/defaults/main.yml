@@ -1,7 +1,6 @@
-# Copyright 2019, Cray Inc. All Rights Reserved.
+# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Defaults for uan_disk_config role
 ---
-networks_yml_src_server: ncn-w001
-
 uan_disk: "/dev/sda"
 uan_swap: "/swap"
 uan_scratch: "/scratch"
@@ -10,7 +9,3 @@ swap_file: "swapfile"
 swap_dd_command: "/usr/bin/dd if=/dev/zero of={{ uan_swap }}/{{ swap_file }} bs=1GB count=10"
 swap_swappiness: 10
 
-# List of additional RPMs to install on UANs
-uan_rpms:
-  - wget
-  - cray-switchboard

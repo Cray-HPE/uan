@@ -1,0 +1,102 @@
+#!/usr/bin/env ansible-playbook
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Top-level site.yml for User Access Nodes
+- hosts: Application
+  gather_facts: yes
+  any_errors_fatal: true
+  remote_user: root
+
+  pre_tasks:
+    - name: Disallow login to the UANs during post-boot configuration
+      file:
+        path: /etc/nologin
+        owner: root
+        group: root
+        mode: 0644
+        state: touch
+      when: not cray_cfs_image and uan_login_config_protect|default(true)
+
+    - name: get the DNS information for the chrooted environment
+      local_action:
+        module: command
+        cmd: cat /etc/resolv.conf
+      register: resolv_conf_output
+      when: cray_cfs_image | default(false) | bool
+
+    - name: copy DNS content to chroots
+      copy:
+        dest: /etc/resolv.conf
+        content: "{{ resolv_conf_output.stdout }}"
+      when: cray_cfs_image | default(false) | bool
+
+  post_tasks:
+    - name: Allow user logins to the UANs after configuration
+      file:
+        path: /etc/nologin
+        state: absent
+      when: not cray_cfs_image and uan_login_config_protect|default(true)
+
+    - name: Remove chroot resolv.conf
+      file:
+        path: /etc/resolv.conf
+        state: absent
+      when: cray_cfs_image | default(false) | bool
+
+  roles:
+
+    # Standard UNIX configuration
+    - rsyslog
+    - localtime
+    - ntp
+    - limits
+    - shadow
+    - kdump
+    - ssh-keys
+
+    # DVS/LNET/FS
+    - overlay-preload
+    - role: cray_lnet_load
+      when: cray_cfs_image|default(false)|bool
+    - role: cray_dvs_load
+      when: cray_cfs_image|default(false)|bool
+
+    # UAN-specific configuration
+    - role: ca-cert
+    - role: uan_disk_config
+      when: not cray_cfs_image
+    - role: uan_packages
+    - role: uan_interfaces
+      when: not cray_cfs_image
+    - role: uan_motd
+    - role: uan_ldap
+
+    # Workload managers
+    - role: munged                   # slurm-crayctldeploy
+      when: system_wlm is defined and system_wlm|lower == "slurm"
+    - role: slurm_node               # slurm-crayctldeploy
+      when: system_wlm is defined and system_wlm|lower == "slurm"
+    - role: pbs_client               # pbs-crayctldeploy
+      when: system_wlm is defined and system_wlm|lower == "pbs"
+
+    # High-speed networking
+    - role: ncmp_lldpad              # cf-cme-ncmp-hsn-premium-crayctldeploy
+      when: not cray_cfs_image
+    - role: ncmp_hsn_cns             # cf-cme-ncmp-hsn-premium-crayctldeploy
+      when: not cray_cfs_image
+
+    # Nvidia developer toolkit
+    - role: cray_nvidia_customize  # cf-cme-sysconfig
+      when: gpu is defined and gpu|lower == "nvidia" and cray_cfs_image
+
+    # Filesystem mounts
+    - role: configure_fs
+
+    # Rebuild initrd for image customization
+    - role: rebuild-initrd
+      when: cray_cfs_image | default(false) | bool
+
+  tasks:
+
+  - import_tasks: playbooks/nvidia_deploy.yml
+    when: gpu is defined and gpu|lower == "nvidia" and (not cray_cfs_image | default(false))
+

@@ -1,0 +1,27 @@
+#
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+#
+# Cray services
+enable amd-fix-xGMI-width.service
+enable cfs-state-reporter.service
+enable cray-heartbeat.service
+enable cray-hugepage-setup.service
+enable cray-memory-spread.service
+enable cray-node-identity.service
+enable cray-orca.service
+enable cray-power-mon.service
+enable cray-printk.service
+enable jacsd.service
+enable mlx-set-irq-affinity.service
+enable palsd.service
+enable cray-switchboard-sshd.service
+# non-Cray services
+enable acpid.service
+enable chronyd.service
+disable firewalld.service
+enable kdump.service
+enable ldmsd-bootstrap.service
+enable ras-mc-ctl.service
+enable rasdaemon.service
+enable sshd.service
+enable wicked.service

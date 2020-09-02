@@ -21,7 +21,6 @@ enable chronyd.service
 disable firewalld.service
 enable kdump.service
 enable ldmsd-bootstrap.service
-enable msr-safe.service
 enable ras-mc-ctl.service
 enable rasdaemon.service
 enable sshd.service

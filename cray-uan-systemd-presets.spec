@@ -31,7 +31,7 @@ system features.
 %build
 
 %install
-%{__install} -m 0644 -D -t %{buildroot}%{_presetdir} systemd-presets-premium/src/*.preset
+%{__install} -m 0644 -D -t %{buildroot}%{_presetdir} systemd-presets/src/*.preset
 
 %files
 %defattr(-,root,root)

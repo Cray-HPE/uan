@@ -418,7 +418,7 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
     </packages>
     <packages type="bootstrap">
         <!-- SECTION: Cray Bootstrap Packages -->
-        <package name="cray-systemd-presets"/>
+        <package name="cray-uan-systemd-presets"/>
 
         <!-- SECTION: External Bootstrap Packages -->
         <package name="branding-SLE"/>

@@ -12,8 +12,6 @@ Release: %(echo ${BUILD_METADATA})
 Source: %{name}-%{version}.tar.bz2
 Vendor: Cray Inc.
 
-Requires: uan-crayctldeploy
-
 %description
 
 %files

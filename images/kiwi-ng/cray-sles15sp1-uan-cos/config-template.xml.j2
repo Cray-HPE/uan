@@ -73,7 +73,7 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
     uncommented.
 
 -->
-<image schemaversion="6.8" name="Cray-shasta-uan-cos-sles15sp1">
+<image schemaversion="6.8" name="cray-shasta-uan-cos-sles15sp1">
     <description type="system">
         <author>Cray Inc</author>
         <contact>keopp@@hpe.com</contact>
@@ -117,27 +117,16 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
         <user password="$2y$12$zIitnBqEOgiB9FtnGIKjyO0wSuqutDKSeCwp8m9dEK4zaS/lnAk/W" home="/root" name="root" groups="root"/>
     </users>
 
-
-    <!-- Cray SLES15sp1 CN, Nexus repo -->
-    <repository type="rpm-md" alias="cos-1.3-sle-15sp1-compute" priority="2" imageinclude="true">
-        <source path="https://packages.local/repository/cos-1.3-sle-15sp1-compute/"/>
+<!--
+Repositories are added dynamically based on if the build is being done in the
+pipeline (CJE) or on the Shasta system (Shasta)
+-->
+{% for repo in values['repos'] %}
+    <!-- {{ repo['details'] }} -->
+    <repository type="rpm-md" alias="{{ repo['alias'] }}" priority="{{ repo['priority'] }}" imageinclude="{{ repo['imageinclude'] }}">
+        <source path="{{ repo['path'] }}"/>
     </repository>
-
-    <!-- Cray SMA SLES15sp1 CN, Nexus repo -->
-    <repository type="rpm-md" alias="sma-1.3-sle-15sp1-compute" priority="2" imageinclude="true">
-        <source path="https://packages.local/repository/sma-1.3-sle-15sp1-compute/"/>
-    </repository>
-
-    <!-- SUSE SLE15sp1 packages, Nexus repo -->
-    <repository type="rpm-md" alias="mirror-1.3-le-15sp1-all-products" priority="3" imageinclude="true">
-        <source path="https://packages.local/repository/mirror-1.3-sle-15sp1-all-products/"/>
-    </repository>
-
-    <!-- SUSE SLE15sp1 packages, Nexus repo -->
-    <repository type="rpm-md" alias="mirror-1.3-sle-15sp1-all-updates" priority="3" imageinclude="true">
-        <source path="https://packages.local/repository/mirror-1.3-sle-15sp1-all-updates/"/>
-    </repository>
-
+{% endfor %}
 
     <!--
     NOTE: XML doesn't allow nested comments the following commands
@@ -204,12 +193,6 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
         <package name="jq"/>
         <package name="libs3"/>
         <package name="makedumpfile"/>
-        <package name="msr-safe"/>
-        <package name="msr-safe-kmp-cray_shasta_c"/>
-        <package name="msr-tools"/>
-        <package name="rasdaemon"/>
-        <package name="syscfg"/>
-
         <!-- SECTION: LDMS Packages -->
         <package name="cray-ldms"/>
         <package name="genders"/>

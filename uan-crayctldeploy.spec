@@ -6,12 +6,12 @@
 %define ansible_dir %{crayctl_dir}/ansible_framework
 
 Name: uan-crayctldeploy
-License: Cray Software License Agreement
+License: HPE Proprietary
 Summary: User Access Node ansible plays
 Version: %(cat .rpm_version_uan-crayctldeploy)
 Release: %(echo ${BUILD_METADATA})
 Source: %{name}-%{version}.tar.bz2
-Vendor: Cray Inc.
+Vendor: Hewlett Packard Enterprise Company
 
 BuildRequires: cme-premium-cf-crayctldeploy-buildmacro
 
@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Tue Sep 22 2020 0.2.13
+- Support additional fields in sssd.conf
 * Wed Aug 12 2020 0.2.12
 - Support bonded CAN interfaces
 * Tue Aug 04 2020 0.2.11

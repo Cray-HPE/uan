@@ -3,6 +3,16 @@
 #   @***@ variables in this file are sed replaced using this repository's
 #   runBuildPrep.sh script.
 #
+
+# For products that import Kiwi recipes and built-out images
+cray-import-kiwi-recipe-image:
+  import_image:
+    name: "@kiwi_import_image_name@"
+    tag: "@kiwi_import_image_tag@"
+  import_job:
+    name: "@product_name@-image-recipe-import-@product_version@"
+
+# For products that import Ansible configuration content
 cray-import-config:
   config_image:
     name: "@config_image_name@"

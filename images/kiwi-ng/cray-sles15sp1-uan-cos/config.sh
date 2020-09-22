@@ -89,9 +89,13 @@ baseCleanMount
 # remove bogus hostname that breaks setting dhcp hostname
 rm -f /etc/hostname /etc/HOSTNAME
 
+# update zypper repos
+zypper --verbose clean --all
+rm -r /etc/zypp/repos.d/*
+cp /dev/null /var/log/zypper.log
 /root/bin/zypper-addrepo.sh
 
-# Add images.sh into OS tarball for CFS compute image customization
+# Add images.sh into OS tarball for image customization through CFS
 cp /image/images.sh /tmp/images.sh
 chmod 700 /tmp/images.sh
 

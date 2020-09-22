@@ -1,6 +1,4 @@
-
 @Library('dst-shared@master') _
-
 dockerBuildPipeline {
     repository = "cray"
     imagePrefix = "cray"
@@ -9,4 +7,6 @@ dockerBuildPipeline {
     description = "Cray User Access Node Product Installation"
     product = "shasta-premium"
     enableSonar = false
+    dockerfile = "Dockerfile.config_framework"
+    buildPrepScript = "runBuildPrep-config_framework.sh"
 }

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -ex
+
+{% for repo in values['repos'] %}
+{% if repo['imageinclude'] == 'true' %}
+zypper addrepo --priority {{ repo['priority'] }} {{ repo['path'] }} {{ repo['alias'] }}
+{% endif %}
+{% endfor %}
+
+exit 0

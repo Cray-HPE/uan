@@ -1,4 +1,4 @@
-# Copyright 2020, Cray Inc. All Rights Reserved.
+# Copyright 2020, Hewlett Packard Enterprise Development LP
 ---
 - name: Configure customer defined networks on UAN
   block:
@@ -9,7 +9,7 @@
       dest: "/etc/sysconfig/network/ifcfg-{{ item.name }}"
       mode: 0644
     when: item.name is defined
-    loop: "{{ customer_uan_interfaces }}"
+    loop: "{{ imported_customer_var.customer_uan_interfaces }}"
 
   - name: Ensure ifroute-x file exists
     copy:
@@ -20,7 +20,7 @@
       owner: root
       mode: 0600
     when: item.name is defined
-    loop: "{{ customer_uan_routes }}"
+    loop: "{{ imported_customer_var.customer_uan_routes }}"
 
   - name: Setup ifroute-x
     lineinfile:
@@ -30,7 +30,7 @@
       line: "{{ item.1 }}"
     when: item.0.name is defined
     with_subelements:
-      - "{{ customer_uan_routes }}"
+      - "{{ imported_customer_var.customer_uan_routes }}"
       - routes
 
   - name: Ensure ifrule-x file exists
@@ -42,7 +42,7 @@
       owner: root
       mode: 0600
     when: item.name is defined
-    loop: "{{ customer_uan_rules }}"
+    loop: "{{ imported_customer_var.customer_uan_rules }}"
 
   - name: Setup ifrule-x
     lineinfile:
@@ -52,7 +52,7 @@
       line: "{{ item.1 }}"
     when: item.0.name is defined
     with_subelements:
-      - "{{ customer_uan_rules }}"
+      - "{{ imported_customer_var.customer_uan_rules }}"
       - rules
 
   - name: Ensure routes file exists
@@ -64,7 +64,7 @@
       owner: root
       mode: 0600
     when: item.routes is defined
-    loop: "{{ customer_uan_global_routes }}"
+    loop: "{{ imported_customer_var.customer_uan_global_routes }}"
 
   - name: Setup routes
     lineinfile:
@@ -74,7 +74,7 @@
       line: "{{ item.1 }}"
     when: item.1 is defined
     with_subelements: 
-      - "{{ customer_uan_global_routes }}"
+      - "{{ imported_customer_var.customer_uan_global_routes }}"
       - routes
 
   - name: Restart customer interfaces to set the interface config and routes
@@ -83,13 +83,13 @@
     failed_when: result.rc != 0
     register: result
     when: item.name is defined
-    loop: "{{ customer_uan_interfaces }}"
+    loop: "{{ imported_customer_var.customer_uan_interfaces }}"
 
   - name: Check that the customer interfaces have the expected IPs
     shell: "ip addr show {{ item.name }} | grep -q {{ item.ipaddr }}/{{ item.prefixlen }}"
     failed_when: result.rc != 0
     register: result
     when: item.name is defined
-    loop: "{{ customer_uan_interfaces }}"
+    loop: "{{ imported_customer_var.customer_uan_interfaces }}"
   
   when: not cray_cfs_image

@@ -2,7 +2,7 @@
 # Tasks for uan_motd file
 ---
 - name: Append motd content
-  when: uan_motd_content
+  when: uan_motd_content|length > 0
   lineinfile:
     backup: yes
     create: yes

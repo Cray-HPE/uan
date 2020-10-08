@@ -4,7 +4,11 @@
 
 [sssd]
   config_file_version = 2
+{% if imported_customer_var.sssd_services is defined %}
+  services = {% for item in imported_customer_var.sssd_services %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
+{% else %}
   services = nss, pam
+{% endif %}
   domains = {{ imported_customer_var.domain }} 
 
 [nss]
@@ -15,18 +19,38 @@
 
 [domain/{{ imported_customer_var.domain }}]
   ldap_search_base={{ imported_customer_var.search_base }}
+{% if imported_customer_var.user_search_base is defined %}
+  ldap_user_search_base={{ imported_customer_var.user_search_base }}
+{% endif %}
+{% if imported_customer_var.group_search_base is defined %}
+  ldap_group_search_base={{ imported_customer_var.group_search_base }}
+{% endif %}
+{% if imported_customer_var.user_ssh_public_key is defined %}
+  ldap_user_ssh_public_key={{ imported_customer_var.user_ssh_public_key }}
+{% endif %}
+{% if imported_customer_var.ldap_servers is defined %}
   ldap_uri={% for item in imported_customer_var.ldap_servers %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
-  id_provider = ldap
-  auth_provider = ldap
+{% endif %}
+  id_provider = {{ imported_customer_var.id_provider | default("ldap") }}
+{% if imported_customer_var.auth_provider is defined %}
+  auth_provider = {{ imported_customer_var.auth_provider }}
+{% endif %}
   ldap_tls_reqcert = allow
   ldap_schema = rfc2307
+  cache_credentials = {{ imported_customr_var.cache_credentials | default(true) }}
+  entry_cache_timeout = {{ imported_customer_var.entry_cache_timeout | default(60) }} 
+  enumerate = {{ imported_customer_var.enumerate | default(false) }} 
+{% if imported_customer_var.memcache_timeout is defined %}
+  memcache_timeout = {{ imported_customer_var.memcache_timeout }}
+{% endif %}
 {% if ldap_port != 389 %}
-  entry_cache_timeout = 60 
-  cache_credentials = true 
   case_sensitive = true 
-  enumerate = false 
   ldap_use_tokengroups = false 
 {% endif %}
 {% if imported_customer_var.ldap_chpass_uri is defined %}
   ldap_chpass_uri={% for item in imported_customer_var.ldap_chpass_uri %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
+{% endif %}
+{% if imported_customer_var.krb5_server is defined %}
+  krb5_server={% for item in imported_customer_var.krb5_server %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
+  krb5_realm={{ imported_customer_var.krb5_realm }}
 {% endif %}

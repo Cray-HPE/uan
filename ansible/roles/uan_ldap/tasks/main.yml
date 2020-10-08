@@ -1,3 +1,5 @@
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Tasks for uan_ldap role
 ---
 - name: Configure LDAP
   block:

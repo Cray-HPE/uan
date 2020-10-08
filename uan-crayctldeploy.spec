@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Thu Oct 09 2020 0.2.15
+- Support filterable disk selection during configuration
 * Thu Oct 08 2020 0.2.14
 - Support CAN over NMN NIC when bonded interface not available
 * Tue Sep 22 2020 0.2.13
@@ -56,7 +58,7 @@ cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 * Tue Aug 04 2020 0.2.11
 - Increase timeout for BOS status endpoint to appear
 * Mon Jul 27 2020 0.2.10
-- Support LDAP and LDAPS 
+- Support LDAP and LDAPS
 * Fri Jul 24 2020 0.2.9
 - Update DVS rather than restart it
 * Wed Jul 22 2020 0.2.8
@@ -70,7 +72,7 @@ cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 * Thu Jul 02 2020 0.2.4
 - Get Application node xnames from SLS, if possible
 * Wed Jul 01 2020 0.2.3
-- Wait on new BOS status 
+- Wait on new BOS status
 * Thu Jun 18 2020 0.2.2
 - Configure routing on eth0 for local services and mountain management
 * Thu Jun 18 2020 0.2.1

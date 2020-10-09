@@ -1,3 +1,4 @@
+# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
 ---
 - name: UAN Post-boot configuration
   block:
@@ -71,10 +72,35 @@
         backrefs: yes
 # -----------------------------------------------------------------------------
 
-  - name: Check if {{ uan_disk }} exists
-    stat: 
+  - name: Check for available disks
+    device_filter:
+      device_data: "{{ ansible_devices }}"
+      device_name_filter: "{{ uan_device_name_filter }}"
+      device_host_filter: "{{ uan_device_host_filter }}"
+      device_model_filter: "{{ uan_device_model_filter }}"
+      device_vendor_filter: "{{ uan_device_vendor_filter }}"
+      device_size_filter: "{{ uan_device_size_filter }}"
+    register: uan_disk_options
+
+  - name: Fail if no disks are available
+    fail:
+      msg: No disks match the criteria given, and a disk is required for scratch/swap
+    when:
+      - uan_disk_options.devices == {}
+      - uan_require_disk
+
+  - name: Select first available disk
+    set_fact:
+      uan_disk: "/dev/{{ uan_disk_options.devices | first }}"
+    when:
+      - uan_disk_options.devices != {}
+
+  - name: Stat {{ uan_disk }}
+    stat:
       path: "{{ uan_disk }}"
     register: uan_disk_stat
+    when:
+      - uan_disk_options.devices != {}
 
   - block:
     - name: Check if swap and scratch are mounted
@@ -170,7 +196,10 @@
         name: vm.swappiness
         value: "{{ swap_swappiness }}"
 
-    when: uan_disk_stat.stat.isblk is defined and uan_disk_stat.stat.isblk == True
+    when:
+      - uan_disk_options.devices != {}
+      - uan_disk_stat.stat.isblk is defined
+      - uan_disk_stat.stat.isblk == True
 
   - name: Install additional UAN RPMs
     zypper:

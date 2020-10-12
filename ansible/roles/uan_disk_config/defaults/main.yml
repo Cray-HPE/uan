@@ -1,7 +1,13 @@
 # Copyright 2019-2020 Hewlett Packard Enterprise Development LP
 # Defaults for uan_disk_config role
 ---
-uan_disk: "/dev/sda"
+uan_device_name_filter: "^sd[a-f]$"
+uan_device_host_filter: ""
+uan_device_model_filter: ""
+uan_device_vendor_filter: ""
+uan_device_size_filter: "<1TB"
+
+uan_require_disk: false
 uan_swap: "/swap"
 uan_scratch: "/scratch"
 

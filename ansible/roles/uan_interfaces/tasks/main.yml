@@ -112,6 +112,7 @@
 - name: Build list of uan_can_devices
   set_fact:
     uan_can_devices: "{{ uan_can_devices }} + ['{{ item.item }}']"
+    uan_can_if: 'bond0'
   when: item.stdout | regex_search('Speed:40000Mb')
   loop: "{{ uan_device_speed.results }}"
 
@@ -124,7 +125,14 @@
 - name: Add second CAN interface to uan_can_devices
   set_fact:
     uan_can_devices: "{{ uan_can_devices }} + ['{{ uan_2nd_can_ifname }}']"
+    uan_can_if: 'bond0'
   when: uan_can_devices | length == 1
+
+- name: Fall back to NMN interface for CAN if no 40Gb devices found
+  set_fact:
+    uan_can_devices: "{{ uan_can_devices }} + ['eth0']"
+    uan_can_if: 'eth0'
+  when: uan_can_devices | length == 0
 
 - name: List uan_can_devices
   debug:

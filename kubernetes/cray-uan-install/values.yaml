@@ -35,18 +35,6 @@ cray-import-config:
 # gitea. This should all be removed and replaced by ansible tasks that pull the
 # pertinent HSN interface info for the target node.
 
-# FIXME TODO CASMCMS-5645
-# Values for the customer network are still being pulled from the ncn-w001 (yuck)
-# filesystem. This requires an initContainer to pull the file and place it in
-# the group_vars before the main container imports it into Gitea. This info
-# should instead be pulled from SLS during configuration.
-
-# FIXME TODO CASMCMS-5660
-# Values for the Mountain NMN are still being pulled from networks.yml on
-# ncn-w001 (yuck). This requires an initContainer to pull the file and place
-# it in the group_vars before the main container imports it into Gitea. This
-# info should instead be pulled from something like SLS during configuration.
-
 # FIXME TODO CASMCMS-5755
 # The ssh-keys role copies /etc/ssh/*key* files to the node during image
 # customization. During the cme-premium-deployment Ansible playbook during
@@ -55,7 +43,7 @@ cray-import-config:
 # further copy them to the image/node.
 
     nodeSelector:
-      kubernetes.io/hostname: ncn-w001  ## FIXME CASMCMS-5737 CASMCMS-5645 CASMCMS-5755
+      kubernetes.io/hostname: ncn-w001  ## FIXME CASMCMS-5737 CASMCMS-5755
 
     additionalVolumes:
     - name: war-ncmp-nhi-to-cfs-dir     ## FIXME CASMCMS-5737
@@ -69,14 +57,6 @@ cray-import-config:
     - name: war-ssh-pubkey-to-cfs-dir   ## FIXME CASMCMS-5755
       hostPath:
         path: /root/.ssh
-        type: Directory
-    - name: war-customer-var-to-cfs-dir ## FIXME CASMCMS-5645
-      hostPath:
-        path: /opt/cray/crayctl/ansible_framework/customer_runbooks
-        type: Directory
-    - name: war-networks-yml-to-cfs-dir ## FIXME CASMCMS-5660
-      hostPath:
-        path: /etc/ansible/hosts/group_vars/all
         type: Directory
 
     initContainers:
@@ -109,32 +89,3 @@ cray-import-config:
         name: war-ssh-pubkey-to-cfs-dir
       - mountPath: /shared
         name: config-overlay
-
-    - name: customer-var-to-cfs         ## FIXME CASMCMS-5645
-      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
-      command:
-      - bin/sh
-      - -c
-      - |
-        mkdir -p /shared/group_vars/Application && \
-        grep customer_access /tmp/customer_runbooks/customer_var.yml > /shared/group_vars/Application/customer_var.yml
-      volumeMounts:
-      - mountPath: /tmp/customer_runbooks
-        name: war-customer-var-to-cfs-dir
-      - mountPath: /shared
-        name: config-overlay
-
-    - name: networks-yml-to-cfs         ## FIXME CASMCMS-5660
-      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
-      command:
-      - bin/sh
-      - -c
-      - |
-        mkdir -p /shared/group_vars/Application && \
-        cp -a /tmp/networks/networks.yml /shared/group_vars/Application/networks.yml
-      volumeMounts:
-      - mountPath: /tmp/networks
-        name: war-networks-yml-to-cfs-dir
-      - mountPath: /shared
-        name: config-overlay
-

@@ -16,3 +16,10 @@ uan_ad_groups: []
 #   servers: ["ldap://123.123.123.1", "ldap://213.312.123.132"]
 uan_ldap_config: []
 
+## uan_pam_modules example:
+# 
+# uan_pam_modules:
+#   - name: "common-account"
+#     lines:
+#       - "account required\tpam_access.so"
+uan_pam_modules: []

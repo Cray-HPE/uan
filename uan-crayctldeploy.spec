@@ -47,6 +47,8 @@ cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
 
 %changelog
+* Thu Oct 15 2020 0.2.16
+- Fix customer_interfaces.yml to not read imported customer_var.yml
 * Thu Oct 09 2020 0.2.15
 - Support filterable disk selection during configuration
 * Thu Oct 08 2020 0.2.14

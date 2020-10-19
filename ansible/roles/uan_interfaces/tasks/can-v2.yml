@@ -1,27 +1,56 @@
 # Copyright 2020 Hewlett Packard Enterprise Development LP
 ---
+- name: Get Customer Access Network info from SLS
+  local_action:
+    module: uri
+    url: http://cray-sls/v1/search/networks?name=CAN
+    method: GET
+  register: sls_can
+
+- name: Set Customer Access Network CIDR from SLS, if network exists
+  set_fact:
+    customer_access_network: "{{ sls_can.json[0].ExtraProperties.Subnets[0].CIDR }}"
+  when: sls_can.status == 200
+
+- name: Set Customer Access Network Gateway from SLS, if network exists
+  set_fact:
+    customer_access_gateway: "{{ sls_can.json[0].ExtraProperties.Subnets[0].Gateway }}"
+  when: sls_can.status == 200
+
+- debug:
+    msg: "No Customer Access Network defined, skipping CAN configuration."
+  when:
+    - customer_access_network is not defined
+    - customer_access_gateway is not defined
+
 - name: Configure CAN v2 on UANs
   block:
 
-  - debug:
-     msg: "Customer Access Network - {{ customer_access_network }}"
-
   # Uses the nth IP of the customer_access_network subnet where n is the last octet of the NMN IP
-  # FIXME TODO: get the CAN IP from SLS - CASMCMS-5645
   - name: Get CAN IP
     set_fact:
         can_ip: "{{ customer_access_network | ipaddr(octet|int) | ipaddr('address') }}"
 
-  # FIXME TODO: get the CAN Prefix from SLS - CASMCMS-5645
   - name: Get CAN Prefix
     set_fact:
         can_prefix: "{{ customer_access_network | ipaddr('prefix') }}"
 
-  # FIXME TODO: get the Mountain NMN network info from SLS or anything but networks.yml - CASMCMS-5660
-  - name: Get Mountain NMN network
-    when: networks.node_management.blocks.ipv4[1].network is defined
+  - name: Get customer_access_metallb_address_pool
     set_fact:
-      mountain_network: networks.node_management.blocks.ipv4[1].network
+      customer_access_metallb_address_pool: "{{ sls_can.json[0].ExtraProperties.Subnets[1].CIDR }}"
+    when: sls_can.status == 200
+
+  - name: Get Mountain NMN Services Network info from SLS
+    local_action:
+      module: uri
+      url: http://cray-sls/v1/search/networks?name=MNMN
+      method: GET
+    register: sls_mnmn_svcs
+
+  - name: Set Mountain NMN Services CIDR from SLS, if network exists
+    set_fact:
+      mnmn_svcs_cidr: "{{ sls_mnmn_svcs.json[0].IPRanges[0] }}"
+    when: sls_mnmn_svcs.status == 200
 
   - name: Get MTL IP
     set_fact:

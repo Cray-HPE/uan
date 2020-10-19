@@ -1,4 +1,4 @@
 {{ nmn_svcs_cidr | ipaddr('network') }} {{ nmn_gateway }} {{ nmn_svcs_cidr | ipaddr('netmask') }} -
-{% if mountain_network is defined %}
-{{ mountain_network | ipaddr('network') }} {{ nmn_gateway }} {{ mountain_network | ipaddr('netmask') }} -
+{% if mnmn_svcs_cidr is defined %}
+{{ mnmn_svcs_cidr | ipaddr('network') }} {{ nmn_gateway }} {{ mnmn_svcs_cidr | ipaddr('netmask') }} -
 {% endif %}

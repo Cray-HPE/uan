@@ -28,6 +28,7 @@ Requires: shasta-authorization-module
 %{ansible_dir}
 %{cme_premium_plays_dir}
 %{cme_premium_roles_dir}
+%{cme_premium_library_dir}
 
 %prep
 %setup -q
@@ -40,13 +41,17 @@ cp -R ansible %{buildroot}%{ansible_dir}
 
 install -D -m 644 ansible/customer_runbooks/uan_config.yml %{buildroot}%{cme_premium_plays_dir}/uan_config.yml
 mkdir -p %{buildroot}%{cme_premium_roles_dir}
+mkdir -p %{buildroot}%{cme_premium_library_dir}
 cp -R ansible/roles/uan_config %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_interfaces %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_ldap %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_motd %{buildroot}%{cme_premium_roles_dir}
 cp -R ansible/roles/uan_nologin %{buildroot}%{cme_premium_roles_dir}
+install -D -m 644 ansible/library/device_filter.py %{buildroot}%{cme_premium_library_dir}/device_filter.py
 
 %changelog
+* Wed Oct 21 2020 0.2.17
+- Fix location of device_filter.py so it gets to AEE
 * Thu Oct 15 2020 0.2.16
 - Fix customer_interfaces.yml to not read imported customer_var.yml
 * Thu Oct 09 2020 0.2.15

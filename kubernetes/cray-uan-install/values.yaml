@@ -11,6 +11,8 @@ cray-import-kiwi-recipe-image:
     tag: "@kiwi_import_image_tag@"
   import_job:
     name: "@product_name@-image-recipe-import-@product_version@"
+    PRODUCT_NAME: "@product_name@"
+    PRODUCT_VERSION: "@product_version@"
 
 # For products that import Ansible configuration content
 cray-import-config:
@@ -23,69 +25,3 @@ cray-import-config:
     CF_IMPORT_PRODUCT_VERSION: "@product_version@"
     CF_IMPORT_GITEA_REPO: "@product_name@-config-management"
 
-#### EVERYTHING BELOW THIS POINT IS A WORKAROUND ####
-
-# FIXME TODO CASMCMS-5737
-# The following is necessary to populate the node HSN information
-# while the Slingshot installer is in development. Remove with
-# CASMCMS-5737 after SSHOTMGP-2729 is complete.
-# What it do: run nhi_to_cfs.py on the contents of /opt/cray/crayctl/files/node_hsn_interface.yaml
-# located on ncn-w001 (yuck) and put it in /shared/host_vars, which is copied
-# to /content/host_vars and imported via the cf-gitea-import container into
-# gitea. This should all be removed and replaced by ansible tasks that pull the
-# pertinent HSN interface info for the target node.
-
-# FIXME TODO CASMCMS-5755
-# The ssh-keys role copies /etc/ssh/*key* files to the node during image
-# customization. During the cme-premium-deployment Ansible playbook during
-# system Stage 5 install, these files are copied from ncn-w001 and placed into
-# a location where they are imported into Gitea for the ssh-keys role to
-# further copy them to the image/node.
-
-    nodeSelector:
-      kubernetes.io/hostname: ncn-w001  ## FIXME CASMCMS-5737 CASMCMS-5755
-
-    additionalVolumes:
-    - name: war-ncmp-nhi-to-cfs-dir     ## FIXME CASMCMS-5737
-      hostPath:
-        path: /opt/cray/crayctl/files
-        type: Directory
-    - name: war-ssh-keys-to-cfs-dir     ## FIXME CASMCMS-5755
-      hostPath:
-        path: /etc/ssh
-        type: Directory
-    - name: war-ssh-pubkey-to-cfs-dir   ## FIXME CASMCMS-5755
-      hostPath:
-        path: /root/.ssh
-        type: Directory
-
-    initContainers:
-    - name: ncmp-nhi-to-cfs             ## FIXME CASMCMS-5737
-      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
-      command:
-      - bin/sh
-      - -c
-      - |
-        python3 /content/roles/ncmp_nhi_to_cfs/files/nhi_to_cfs.py -nhif /tmp/nhi/node_hsn_interface.yaml -cfsp /shared/host_vars -intf all
-      volumeMounts:
-      - mountPath: /tmp/nhi
-        name: war-ncmp-nhi-to-cfs-dir
-      - mountPath: /shared
-        name: config-overlay
-
-    - name: ssh-keys-to-cfs             ## FIXME CASMCMS-5755
-      image: "dtr.dev.cray.com/cray/@config_image_name@:@config_image_tag@"
-      command:
-      - bin/sh
-      - -c
-      - |
-        mkdir -p /shared/roles/ssh-keys/templates && \
-        cp -a /tmp/root/.ssh/id_rsa.pub /shared/roles/ssh-keys/templates/authorized_keys.j2 && \
-        for k in $(ls /tmp/host-ssh/ssh_host_*_key*); do cp -a $k /shared/roles/ssh-keys/templates/$(basename $k).j2; done;
-      volumeMounts:
-      - mountPath: /tmp/host-ssh
-        name: war-ssh-keys-to-cfs-dir
-      - mountPath: /tmp/root/.ssh
-        name: war-ssh-pubkey-to-cfs-dir
-      - mountPath: /shared
-        name: config-overlay

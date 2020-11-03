@@ -10,7 +10,7 @@ kiwiImageRecipeBuildPipeline {
   dockerfile="Dockerfile.image-recipe"
 
   // Product designation
-  product="shasta-uan"
+  product="uan"
   productVersionFile="uan_product_version"
 
   // Location and name of the recipe/image for the IMS manifest

@@ -5,7 +5,7 @@ dockerBuildPipeline {
   app = "uan-config"
   name = "uan-config"
   description = "Shasta User Access Node (UAN) Helm Chart and Configuration Content"
-  product = "shasta-premium"
+  product = "uan"
   enableSonar = false
   dockerfile = "Dockerfile.config-framework"
   buildPrepScript = "runBuildPrep-config-framework.sh"

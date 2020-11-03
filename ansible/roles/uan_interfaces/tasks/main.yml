@@ -1,231 +1,74 @@
 # Copyright 2020 Hewlett Packard Enterprise Development LP
 # uan_interfaces tasks
 ---
-- name: Get NMN Services Network info from SLS
-  local_action:
-    module: uri
-    url: http://cray-sls/v1/search/networks?name=MetalLB_NMN
-    method: GET
-  register: sls_nmn_svcs
-  failed_when: sls_nmn_svcs.status != 200
+- block:
+  - name: Get NMN Services Network info from SLS
+    local_action:
+      module: uri
+      url: http://cray-sls/v1/search/networks?name=MetalLB_NMN
+      method: GET
+    register: sls_nmn_svcs
+    failed_when: sls_nmn_svcs.status != 200
 
-- name: Set NMN Services CIDR from SLS
-  set_fact:
-    nmn_svcs_cidr: "{{ sls_nmn_svcs.json[0].IPRanges[0] }}"
+  - name: Get NMN Services CIDR from SLS
+    set_fact:
+      nmn_svcs_cidr: "{{ sls_nmn_svcs.json[0].IPRanges[0] }}"
 
-- name: Get NMN Network info from SLS
-  local_action:
-    module: uri
-    url: http://cray-sls/v1/search/networks?name=NMN
-    method: GET
-  register: sls_nmn
-  failed_when: sls_nmn.status != 200
+  - name: Get NMN Network info from SLS
+    local_action:
+      module: uri
+      url: http://cray-sls/v1/search/networks?name=NMN
+      method: GET
+    register: sls_nmn
+    failed_when: sls_nmn.status != 200
 
-- name: Set NMN CIDR from SLS
-  set_fact:
-    nmn_cidr: "{{ sls_nmn.json[0].IPRanges[0] }}"
+  - name: Get NMN CIDR from SLS
+    set_fact:
+      nmn_cidr: "{{ sls_nmn.json[0].IPRanges[0] }}"
 
-- name: Set NMN gateway
-  set_fact:
-    nmn_gateway: "{{ nmn_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
+  - name: Get NMN gateway
+    set_fact:
+      nmn_gateway: "{{ nmn_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
 
-- set_fact:
-    nmn_ip: "{{ ansible_all_ipv4_addresses | ipaddr(nmn_cidr) | first }}"
+  - name: Configure ifcfg-eth0
+    copy:
+      src: ifcfg-eth0
+      dest: /etc/sysconfig/network/ifcfg-eth0
+      owner: root
+      group: root
+      mode: '0644'
 
-- name: Get last octet of NMN IP
-  set_fact:
-    octet: "{{ nmn_ip.split('.')[3] }}"
+  - name: Configure iproute2 tables
+    lineinfile:
+      path: /etc/iproute2/rt_tables
+      regexp: '^{{ item.pref }}\s+{{ item.name }}'
+      line: "{{ item.pref }}       {{ item.name }}"
+    loop: "{{ rt_tables }}"
 
-- name: Get Metal Network info from SLS
-  local_action:
-    module: uri
-    url: http://cray-sls/v1/search/networks?name=Metal
-    method: GET
-  register: sls_mtl
-  failed_when: sls_mtl.status != 200
+  - name: Configure ifroute-eth0
+    template:
+      src: ifroute-eth0.j2
+      dest: /etc/sysconfig/network/ifroute-eth0
+      owner: root
+      mode: 0600
 
-- name: Set Metal Management Network CIDR from SLS
-  set_fact:
-    metal_mgmt_cidr: "{{ sls_mtl.json[0].IPRanges[0] }}"
+  - name: Tell DHCP client to not set default gateway
+    lineinfile:
+      path: /etc/sysconfig/network/dhcp
+      regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
+      line: DHCLIENT_SET_DEFAULT_ROUTE="no"
 
-- name: Get MTL network prefix
-  set_fact:
-    mtl_vlan1_prefix: "{{ metal_mgmt_cidr | ipaddr('prefix') }}"
+  - name: Remove existing default route
+    command: "ip route delete default"
+    changed_when: result.rc != 0 or result.rc == 2
+    failed_when: result.rc != 0 and result.rc != 2
+    register: result
 
-- name: Slurp in /etc/resolv.conf to get any DHCP added entries
-  slurp:
-    src: "/etc/resolv.conf"
-  register: resolv_conf
+  # Configure CAN v2 - Uses external subnet on vlan007
+  - include_tasks: can-v2.yml
+    when: uan_can_setup 
 
-- name: Register /etc/resolv.conf contents
-  set_fact:
-    resolv: "{{ resolv_conf.content | b64decode }}"  
+  # Configure Customer defined interfaces, routes, and rules
+  - include_tasks: customer_interfaces.yml
 
-- name: Parse existing nameservers from /etc/resolv.conf
-  set_fact:
-    uan_existing_nameservers: "{{ resolv | regex_findall( 'nameserver (\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\\b') }}"
-
-- name: Parse existing search domains from /etc/resolv.conf
-  set_fact:
-    uan_existing_search_domains: "{{ item.split() }}"
-  loop: "{{ resolv | regex_findall( 'search (\\b(?:[a-zA-Z0-9])?(?:[a-zA-Z0-9-]{1,})?(?:\\.[a-zA-Z0-9-]{1,}){1,}\\b.*){1,}') }}"
-
-- name: Slurp in /etc/sysconfig/network/config to get any DHCP added entries
-  slurp:
-    src: "/etc/sysconfig/network/config"
-  register: net_config
-
-- name: Register /etc/sysconfig/network/config contents
-  set_fact:
-    netconf: "{{ net_config.content | b64decode }}"  
-
-- name: Parse search domains from config list
-  set_fact:
-    uan_netconf_search_domains: "{{ item.split() }}"
-  loop: "{{ netconf | regex_findall( 'NETCONFIG_DNS_STATIC_SEARCHLIST=\"(.*)\"') }}"
-
-- name: Parse nameservers from config list
-  set_fact:
-    uan_netconf_nameservers: "{{ item.split() }}"
-  loop: "{{ netconf | regex_findall( 'NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"') }}"
-
-- name: Add existing search domains to uan_netconf_search_domains
-  set_fact:
-    uan_netconf_search_domains: "{{ uan_netconf_search_domains }} + [ item ]"
-  when: (uan_existing_search_domains is defined) and (item not in uan_netconf_search_domains)
-  loop: "{{ uan_existing_search_domains }}"
-
-- name: Add existing nameservers to uan_netconf_nameservers
-  set_fact:
-    uan_netconf_nameservers: "{{ uan_netconf_nameservers }} + [ item ]"
-  when: (uan_existing_nameservers is defined) and (item not in uan_netconf_nameservers)
-  loop: "{{ uan_existing_nameservers }}"
-
-- name: Add any customer defined search domains to uan_netconf_search_domains
-  set_fact:
-    uan_netconf_search_domains: "{{ uan_netconf_search_domains }} + [ item ]"
-  when: item not in uan_netconf_search_domains
-  loop: "{{ external_dns_searchlist }}"
-
-- name: Add any customer defined nameservers to uan_netconf_nameservers
-  set_fact:
-    uan_netconf_nameservers: "{{ uan_netconf_nameservers }} + [ item ]"
-  when: item not in uan_netconf_nameservers
-  loop: "{{ external_dns_servers }}"
-
-- name: Set DNS STATIC SEARCHLIST entries
-  when: uan_netconf_search_domains is defined
-  lineinfile:
-    dest: /etc/sysconfig/network/config
-    regex: '^NETCONFIG_DNS_STATIC_SEARCHLIST=\"(.*)\"$'
-    line: "NETCONFIG_DNS_STATIC_SEARCHLIST=\"{{ uan_netconf_search_domains | join(' ') }}\""
-    backrefs: yes
-
-- name: Set DNS STATIC SERVERS entries
-  when: uan_netconf_nameservers is defined
-  lineinfile:
-    dest: /etc/sysconfig/network/config
-    regex: '^NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"$'
-    line: "NETCONFIG_DNS_STATIC_SERVERS=\"{{ uan_netconf_nameservers | join(' ') }}\""
-    backrefs: yes
-
-- name: Generate updated /etc/resolv.conf by restarting wicked
-  shell: "systemctl restart wicked;sleep 5"
-  changed_when: result.rc == 0
-  failed_when: result.rc != 0
-  register: result
-
-- name: Configure ifcfg-eth0
-  copy:
-    src: ifcfg-eth0
-    dest: /etc/sysconfig/network/ifcfg-eth0
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Configure iproute2 tables
-  lineinfile:
-    path: /etc/iproute2/rt_tables
-    regexp: '^{{ item.pref }}\s+{{ item.name }}'
-    line: "{{ item.pref }}       {{ item.name }}"
-  loop: "{{ rt_tables }}"
-
-- name: Configure ifroute-eth0
-  template:
-    src: ifroute-eth0.j2
-    dest: /etc/sysconfig/network/ifroute-eth0
-    owner: root
-    mode: 0600
-
-- name: Tell DHCP client to not set default gateway
-  lineinfile:
-    path: /etc/sysconfig/network/dhcp
-    regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
-    line: DHCLIENT_SET_DEFAULT_ROUTE="no"
-
-- name: Remove existing default route
-  command: "ip route delete default"
-  changed_when: result.rc != 0 or result.rc == 2
-  failed_when: result.rc != 0 and result.rc != 2
-  register: result
-
-- name: Get list of possible CAN interfaces
-  shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|vlan'"
-  register: uan_device_list
-
-- name: Ensure list of possible CAN interfaces are UP
-  shell: "ip link set dev {{ item }} up"
-  register: cmd_out
-  failed_when: cmd_out.rc not in [0, 1]
-  loop: "{{ uan_device_list.stdout_lines }}"
-
-- name: List possible CAN intefaces
-  debug:
-    msg: "{{uan_device_list.stdout_lines }}"
-
-- name: Find the 40Gb devices
-  shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
-  register: uan_device_speed
-  loop: "{{ uan_device_list.stdout_lines }}"
-
-- name: Initialize list of uan_can_devices
-  set_fact:
-    uan_can_devices: []
-
-- name: Build list of uan_can_devices
-  set_fact:
-    uan_can_devices: "{{ uan_can_devices }} + ['{{ item.item }}']"
-    uan_can_if: 'bond0'
-  when: item.stdout | regex_search('Speed:40000Mb')
-  loop: "{{ uan_device_speed.results }}"
-
-- name: Set second CAN interface, if it is not connected
-  set_fact:
-    uan_2nd_can_ifname: "{{ item | regex_replace('(.+)(\\d+$)', '\\1') }}{{ item | regex_replace('(.+)(\\d+$)', '\\2') | int +1 }}"
-  when: uan_can_devices | length == 1
-  loop: "{{ uan_can_devices }}"
-
-- name: Add second CAN interface to uan_can_devices
-  set_fact:
-    uan_can_devices: "{{ uan_can_devices }} + ['{{ uan_2nd_can_ifname }}']"
-    uan_can_if: 'bond0'
-  when: uan_can_devices | length == 1
-
-- name: Fall back to NMN interface for CAN if no 40Gb devices found
-  set_fact:
-    uan_can_devices: "{{ uan_can_devices }} + ['eth0']"
-    uan_can_if: 'eth0'
-  when: uan_can_devices | length == 0
-
-- name: List uan_can_devices
-  debug:
-    msg: "{{ uan_can_devices }}"
-
-# Configure CAN v2 - Uses external subnet on vlan007
-- include_tasks: can-v2.yml
-  when:
-    - uan_can_devices | length >= 1
-
-# Configure Customer defined interfaces, routes, and rules
-- include_tasks: customer_interfaces.yml
-
+  when: not cray_cfs_image

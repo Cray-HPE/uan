@@ -3,7 +3,11 @@
 
 [sssd]
   config_file_version = 2
+{% if uan_ldap_config.sssd_services is defined %}
+  services = {% for item in uan_ldap_config.sssd_services %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
+{% else %}
   services = nss, pam
+{% endif %}
   domains = {% for item in uan_ldap_config %}{{ item.domain }}{{ "," if not loop.last else "" }}{% endfor %}
 
 [nss]
@@ -15,20 +19,40 @@
 {% for cfg in uan_ldap_config %}
 [domain/{{ cfg.domain }}]
   ldap_search_base={{ cfg.search_base }}
+{% if cfg.user_search_base is defined %}
+  ldap_user_search_base={{ cfg.user_search_base }}
+{% endif %}
+{% if cfg.group_search_base is defined %}
+  ldap_group_search_base={{ cfg.group_search_base }}
+{% endif %}
+{% if cfg.user_ssh_public_key is defined %}
+  ldap_user_ssh_public_key={{ cfg.user_ssh_public_key }}
+{% endif %}
+{% if cfg.servers is defined %}
   ldap_uri={% for item in cfg.servers %}{{ item }}{{ "," if not loop.last else "" }}{% endfor %}{{''}}
-  id_provider = ldap
-  auth_provider = ldap
+{% endif %}
+  id_provider = {{ cfg.id_provider | default("ldap") }}
+{% if cfg.auth_provider is defined %}
+  auth_provider = {{ cfg.auth_provider }}
+{% endif %}
   ldap_tls_reqcert = allow
   ldap_schema = rfc2307
+  cache_credentials = {{ cfg.cache_credentials | default(true) }}
+  entry_cache_timeout = {{ cfg.entry_cache_timeout | default(60) }} 
+  enumerate = {{ cfg.enumerate | default(false) }} 
+{% if cfg.memcache_timeout is defined %}
+  memcache_timeout = {{ cfg.memcache_timeout }}
+{% endif %}
 {% if ldap_port != 389 %}
-  entry_cache_timeout = 60 
-  cache_credentials = true 
   case_sensitive = true 
-  enumerate = false 
   ldap_use_tokengroups = false 
 {% endif %}
 {% if cfg.chpass_uri is defined %}
   ldap_chpass_uri={% for item in cfg.chpass_uri %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
+{% endif %}
+{% if cfg.krb5_server is defined %}
+  krb5_server={% for item in cfg.krb5_server %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
+  krb5_realm={{ cfg.krb5_realm }}
 {% endif %}
 
 {% endfor %}

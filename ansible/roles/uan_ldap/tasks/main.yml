@@ -28,7 +28,6 @@
       - servers
 
   - name: Make nscd.conf compatible with sssd
-    when: cray_cfs_image|default(false)
     replace:
       path: /etc/nscd.conf
       regexp: '(^[ \t]+enable\-cache[ \t]+{{ item }}[ \t]+)yes'  
@@ -40,7 +39,6 @@
       - services
 
   - name: Generate sssd.conf
-    when: cray_cfs_image|default(false)
     template:
       src: sssd.conf.j2
       dest: /etc/sssd/sssd.conf
@@ -67,14 +65,12 @@
       enabled: true
 
   - name: Copy over nsswitch.conf
-    when: cray_cfs_image|default(false)
     template:
       src: nsswitch.conf.j2
       dest: /etc/nsswitch.conf
       backup: yes
 
   - name: Generate new access.conf
-    when: cray_cfs_image|default(false)
     template:
       src: templates/access.conf.j2
       dest: /etc/security/access.conf

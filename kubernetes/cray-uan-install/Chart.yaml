@@ -2,7 +2,7 @@ apiVersion: v1
 description: "Kubernetes resources for cray-uan-install"
 name: "cray-uan-install"
 home: "scms/uan"
-version: 1.0.4
+version: 1.0.5
 keywords:
   - uan
   - cfs

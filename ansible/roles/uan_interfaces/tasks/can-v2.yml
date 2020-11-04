@@ -66,6 +66,7 @@
       owner: root
       group: root
       mode: '0644'
+    when: uan_can_if == 'bond0'
     loop: "{{ uan_can_devices }}"
 
   - name: Configure ifcfg-bond0
@@ -73,6 +74,7 @@
       src: ifcfg-bond0.j2
       dest: /etc/sysconfig/network/ifcfg-bond0
       mode: 0644
+    when: uan_can_if == 'bond0'
 
   - name: Configure ifcfg-vlan007
     template:
@@ -108,7 +110,7 @@
       mode: 0755
 
   - name: ifdown vlan007 and eth0 interfaces to set the interface config and routes
-    shell: "wicked ifdown {{ item }};sleep 5"
+    shell: "wicked ifdown {{ item }}"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
@@ -116,14 +118,38 @@
       - eth0
       - vlan007
 
+  - name: Wait 5 seconds for the interface to go down
+    wait_for:
+      timeout: 5
+
+  - name: Restarting wicked-nanny
+    shell: "systemctl restart wickedd-nanny"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+
+  - name: Wait 5 seconds for wickedd-nanny to restart
+    wait_for:
+      timeout: 5
+
+  - name: Remove existing default route
+    command: "ip route delete default"
+    changed_when: result.rc != 0 or result.rc == 2
+    failed_when: result.rc != 0 and result.rc != 2
+    register: result
+
   - name: ifup vlan007 and eth0 interfaces to set the interface config and routes
-    shell: "wicked ifup {{ item }};sleep 5"
+    shell: "wicked ifup {{ item }}"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
     with_items:
       - vlan007
       - eth0
+
+  - name: Wait 10 seconds for the interfaces to come up
+    wait_for:
+      timeout: 10
 
   - name: Check that we have the default route we are expecting
     shell: "ip route | grep default | grep -q '{{ customer_access_gateway }}'"

@@ -38,6 +38,42 @@
       - netgroup
       - services
 
+  - name: Configure pam to use sss and enable mkhomedir
+    when: not cray_cfs_image|default(false)
+    command: "pam-config -a --sss --mkhomedir"
+
+  - name: Test if /etc/pam.d/<module> is a symlink
+    when: uan_pam_modules is defined
+    stat:
+      path: "/etc/pam.d/{{ item.name }}"
+    register: links
+    loop: "{{ uan_pam_modules }}"
+      
+  - name: Remove symlink of /etc/pam.d/<module> from /etc/pam.d/<module>-pc
+    when: item.stat.islnk
+    file: 
+      path: "/etc/pam.d/{{ item.item.name }}"
+      state: absent
+    loop: "{{ links.results }}"
+
+  - name: Copy /etc/pam.d/<module>-pc to /etc/pam.d/<module>
+    when: item.stat.islnk
+    shell: "cp /etc/pam.d/{{ item.item.name}}-pc /etc/pam.d/{{ item.item.name }}"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+    loop: "{{ links.results }}"
+
+  - name: Add lines to /etc/pam.d/<module>
+    when: uan_pam_modules is defined
+    lineinfile:
+      path: "/etc/pam.d/{{ item.0.name }}"
+      regexp: "(^{{ item.1 }})"
+      line: "{{ item.1 }}"
+    with_subelements:
+      - "{{ uan_pam_modules }}"
+      - lines
+
   - name: Generate sssd.conf
     template:
       src: sssd.conf.j2
@@ -45,10 +81,6 @@
       owner: root
       group: root
       mode: 0600
-
-  - name: Configure pam to use sss and enable mkhomedir
-    when: not cray_cfs_image|default(false)
-    command: "pam-config -a --sss --mkhomedir"
 
   - name: Disable nscd and stop
     when: not cray_cfs_image|default(false)

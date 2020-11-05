@@ -9,6 +9,7 @@ rt_tables:
   - pref: '3'
     name: rt_can
 
+## ifcfg-X fields
 bootproto: ''
 device: ''
 dhcp_hostname: ''
@@ -28,3 +29,17 @@ bonding_master: ''
 bonding_module_opts: ''
 bonding_slave0: ''
 bonding_slave1: ''
+
+## /etc/resolv.conf customer configurable fields
+# Examples of usage format.
+#
+# external_dns_searchlist:
+#   - 'my.domain.com'
+#   - 'my.other.domain.com'
+# external_dns_servers:
+#  - '1.2.3.4'
+#  - '5.6.7.8'
+external_dns_searchlist:
+  - ''
+external_dns_servers:
+  - ''

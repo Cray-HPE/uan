@@ -35,7 +35,8 @@ chmod 755 root/root/bin/zypper-addrepo.sh
 # Package up the recipe after file templating is complete.
 # 'recipe' must be in the name for it to be captured by the script that creates
 # the import manifest for IMS.
-tar zcvf /base/build/output/${IMAGE_NAME}-recipe.tgz --exclude=*.j2  --exclude=scripts $DESC_DIR/*
+tar -C $DESC_DIR -zcvf /base/build/output/${IMAGE_NAME}-recipe.tgz --exclude=*.j2  --exclude=scripts *
+tar -ztvf /base/build/output/${IMAGE_NAME}-recipe.tgz
 
 # Build OS image with Kiwi NG (add --debug for lots 'o output)
 time /usr/bin/kiwi-ng --type tbz system build --description $DESC_DIR --target-dir /build/output

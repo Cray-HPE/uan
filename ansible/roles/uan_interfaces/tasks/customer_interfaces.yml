@@ -77,19 +77,52 @@
       - "{{ customer_uan_global_routes }}"
       - routes
 
-  - name: Restart customer interfaces to set the interface config and routes
-    shell: "wicked ifdown {{ item.name }};sleep 5;wicked ifup {{ item.name }}"
+  - name: ifdown interfaces to set the interface config and routes
+    shell: "wicked ifdown {{ item.name }}"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
     when: item.name is defined
     loop: "{{ customer_uan_interfaces }}"
 
-  - name: Check that the customer interfaces have the expected IPs
-    shell: "ip addr show {{ item.name }} | grep -q {{ item.ipaddr }}/{{ item.prefixlen }}"
+  - name: Wait 5 seconds for the interface to go down
+    wait_for:
+      timeout: 5
+
+  - name: Restarting wicked-nanny
+    shell: "systemctl restart wickedd-nanny"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+
+  - name: Wait 5 seconds for wickedd-nanny to restart
+    wait_for:
+      timeout: 5
+
+  - name: Remove existing default route
+    when: not uan_can_setup
+    command: "ip route delete default"
+    changed_when: result.rc != 0 or result.rc == 2
+    failed_when: result.rc != 0 and result.rc != 2
+    register: result
+
+  - name: ifup interfaces to set the interface config and routes
+    shell: "wicked ifup {{ item.name }}"
+    changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
     when: item.name is defined
+    loop: "{{ customer_uan_interfaces }}"
+
+  - name: Wait 10 seconds for the interfaces to come up
+    wait_for:
+      timeout: 10
+
+  - name: Check that the customer interfaces have the expected IPs
+    shell: "ip addr show {{ item.name }} | grep -q {{ item.settings.ipaddr }}/{{ item.settings.prefixlen }}"
+    failed_when: result.rc != 0
+    register: result
+    when: (item.name is defined) and (item.settings.ipaddr is defined)
     loop: "{{ customer_uan_interfaces }}"
   
   when: not cray_cfs_image

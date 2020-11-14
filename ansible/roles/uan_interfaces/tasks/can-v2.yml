@@ -175,13 +175,13 @@
       owner: root
       mode: 0755
 
-  - name: ifdown vlan007 and eth0 interfaces to set the interface config and routes
+  - name: ifdown vlan007 and nmn0 interfaces to set the interface config and routes
     shell: "wicked ifdown {{ item }}"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
     with_items:
-      - eth0
+      - nmn0
       - vlan007
 
   - name: Wait 5 seconds for the interface to go down
@@ -204,14 +204,14 @@
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  - name: ifup vlan007 and eth0 interfaces to set the interface config and routes
+  - name: ifup vlan007 and nmn0 interfaces to set the interface config and routes
     shell: "wicked ifup {{ item }}"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
     with_items:
       - vlan007
-      - eth0
+      - nmn0
 
   - name: Wait 10 seconds for the interfaces to come up
     wait_for:

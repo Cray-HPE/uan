@@ -30,10 +30,10 @@
     set_fact:
       nmn_gateway: "{{ nmn_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
 
-  - name: Configure ifcfg-eth0
+  - name: Configure ifcfg-nmn0
     copy:
-      src: ifcfg-eth0
-      dest: /etc/sysconfig/network/ifcfg-eth0
+      src: ifcfg-nmn0
+      dest: /etc/sysconfig/network/ifcfg-nmn0
       owner: root
       group: root
       mode: '0644'
@@ -45,10 +45,10 @@
       line: "{{ item.pref }}       {{ item.name }}"
     loop: "{{ rt_tables }}"
 
-  - name: Configure ifroute-eth0
+  - name: Configure ifroute-nmn0
     template:
-      src: ifroute-eth0.j2
-      dest: /etc/sysconfig/network/ifroute-eth0
+      src: ifroute-nmn0.j2
+      dest: /etc/sysconfig/network/ifroute-nmn0
       owner: root
       mode: 0600
 

@@ -4,8 +4,7 @@ FROM dtr.dev.cray.com/baseos/sles15sp1 as product-content-base
 WORKDIR /
 
 # Install dependencies as RPMs
-RUN zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/NWMGMT/sle15_sp1_ncn/x86_64/dev/master    shasta-ncmp && \
-    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/CRAYCTL/sle15_sp1_ncn/x86_64/dev/master   shasta-dst  && \
+RUN zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/CRAYCTL/sle15_sp1_ncn/x86_64/dev/master   shasta-dst  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/SCMS/sle15_sp1_ncn/x86_64/dev/master      shasta-scms && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/SHASTA-OS/sle15_sp1_ncn/x86_64/dev/master shasta-cos  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/RM/sle15_sp1_ncn/x86_64/dev/master        shasta-rm   && \
@@ -18,8 +17,6 @@ RUN zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/N
         cf-cme-sysconfig-config-framework \
         cf-cme-overlay-preload-config-framework \
         cf-ca-cert-config-framework \
-        cf-cme-ncmp-hsn-config-framework \
-        nms-config-framework \
         lustre-cfs-config-framework \
         cray-dvs-helper-config-framework \
         cray-lnet-helper-config-framework

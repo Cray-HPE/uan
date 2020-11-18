@@ -16,12 +16,14 @@ mkdir -p /base/build/output /base/build/unpack
 DESC_DIR=/base/images/kiwi-ng/cray-sles15sp1-uan-cos
 cd $DESC_DIR
 
-# Preprocess the Kiwi description config file
+# Preprocess the Kiwi description config file (for on system use)
 scripts/config-process.py \
     --branch $PARENT_BRANCH \
     --input config-template.xml.j2 \
     --output config.xml \
-    values-cje.yaml.j2
+    values-shasta.yaml.j2
+
+cat config.xml
 
 # Preprocess the Zypper configuration file for the image (for on system use)
 mkdir -p $DESC_DIR/root/root/bin
@@ -37,6 +39,16 @@ chmod 755 root/root/bin/zypper-addrepo.sh
 # the import manifest for IMS.
 tar -C $DESC_DIR -zcvf /base/build/output/${IMAGE_NAME}-recipe.tgz --exclude=*.j2  --exclude=scripts *
 tar -ztvf /base/build/output/${IMAGE_NAME}-recipe.tgz
+
+# Preprocess the Kiwi description config file for the prebuilt image
+rm config.xml
+scripts/config-process.py \
+    --branch $PARENT_BRANCH \
+    --input config-template.xml.j2 \
+    --output config.xml \
+    values-cje.yaml.j2
+
+cat config.xml
 
 # Build OS image with Kiwi NG (add --debug for lots 'o output)
 time /usr/bin/kiwi-ng --type tbz system build --description $DESC_DIR --target-dir /build/output

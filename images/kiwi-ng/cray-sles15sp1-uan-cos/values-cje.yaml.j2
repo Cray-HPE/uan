@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Cray Inc.
+# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
 #
 # This is a Jinja2 configuration file, used in processing the config-template
 # for use on CJE or the Shasta System.
@@ -104,6 +104,12 @@ repos:
     priority: "2"
     imageinclude: "true"
     path: "{{urls['blob_url']}}shasta-general/rpms/cray-sles15-sp1-ncn"
+ -
+    details: "Cray CSM SLES15 CN, DST mirror"
+    alias: "cray-csm-sles15-cn"
+    priority: "2"
+    imageinclude: "true"
+    path: "{{urls['blob_url']}}csm/rpms/cray-sles15-sp1-cn"
  -
     details: "Cray SLES15SP1 CN, DST mirror"
     alias: "cray-sles15-sp1-cn"

@@ -11,7 +11,7 @@ DEV_IMG_VER=$PRODUCT_VERSION-$BUILD_TS-$DEV_GIT_HASH
 sed -i s/CRAY.VERSION.HERE/${IMG_VER:-$DEV_IMG_VER}/g images/kiwi-ng/cray-sles15sp1-uan-cos/config-template.xml.j2
 
 # Set the cray-ims-load-artifacts image version
-wget http://car.dev.cray.com/artifactory/shasta-premium/SCMS/noos/noarch/dev/master/cms-team/manifest.txt
+wget http://car.dev.cray.com/artifactory/csm/SCMS/noos/noarch/dev/master/cms-team/manifest.txt
 ims_load_artifacts_image_tag=$(cat manifest.txt | grep cray-ims-load-artifacts | sed s/.*://g | tr -d '[:space:]')
 sed -i s/@ims_load_artifacts_image_tag@/${ims_load_artifacts_image_tag}/g Dockerfile.image-recipe
 rm manifest.txt

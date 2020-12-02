@@ -51,7 +51,6 @@
     - limits
     - shadow
     - kdump
-    - ssh-keys
 
     # Allow trust of CSM generated keys for elective passwordless SSH during image customization
     - role: trust-csm-ssh-keys
@@ -73,14 +72,6 @@
       when: not cray_cfs_image
     - role: uan_motd
     - role: uan_ldap
-
-    # Workload managers
-    - role: munged                   # slurm-crayctldeploy
-      when: system_wlm is defined and system_wlm|lower == "slurm"
-    - role: slurm_node               # slurm-crayctldeploy
-      when: system_wlm is defined and system_wlm|lower == "slurm"
-    - role: pbs_client               # pbs-crayctldeploy
-      when: system_wlm is defined and system_wlm|lower == "pbs"
 
     # Nvidia developer toolkit
     - role: cray_nvidia_customize  # cf-cme-sysconfig

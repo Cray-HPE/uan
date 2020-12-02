@@ -21,7 +21,7 @@
 #   ~~~~~~~~~~~~~
 #   1. Changes will not be accepted if any rules are violated.
 #
-#   2. Changes must be tested. That means booting the image on a VM as
+#   2. Changes must be tested. That means booting the image as
 #   the minimum test. If the change could impact operation specific to
 #   Shasta hardware, it must be booted on hardware. What to accept will
 #   be a judgement call by the reviewers.
@@ -38,19 +38,6 @@
 #   6. If a change is meant to be temporary, provide a comment listing
 #   the JIRA that identifies when the temporary change will be
 #   removed or replaced.
-#
-#   7. Master branches are named cray/<distro-name>, where <distro-name>
-#   describes the release and service pack of the upstream source
-#   corresponding to the branch.  At any given time, there may be more
-#   than one master branch being developed or maintained.  Check on the
-#   #skern-triage channel if your change should be applied to other
-#   master branches.
-
-#     *  If yes, make the changes in separate Pull Requests with the
-#        same JIRA.  Test each branch separately.  Apply the change in
-#        the default master branch first and then merge or cherry-pick
-#        into additional branches.
-#     *  If no, add a comment to the JIRA explaining the decision.
 #
 #   Repo Rules
 #   ~~~~~~~~~~
@@ -84,161 +71,136 @@
 #           - Must never be present in a released recipe.
 #           - Should only be used in developer bugfix/feature branches.
 #       - Priority "2"
-#           - UAN Repos (shasta-general UAN/Application node repos)
+#           - UAN Repos (UAN/Application node repos)
 #       - Priority "3"
+#           - COS Repos
+#           - CSM Repos
+#       - Priority "4"
 #           - SUSE SLE product repos
 #           - SUSE SLE update repos
+#       - Priority "5"
+#           - SUSE SLE backports repos
 #
+# See vars.sh for definitions of "BLOBLET_*" variables
 #vim: et sw=4 ts=4
-blob_tags:
-    release/shasta-1.1: "shasta-cd-1.1"
-    release/shasta-1.2: "shasta-cd-1.2"
-    release/shasta-1.3: "shasta-cd-1.3"
-    master: "shasta-cd-repo"
-urls:
-    blob_url: "http://dst.us.cray.com/dstrepo/{{blob_tags.get(branch)}}/bloblets/"
 repos:
- -
-    details: "Cray SLES15SP1 NCN, DST mirror"
-    alias: "cray-sles15-sp1-ncn"
-    priority: "2"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}shasta-general/rpms/cray-sles15-sp1-ncn"
- -
-    details: "Cray CSM SLES15 CN, DST mirror"
-    alias: "cray-csm-sles15-cn"
-    priority: "2"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}csm/rpms/cray-sles15-sp1-cn"
- -
-    details: "Cray SLES15SP1 CN, DST mirror"
-    alias: "cray-sles15-sp1-cn"
-    priority: "2"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}shasta-general/rpms/cray-sles15-sp1-cn"
- -
-    details: "Cray SMA SLES15SP1 CN, DST mirror"
-    alias: "cray-sma-sles15-sp1-cn"
-    priority: "2"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}sma/rpms/cray-sles15-sp1-cn"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Basesystem"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-Basesystem/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Desktop-Applications"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-Desktop-Applications/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Development-Tools"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-Development-Tools/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-HPC"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-HPC/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Legacy"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-Legacy/"
- -
-    details: "SUSE SLE15SP1 Python2 packages, DST mirror"
-    alias: "sle15-sp1-Module-Python2"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-Python2/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Server-Applications"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Module-Server-Applications/"
- -
-    details: "SUSE SLE15SP1 packages, internal mirror"
-    alias: "sle15-sp1-Product-SLES"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Product-SLES/"
- -
-    details: "SUSE SLE15SP1 SuSE Enterprise Storage (SES) packages, internal mirror"
-    alias: "sle15-sp1-Product-SES6"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/Storage/6"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Product-WE"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Products/SLE-Product-WE/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Basesystem-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-Basesystem/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Desktop-Applications-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-Desktop-Applications/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Development-Tools-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-Development-Tools/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-HPC-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-HPC/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Legacy-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-Legacy/"
- -
-    details: "SUSE SLE15SP1 Python2 packages, DST mirror"
-    alias: "sle15-sp1-Module-Python2-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-Python2/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Module-Server-Applications-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Module-Server-Applications/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Product-SLES-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Product-SLES/"
- -
-    details: "SUSE SLE15SP1 packages, DST mirror"
-    alias: "sle15-sp1-Product-WE-Updates"
-    priority: "3"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Updates/SLE-Product-WE/"
- -
-    details: "SUSE SLE15SP1 backports, DST selections"
-    alias: "sle15-sp1-Backports"
-    priority: "4"
-    imageinclude: "true"
-    path: "{{urls['blob_url']}}os/rpms/sles/15sp1-all/Backports/SLE-15-SP1_x86_64/standard/"
+-  details: "Cray UAN SLES15SP1 NCN, DST mirror"
+   alias: "cray-uan-sles15-sp1-cn"
+   priority: "2"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_UAN }}/rpms/cray-sles15-sp1-ncn"
+-  details: "Cray COS SLES15SP1 CN, DST mirror"
+   alias: "cray-sles15-sp1-cn"
+   priority: "3"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_COS }}/rpms/cray-sles15-sp1-cn"
+-  details: "Cray CSM SLES15SP1 CN, DST mirror"
+   alias: "cray-csm-sles15-sp1-cn"
+   priority: "3"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_CSM }}/rpms/cray-sles15-sp1-cn"
+-  details: "Cray SLES15SP1 CN, DST mirror legacy"
+   alias: "cray-sles15-sp1-cn-legacy"
+   priority: "3"
+   imageinclude: "true"
+   path: "http://dst.us.cray.com/dstrepo/bloblets/shasta-general/dev/master/rpms/cray-sles15-sp1-cn"
+-  details: "SUSE SLE15SP1 backports, DST selections"
+   alias: "sle15-sp1-Backports"
+   priority: "5"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Backports/SLE-15-SP1_x86_64/standard/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Basesystem"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-Basesystem/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Desktop-Applications"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-Desktop-Applications/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Development-Tools"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-Development-Tools/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-HPC"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-HPC/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Legacy"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-Legacy/"
+-  details: "SUSE SLE15SP1 Python2 packages, DST mirror"
+   alias: "sle15-sp1-Module-Python2"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-Python2/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Server-Applications"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Module-Server-Applications/"
+-  details: "SUSE SLE15SP1 packages, internal mirror"
+   alias: "sle15-sp1-Product-SLES"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Product-SLES/"
+-  details: "SUSE SLE15SP1 SuSE Enterprise Storage (SES) packages, internal mirror"
+   alias: "sle15-sp1-Product-SES6"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/Storage/6"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Product-WE"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Products/SLE-Product-WE/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Basesystem-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-Basesystem/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Desktop-Applications-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-Desktop-Applications/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Development-Tools-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-Development-Tools/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-HPC-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-HPC/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Legacy-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-Legacy/"
+-  details: "SUSE SLE15SP1 Python2 packages, DST mirror"
+   alias: "sle15-sp1-Module-Python2-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-Python2/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Module-Server-Applications-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Module-Server-Applications/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Product-SLES-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Product-SLES/"
+-  details: "SUSE SLE15SP1 packages, DST mirror"
+   alias: "sle15-sp1-Product-WE-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "{{ env.BLOBLET_OS }}/rpms/sles/15sp1-all/Updates/SLE-Product-WE/"

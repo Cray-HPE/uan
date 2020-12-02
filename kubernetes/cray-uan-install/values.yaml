@@ -7,8 +7,9 @@
 # For products that import Kiwi recipes and built-out images
 cray-import-kiwi-recipe-image:
   import_image:
-    name: "@kiwi_import_image_name@"
-    tag: "@kiwi_import_image_tag@"
+    name: cray-uan-image-recipe
+    # tag: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
+
   import_job:
     name: "@product_name@-image-recipe-import-@product_version@"
     PRODUCT_NAME: "@product_name@"
@@ -17,8 +18,8 @@ cray-import-kiwi-recipe-image:
 # For products that import Ansible configuration content
 cray-import-config:
   config_image:
-    name: "@config_image_name@"
-    tag: "@config_image_tag@"
+    name: cray-uan-config
+    # tag: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 
   import_job:
     CF_IMPORT_PRODUCT_NAME: "@product_name@"

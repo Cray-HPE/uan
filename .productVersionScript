@@ -1,0 +1,2 @@
+source ./vars.sh
+echo ${VERSION}

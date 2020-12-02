@@ -6,6 +6,7 @@
 #
 # Copyright 2020 Hewlett Packard Enterprise Development LP
 set -ex
+source /base/vars.sh
 
 IMAGE_NAME=cray-shasta-uan-cos-sles15sp1.x86_64-${IMG_VER}
 
@@ -18,21 +19,30 @@ cd $DESC_DIR
 
 # Preprocess the Kiwi description config file (for on system use)
 scripts/config-process.py \
-    --branch $PARENT_BRANCH \
     --input config-template.xml.j2 \
     --output config.xml \
     values-shasta.yaml.j2
 
-cat config.xml
-
 # Preprocess the Zypper configuration file for the image (for on system use)
 mkdir -p $DESC_DIR/root/root/bin
 scripts/config-process.py \
-    --branch $PARENT_BRANCH \
     --input zypper-addrepo.sh.j2 \
     --output root/root/bin/zypper-addrepo.sh \
     values-shasta.yaml.j2
 chmod 755 root/root/bin/zypper-addrepo.sh
+
+# Create a release file for inclusion with the recipe and image
+mkdir -p root/opt/cray/etc/release
+cat <<EOF > root/opt/cray/etc/release/uan
+PRODUCT="HPE Cray User Access Node"
+OS=SLES15SP1
+ARCH=x86_64
+VERSION=${VERSION}
+DATE=${BUILD_DATE}
+GIT=${GIT_TAG}
+EOF
+
+cat root/opt/cray/etc/release/uan
 
 # Package up the recipe after file templating is complete.
 # 'recipe' must be in the name for it to be captured by the script that creates
@@ -43,12 +53,9 @@ tar -ztvf /base/build/output/${IMAGE_NAME}-recipe.tgz
 # Preprocess the Kiwi description config file for the prebuilt image
 rm config.xml
 scripts/config-process.py \
-    --branch $PARENT_BRANCH \
     --input config-template.xml.j2 \
     --output config.xml \
     values-cje.yaml.j2
-
-cat config.xml
 
 # Build OS image with Kiwi NG (add --debug for lots 'o output)
 time /usr/bin/kiwi-ng --type tbz system build --description $DESC_DIR --target-dir /build/output
@@ -68,4 +75,3 @@ cp boot/vmlinuz /base/build/output/${IMAGE_NAME}.vmlinuz
 # For the UAN, we don't need to deliver the tar.xz version. Remove it to
 # save space in the docker image that delivers the image to the system.
 rm /base/build/output/*.tar.xz
-

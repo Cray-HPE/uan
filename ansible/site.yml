@@ -78,12 +78,6 @@
     - role: pbs_client               # pbs-crayctldeploy
       when: system_wlm is defined and system_wlm|lower == "pbs"
 
-    # High-speed networking
-    - role: ncmp_lldpad              # cf-cme-ncmp-hsn-premium-crayctldeploy
-      when: not cray_cfs_image
-    - role: ncmp_hsn_cns             # cf-cme-ncmp-hsn-premium-crayctldeploy
-      when: not cray_cfs_image
-
     # Nvidia developer toolkit
     - role: cray_nvidia_customize  # cf-cme-sysconfig
       when: gpu is defined and gpu|lower == "nvidia" and cray_cfs_image

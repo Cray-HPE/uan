@@ -30,6 +30,89 @@
     set_fact:
       nmn_gateway: "{{ nmn_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
 
+  - name: Slurp in /etc/resolv.conf to get any DHCP added entries
+    slurp:
+      src: "/etc/resolv.conf"
+    register: resolv_conf
+
+  - name: Register /etc/resolv.conf contents
+    set_fact:
+      resolv: "{{ resolv_conf.content | b64decode }}"  
+
+  - name: Parse existing nameservers from /etc/resolv.conf
+    set_fact:
+      uan_existing_nameservers: "{{ resolv | regex_findall( 'nameserver (\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\\b') }}"
+
+  - name: Parse existing search domains from /etc/resolv.conf
+    set_fact:
+      uan_existing_search_domains: "{{ item.split() }}"
+    loop: "{{ resolv | regex_findall( 'search (\\b(?:[a-zA-Z0-9])?(?:[a-zA-Z0-9-]{1,})?(?:\\.[a-zA-Z0-9-]{1,}){1,}\\b.*){1,}') }}"
+
+  - name: Slurp in /etc/sysconfig/network/config to get any DHCP added entries
+    slurp:
+      src: "/etc/sysconfig/network/config"
+    register: net_config
+
+  - name: Register /etc/sysconfig/network/config contents
+    set_fact:
+      netconf: "{{ net_config.content | b64decode }}"  
+
+  - name: Parse search domains from config list
+    set_fact:
+      uan_netconf_search_domains: "{{ item.split() }}"
+    loop: "{{ netconf | regex_findall( 'NETCONFIG_DNS_STATIC_SEARCHLIST=\"(.*)\"') }}"
+
+  - name: Parse nameservers from config list
+    set_fact:
+      uan_netconf_nameservers: "{{ item.split() }}"
+    loop: "{{ netconf | regex_findall( 'NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"') }}"
+
+  - name: Add existing search domains to uan_netconf_search_domains
+    set_fact:
+      uan_netconf_search_domains: "{{ uan_netconf_search_domains }} + [ item ]"
+    when: (uan_existing_search_domains is defined) and (item not in uan_netconf_search_domains)
+    loop: "{{ uan_existing_search_domains }}"
+
+  - name: Add existing nameservers to uan_netconf_nameservers
+    set_fact:
+      uan_netconf_nameservers: "{{ uan_netconf_nameservers }} + [ item ]"
+    when: (uan_existing_nameservers is defined) and (item not in uan_netconf_nameservers)
+    loop: "{{ uan_existing_nameservers }}"
+
+  - name: Add any customer defined search domains to uan_netconf_search_domains
+    set_fact:
+      uan_netconf_search_domains: "{{ uan_netconf_search_domains }} + [ item ]"
+    when: item not in uan_netconf_search_domains
+    loop: "{{ external_dns_searchlist }}"
+
+  - name: Add any customer defined nameservers to uan_netconf_nameservers
+    set_fact:
+      uan_netconf_nameservers: "{{ uan_netconf_nameservers }} + [ item ]"
+    when: item not in uan_netconf_nameservers
+    loop: "{{ external_dns_servers }}"
+
+  - name: Set DNS STATIC SEARCHLIST entries
+    when: uan_netconf_search_domains is defined
+    lineinfile:
+      dest: /etc/sysconfig/network/config
+      regex: '^NETCONFIG_DNS_STATIC_SEARCHLIST=\"(.*)\"$'
+      line: "NETCONFIG_DNS_STATIC_SEARCHLIST=\"{{ uan_netconf_search_domains | join(' ') }}\""
+      backrefs: yes
+
+  - name: Set DNS STATIC SERVERS entries
+    when: uan_netconf_nameservers is defined
+    lineinfile:
+      dest: /etc/sysconfig/network/config
+      regex: '^NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"$'
+      line: "NETCONFIG_DNS_STATIC_SERVERS=\"{{ uan_netconf_nameservers | join(' ') }}\""
+      backrefs: yes
+
+  - name: Generate updated /etc/resolv.conf by restarting wicked
+    shell: "systemctl restart wicked;sleep 5"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+
   - name: Configure ifcfg-nmn0
     copy:
       src: ifcfg-nmn0

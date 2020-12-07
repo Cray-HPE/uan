@@ -37,7 +37,7 @@
 
   - name: Register /etc/resolv.conf contents
     set_fact:
-      resolv: "{{ resolv_conf.content | b64decode }}"  
+      resolv: "{{ resolv_conf.content | b64decode }}"
 
   - name: Parse existing nameservers from /etc/resolv.conf
     set_fact:
@@ -46,7 +46,7 @@
   - name: Parse existing search domains from /etc/resolv.conf
     set_fact:
       uan_existing_search_domains: "{{ item.split() }}"
-    loop: "{{ resolv | regex_findall( 'search (\\b(?:[a-zA-Z0-9])?(?:[a-zA-Z0-9-]{1,})?(?:\\.[a-zA-Z0-9-]{1,}){1,}\\b.*){1,}') }}"
+    loop: "{{ resolv | default() | regex_findall( 'search (\\b(?:[a-zA-Z0-9])?(?:[a-zA-Z0-9-]{1,})?(?:\\.[a-zA-Z0-9-]{1,}){1,}\\b.*){1,}') }}"
 
   - name: Slurp in /etc/sysconfig/network/config to get any DHCP added entries
     slurp:
@@ -55,17 +55,17 @@
 
   - name: Register /etc/sysconfig/network/config contents
     set_fact:
-      netconf: "{{ net_config.content | b64decode }}"  
+      netconf: "{{ net_config.content | b64decode }}"
 
   - name: Parse search domains from config list
     set_fact:
       uan_netconf_search_domains: "{{ item.split() }}"
-    loop: "{{ netconf | regex_findall( 'NETCONFIG_DNS_STATIC_SEARCHLIST=\"(.*)\"') }}"
+    loop: "{{ netconf | default() | regex_findall( 'NETCONFIG_DNS_STATIC_SEARCHLIST=\"(.*)\"') }}"
 
   - name: Parse nameservers from config list
     set_fact:
       uan_netconf_nameservers: "{{ item.split() }}"
-    loop: "{{ netconf | regex_findall( 'NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"') }}"
+    loop: "{{ netconf | default() | regex_findall( 'NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"') }}"
 
   - name: Add existing search domains to uan_netconf_search_domains
     set_fact:
@@ -149,7 +149,7 @@
 
   # Configure CAN v2 - Uses external subnet on vlan007
   - include_tasks: can-v2.yml
-    when: uan_can_setup 
+    when: uan_can_setup
 
   # Configure Customer defined interfaces, routes, and rules
   - include_tasks: customer_interfaces.yml

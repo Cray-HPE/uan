@@ -1,5 +1,5 @@
 # Copyright 2020 Hewlett Packard Enterprise Development LP
-# Dockerfile for image which hold the UAN image (squashfs) and Kiwi recipe
+# Dockerfile for image which holds the UAN image (squashfs) and Kiwi recipe
 FROM dtr.dev.cray.com/cray/cray-ims-load-artifacts:@ims_load_artifacts_image_tag@
 
 # Use for testing/not in pipeline builds
@@ -10,4 +10,3 @@ COPY manifest.yaml /
 
 # Copy the image/recipe files
 COPY build/output/*@product_version@* /
-

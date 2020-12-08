@@ -37,16 +37,6 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
     the JIRA that identifies when the temporary change will be
     removed or replaced.
 
-    7. Master branches are named cray/<distro-name>, where <distro-name>
-    describes the release and service pack of the upstream source corresponding
-    to the branch.  At any given time, there may be more than one master branch
-    being developed or maintained.  Check on the #skern-triage channel if your
-    change should be applied to other master branches.
-      *  If yes, make the changes in separate Pull Requests with the same JIRA.
-         Test each branch separately.  Apply the change in the default master branch
-         first and then merge or cherry-pick into additional branches.
-      *  If no, add a comment to the JIRA explaining the decision.
-
     Package Rules
     ~~~~~~~~~~~~~
     1. Add packages to sections. If creating a new section, add a
@@ -76,7 +66,7 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
 <image schemaversion="6.8" name="cray-shasta-uan-cos-sles15sp1">
     <description type="system">
         <author>Cray Inc</author>
-        <contact>keopp@@hpe.com</contact>
+        <contact>keopp@hpe.com</contact>
         <specification>
             Minimal UAN image based on COS
         </specification>
@@ -117,10 +107,7 @@ Copyright 2019-2020 Hewlett Packard Enterprise Development LP
         <user password="$2y$12$zIitnBqEOgiB9FtnGIKjyO0wSuqutDKSeCwp8m9dEK4zaS/lnAk/W" home="/root" name="root" groups="root"/>
     </users>
 
-<!--
-Repositories are added dynamically based on if the build is being done in the
-pipeline (CJE) or on the Shasta system (Shasta)
--->
+<!-- Repositories are added dynamically based on if the build is in the pipeline (CJE) or on the Shasta system (Shasta) -->
 {% for repo in values['repos'] %}
     <!-- {{ repo['details'] }} -->
     <repository type="rpm-md" alias="{{ repo['alias'] }}" priority="{{ repo['priority'] }}" imageinclude="{{ repo['imageinclude'] }}">
@@ -149,8 +136,10 @@ pipeline (CJE) or on the Shasta system (Shasta)
         <package name="python2"/>
         <package name="python3"/>
 
-        <!-- SECTION: CLE General Packages -->
+        <!-- SECTION: CSM General Packages -->
         <package name="cfs-state-reporter"/>
+
+        <!-- SECTION: COS General Packages -->
         <package name="cray-boot-parameters-shasta-compute"/>
         <package name="cray-bpmcdmod"/>
         <package name="cray-bpmcdmod-kmp-cray_shasta_c"/>
@@ -184,11 +173,11 @@ pipeline (CJE) or on the Shasta system (Shasta)
         <package name="kernel-cray_shasta_c"/>
         <package name="kernel-syms"/>
 
-        <!-- SECTION: CLE SHASTA-OS packages -->
+        <!-- SECTION: COS SHASTA-OS packages -->
         <package name="cray-ckdump-helper"/>
         <package name="cray-cps-utils"/>
 
-        <!-- SECTION: CLE SHASTA-3RD Packages -->
+        <!-- SECTION: COS SHASTA-3RD Packages -->
         <package name="acpid"/>
         <package name="jq"/>
         <package name="libs3"/>

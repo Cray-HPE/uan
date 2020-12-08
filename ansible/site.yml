@@ -53,6 +53,10 @@
     - kdump
     - ssh-keys
 
+    # Allow trust of CSM generated keys for elective passwordless SSH during image customization
+    - role: trust-csm-ssh-keys
+      when: cray_cfs_image|default(false)|bool
+
     # DVS/LNET/FS
     - overlay-preload
     - role: cray_lnet_load

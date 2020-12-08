@@ -10,7 +10,7 @@ RUN zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/C
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/RM/sle15_sp1_ncn/x86_64/dev/master        shasta-rm   && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/LUS/sle15_sp1_ncn/x86_64/dev/master       shasta-lus  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/shasta-premium/DVS/sle15_sp1_ncn/x86_64/dev/master       shasta-dvs  && \
-    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/csm/SCMS/sle15_sp2_ncn/x86_64/dev/master/                csm && \
+    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/csm/SCMS/sle15_sp1_ncn/x86_64/dev/master/                csm && \
     zypper refresh && \
     zypper in -y \
         slurm-config-framework \

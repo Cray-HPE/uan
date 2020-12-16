@@ -10,7 +10,7 @@ export PATCH=`echo ${VERSION} | cut -d. -f3`
 # For developing for a release distribution, use ${VERSION} here.
 #  - List versions of dependencies here as well
 export RELEASE_PREFIX="release"
-export RELEASE_VERSION=${VERSION}
+export RELEASE_VERSION="shasta-1.4"
 export CSM_RELEASE_VERSION="shasta-1.4"
 export COS_RELEASE_VERSION="shasta-1.4"
 

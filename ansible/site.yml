@@ -6,6 +6,7 @@
   any_errors_fatal: true
   remote_user: root
 
+
   pre_tasks:
     - name: Disallow login to the UANs during post-boot configuration
       file:
@@ -16,31 +17,12 @@
         state: touch
       when: not cray_cfs_image and uan_login_config_protect|default(true)
 
-    - name: get the DNS information for the chrooted environment
-      local_action:
-        module: command
-        cmd: cat /etc/resolv.conf
-      register: resolv_conf_output
-      when: cray_cfs_image | default(false) | bool
-
-    - name: copy DNS content to chroots
-      copy:
-        dest: /etc/resolv.conf
-        content: "{{ resolv_conf_output.stdout }}"
-      when: cray_cfs_image | default(false) | bool
-
   post_tasks:
     - name: Allow user logins to the UANs after configuration
       file:
         path: /etc/nologin
         state: absent
       when: not cray_cfs_image and uan_login_config_protect|default(true)
-
-    - name: Remove chroot resolv.conf
-      file:
-        path: /etc/resolv.conf
-        state: absent
-      when: cray_cfs_image | default(false) | bool
 
   roles:
 

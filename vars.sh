@@ -1,11 +1,6 @@
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 # Name and Version Information for the User Access Node Distribution
 export NAME="uan"
-export VERSION="2.0.0"
-
-export MAJOR=`echo ${VERSION} | cut -d. -f1`
-export MINOR=`echo ${VERSION} | cut -d. -f2`
-export PATCH=`echo ${VERSION} | cut -d. -f3`
 
 # For developing for a release distribution, use ${VERSION} here.
 #  - List versions of dependencies here as well

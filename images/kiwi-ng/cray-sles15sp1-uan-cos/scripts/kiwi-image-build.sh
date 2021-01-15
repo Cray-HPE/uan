@@ -4,7 +4,7 @@
 #
 # Artifacts that will be packaged up should be placed in /base/build/output
 #
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 set -ex
 source /base/vars.sh
 
@@ -37,7 +37,7 @@ cat <<EOF > root/opt/cray/etc/release/uan
 PRODUCT="HPE Cray User Access Node"
 OS=SLES15SP1
 ARCH=x86_64
-VERSION=${VERSION}
+VERSION=${IMG_VER}
 DATE=${BUILD_DATE}
 GIT=${GIT_TAG}
 EOF

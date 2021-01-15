@@ -11,7 +11,7 @@ kiwiImageRecipeBuildPipeline {
 
   // Product designation
   product="uan"
-  productVersionScript="./.productVersionScript"
+  productVersionFile="./.version"
 
   // Location and name of the recipe/image for the IMS manifest
   recipeDirectory="images/kiwi-ng/cray-sles15sp1-uan-cos"

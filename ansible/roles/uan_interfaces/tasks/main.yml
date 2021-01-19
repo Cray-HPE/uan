@@ -5,7 +5,7 @@
   - name: Get NMN Services Network info from SLS
     local_action:
       module: uri
-      url: http://cray-sls/v1/search/networks?name=MetalLB_NMN
+      url: http://cray-sls/v1/search/networks?name=NMNLB
       method: GET
     register: sls_nmn_svcs
     failed_when: sls_nmn_svcs.status != 200

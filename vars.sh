@@ -16,3 +16,6 @@ export BLOBLET_SLINGSHOT="http://dst.us.cray.com/dstrepo/bloblets/slingshot/${RE
 export BLOBLET_CSM="http://dst.us.cray.com/dstrepo/bloblets/csm/${RELEASE_PREFIX}/${CSM_RELEASE_VERSION}"
 export BLOBLET_COS="http://dst.us.cray.com/dstrepo/bloblets/cos/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}"
 export BLOBLET_OS="http://dst.us.cray.com/dstrepo/bloblets/os/dev/mirrors"
+
+# Version of the cf-gitea-import Docker Image to Use
+export cf_gitea_import_image_tag=1.0.10

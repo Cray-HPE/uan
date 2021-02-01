@@ -11,7 +11,7 @@ cray-import-kiwi-recipe-image:
     # tag: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 
   import_job:
-    name: "@product_name@-image-recipe-import-@product_version@"
+    # name: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
     PRODUCT_NAME: "@product_name@"
     # PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 

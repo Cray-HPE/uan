@@ -29,8 +29,6 @@ FROM dtr.dev.cray.com/cray/cf-gitea-import:@cf_gitea_import_image_tag@
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan
-ADD vars.sh /
-RUN source /vars.sh && echo ${VERSION} > /product_version
 
 # Copy in dependencies' Ansible content
 COPY --from=product-content-base /opt/cray/ansible/roles/     /content/roles/

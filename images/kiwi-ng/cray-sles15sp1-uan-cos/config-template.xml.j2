@@ -138,6 +138,7 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 
         <!-- SECTION: CSM General Packages -->
         <package name="cfs-state-reporter"/>
+        <package name="cfs-trust"/>
 
         <!-- SECTION: COS General Packages -->
         <package name="cray-bpmcdmod"/>
@@ -151,21 +152,22 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <package name="cray-freemem-kmp-cray_shasta_c"/>
         <package name="cray-heartbeat"/>
         <package name="cray-hugepage-setup"/>
-        <package name="cray-libhugetlbfs"/>
-        <package name="cray-libhugetlbfs-devel"/>
         <package name="cray-liborca"/>
         <package name="cray-libxpmem-devel"/>
         <package name="cray-libxpmem0"/>
         <package name="cray-netif-dracut"/>
+        <package name="cray-network-config-dracut"/>
         <package name="cray-network-dracut"/>
         <package name="cray-node-identity"/>
         <package name="cray-orca"/>
         <package name="cray-overlay-preload"/>
         <package name="cray-power-button"/>
+        <package name="cray-spire-dracut"/>
         <package name="cray-squashfs-dracut"/>
         <package name="cray-system-files"/>
         <package name="cray-system-setup-scripts"/>
         <package name="cray-tokens-dracut"/>
+        <package name="cray-udev-network"/>
         <package name="cray-url-dracut"/>
         <package name="cray-xpmem"/>
         <package name="cray-xpmem-kmp-cray_shasta_c"/>
@@ -175,12 +177,21 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <!-- SECTION: COS SHASTA-OS packages -->
         <package name="cray-ckdump-helper"/>
         <package name="cray-cps-utils"/>
+        <package name="kdump-spire-watcher"/>
 
         <!-- SECTION: COS SHASTA-3RD Packages -->
         <package name="acpid"/>
-        <package name="jq"/>
+        <package name="cray-libhugetlbfs"/>
+        <package name="cray-libhugetlbfs-devel"/>
+        <package name="cray-makedumpfile"/>
+        <package name="cray-rasdaemon"/>
         <package name="libs3"/>
-        <package name="makedumpfile"/>
+        <package name="msr-safe"/>
+        <package name="msr-safe-kmp-cray_shasta_c"/>
+        <package name="msr-tools"/>
+        <package name="qlgc-fastlinq-kmp-cray_shasta_c"/>
+        <package name="spire-agent"/>
+        <package name="syscfg"/>
 
         <!-- SECTION: NVIDIA GPU Support packages -->
         <package name="glu-devel"/>
@@ -234,6 +245,7 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 
         <!-- SECTION: Static UAI Packages  -->
         <package name="craycli"/>
+        <package name="cray-uai-util"/>
 
         <!-- SECTION: SUSE SLES15 Packages -->
         <package name="acpica"/>
@@ -278,6 +290,7 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <package name="iproute2"/>
         <package name="iputils"/>
         <package name="java-1_8_0-openjdk"/>
+        <package name="jq"/>
         <package name="kdump"/>
         <package name="kernel-firmware"/>
         <package name="kmod-compat"/>

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 #
 
 set -e
@@ -38,11 +38,13 @@ if [[ $num -ne 1 ]]; then
 fi
 
 initrd_add="\
+cray-network-lldp \
 craycps \
 craydvs \
 crayfs \
 craylnet \
 craytokens \
+crayspire \
 crayurl \
 network \
 nfs \
@@ -55,9 +57,16 @@ initrd_install="\
 /etc/modprobe.d/dvs.conf \
 /etc/modprobe.d/lnet.conf \
 /opt/cray/cps-utils/bin/cpsmount.sh \
+/opt/cray/auth-utils/bin/get-auth-token \
+/opt/cray/cps-utils/bin/cpsmount_helper \
 $dvs_tg \
+/root/spire/bundle/bundle.crt \
+/root/spire/conf/spire-agent.conf \
+/root/spire/data \
+/sbin/slingshot-network-cfg-lldp \
 /usr/bin/awk \
 /usr/bin/chmod \
+/usr/bin/cpsmount-spire-agent \
 /usr/bin/curl \
 /usr/bin/date \
 /usr/bin/expr \
@@ -67,12 +76,25 @@ $dvs_tg \
 /usr/bin/jq \
 /usr/bin/sed \
 /usr/bin/sleep \
+/usr/bin/spire-agent \
 /usr/bin/wc \
+/usr/lib/systemd/system/lldpad.service \
+/usr/lib/systemd/system/lldpad.socket \
+/usr/sbin/lldpad \
+/usr/sbin/lldptool \
 /usr/sbin/lnetctl \
+/var/lib/lldpad \
+"
+initrd_drivers="\
+qed \
+qede \
+crc8 \
+devlink \
 "
 
 dracut \
 --add "${initrd_add}" \
+--add-driver="${initrd_drivers}" \
 --force \
 --install "${initrd_install}" \
 --kver ${premium_version} \

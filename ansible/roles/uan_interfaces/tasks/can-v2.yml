@@ -1,4 +1,4 @@
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 ---
 - name: Configure CAN v2 on UANs
   block:
@@ -29,7 +29,7 @@
   - name: Get Metal Network info from SLS
     local_action:
       module: uri
-      url: http://cray-sls/v1/search/networks?name=Metal
+      url: http://cray-sls/v1/search/networks?name=MTL
       method: GET
     register: sls_mtl
     failed_when: sls_mtl.status != 200
@@ -59,17 +59,13 @@
     set_fact:
         can_prefix: "{{ customer_access_network | ipaddr('prefix') }}"
 
-  - name: Get customer_access_metallb_address_pool
-    set_fact:
-      customer_access_metallb_address_pool: "{{ sls_can.json[0].ExtraProperties.Subnets[1].CIDR }}"
-    when: sls_can.status == 200
-
   - name: Get Mountain NMN Services Network info from SLS
     local_action:
       module: uri
       url: http://cray-sls/v1/search/networks?name=MNMN
       method: GET
     register: sls_mnmn_svcs
+    ignore_errors: yes
 
   - name: Set Mountain NMN Services CIDR from SLS, if network exists
     set_fact:

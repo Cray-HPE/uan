@@ -1,9 +1,9 @@
 ---
 dependencies:
   - name: cray-import-config
-    version: "0.1.2"
+    version: "0.1.4"
     repository: "@cray-internal"
   - name: cray-import-kiwi-recipe-image
-    version: "0.1.2"
+    version: "0.1.3"
     repository: "@cray-internal"
 

@@ -38,7 +38,6 @@ if [[ $num -ne 1 ]]; then
 fi
 
 initrd_add="\
-cray-network-lldp \
 craycps \
 craydvs \
 crayfs \
@@ -90,6 +89,8 @@ qed \
 qede \
 crc8 \
 devlink \
+smartpqi \
+scsi_transport_sas \
 "
 
 dracut \

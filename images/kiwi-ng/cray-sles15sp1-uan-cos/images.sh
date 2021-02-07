@@ -42,7 +42,6 @@ craycps \
 craydvs \
 crayfs \
 craylnet \
-craytokens \
 crayspire \
 crayurl \
 network \

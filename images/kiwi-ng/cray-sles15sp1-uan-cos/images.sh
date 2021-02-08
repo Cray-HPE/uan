@@ -68,6 +68,7 @@ $dvs_tg \
 /usr/bin/cpsmount-spire-agent \
 /usr/bin/curl \
 /usr/bin/date \
+/usr/bin/dvs-map-spire-agent \
 /usr/bin/expr \
 /usr/bin/getopt \
 /usr/bin/grep \

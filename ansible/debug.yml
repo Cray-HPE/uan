@@ -2,7 +2,7 @@
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 # Top-level site.yml for User Access Nodes
 - hosts: Application_UAN
-  gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   remote_user: root
 

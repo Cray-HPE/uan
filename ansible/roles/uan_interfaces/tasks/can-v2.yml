@@ -2,7 +2,7 @@
 ---
 - name: Get CAN IP from DNS
   set_fact:
-    can_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-can.') }}"
+    can_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-can.can') }}"
 
 - name: INFO
   debug:
@@ -33,6 +33,12 @@
     - customer_access_network is not defined
     - customer_access_gateway is not defined
 
+- name: Initialize list of uan_can_devices
+  set_fact:
+    uan_can_devices: []
+    uan_25G_can_devices: []
+    uan_40G_can_devices: []
+
 - name: Configure CAN v2 on UANs
   block:
 
@@ -58,12 +64,6 @@
     shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
     register: uan_device_speed
     loop: "{{ uan_device_list.stdout_lines }}"
-
-  - name: Initialize list of uan_can_devices
-    set_fact:
-      uan_can_devices: []
-      uan_25G_can_devices: []
-      uan_40G_can_devices: []
 
   - name: Build list of 25Gb uan_can_devices
     set_fact:
@@ -182,8 +182,10 @@
 
   - name: ifup vlan007 and nmn0 interfaces to set the interface config and routes
     shell: "wicked ifup {{ item }}"
-    changed_when: result.rc == 0
-    failed_when: result.rc != 0
+    changed_when: result.rc == 0 or result.rc == 158
+    failed_when:
+      - result.rc != 0
+      - result.rc != 158
     register: result
     with_items:
       - vlan007

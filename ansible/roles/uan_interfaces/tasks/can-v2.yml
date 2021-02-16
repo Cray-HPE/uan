@@ -121,7 +121,7 @@
     loop: "{{ uan_can_devices }}"
 
   - name: Configure bond0
-    copy:
+    template:
       src: ifcfg-bond0.j2
       dest: "/etc/sysconfig/network/ifcfg-bond0"
       owner: root

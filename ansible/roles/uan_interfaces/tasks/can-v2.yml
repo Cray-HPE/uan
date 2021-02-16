@@ -15,14 +15,16 @@
     method: GET
   register: sls_can
 
-- name: Get Customer Access Network CIDR from SLS, if network exists
+- name: Get Customer Access Network CIDR from SLS, if network exists. 
+  # This assumes that the CAN network is _always_ the third item in the array. This makes the 
+  # implementation fragile. See CASMCMS-6714.
   set_fact:
-    customer_access_network: "{{ sls_can.json[0].ExtraProperties.Subnets[0].CIDR }}"
+    customer_access_network: "{{ sls_can.json[0].ExtraProperties.Subnets[2].CIDR }}"
   when: sls_can.status == 200
 
 - name: Get Customer Access Network Gateway from SLS, if network exists
   set_fact:
-    customer_access_gateway: "{{ sls_can.json[0].ExtraProperties.Subnets[0].Gateway }}"
+    customer_access_gateway: "{{ sls_can.json[0].ExtraProperties.Subnets[2].Gateway }}"
   when: sls_can.status == 200
 
 - name: WARNING
@@ -118,6 +120,13 @@
       mode: '0644'
     loop: "{{ uan_can_devices }}"
 
+  - name: Configure bond0
+    template:
+      src: ifcfg-bond0.j2
+      dest: "/etc/sysconfig/network/ifcfg-bond0"
+      owner: root
+      mode: 0644
+
   - name: Configure ifcfg-vlan007
     template:
       src: ifcfg-vlan007.j2
@@ -130,26 +139,6 @@
       dest: /etc/sysconfig/network/ifroute-vlan007
       owner: root
       mode: 0600
-
-  - name: Ensure wicked script directories exist
-    file:
-      path: "/etc/wicked/scripts/{{ item }}"
-      state: directory
-    loop: [ "post-up", "post-down" ]
-
-  - name: Configure can-up.sh
-    template:
-      src: can-up.j2
-      dest: "/etc/wicked/scripts/post-up/can-up.sh"
-      owner: root
-      mode: 0755
-
-  - name: Configure can-down.sh
-    template:
-      src: can-down.j2
-      dest: "/etc/wicked/scripts/post-down/can-down.sh"
-      owner: root
-      mode: 0755
 
   - name: ifdown vlan007 and nmn0 interfaces to set the interface config and routes
     shell: "wicked ifdown {{ item }}"
@@ -182,10 +171,8 @@
 
   - name: ifup vlan007 and nmn0 interfaces to set the interface config and routes
     shell: "wicked ifup {{ item }}"
-    changed_when: result.rc == 0 or result.rc == 158
-    failed_when:
-      - result.rc != 0
-      - result.rc != 158
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
     register: result
     with_items:
       - vlan007

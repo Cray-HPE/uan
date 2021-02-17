@@ -134,13 +134,6 @@
       group: root
       mode: '0644'
 
-  - name: Configure iproute2 tables
-    lineinfile:
-      path: /etc/iproute2/rt_tables
-      regexp: '^{{ item.pref }}\s+{{ item.name }}'
-      line: "{{ item.pref }}       {{ item.name }}"
-    loop: "{{ rt_tables }}"
-
   - name: Configure ifroute-nmn0
     template:
       src: ifroute-nmn0.j2

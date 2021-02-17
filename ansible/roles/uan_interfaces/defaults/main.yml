@@ -102,14 +102,3 @@ external_dns_searchlist:
   - ''
 external_dns_servers:
   - ''
-
-## /etc/iproute2/rt_tables
-# These values setup the routing tables on the UAN
-# to work in the system networking environment.
-rt_tables:
-  - pref: '1'
-    name: rt_smnet
-  - pref: '2'
-    name: rt_mtl
-  - pref: '3'
-    name: rt_can

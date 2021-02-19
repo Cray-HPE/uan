@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 # Tasks for uan_motd file
 ---
 - name: Append motd content
@@ -10,4 +10,3 @@
     path: /etc/motd
     insertafter: EOF
     line: "{{ uan_motd_content }}"
-

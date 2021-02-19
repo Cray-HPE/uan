@@ -1,13 +1,19 @@
-# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 # Defaults for uan_disk_config role
+
+# DO NOT SET VALUES IN THIS FILE.
+# Override these values in the Ansible inventory or in a playbook.
+
+# See the role README.md file for information about these variables.
 ---
+uan_require_disk: false
+
 uan_device_name_filter: "^sd[a-f]$"
 uan_device_host_filter: ""
 uan_device_model_filter: ""
 uan_device_vendor_filter: ""
 uan_device_size_filter: "<1TB"
 
-uan_require_disk: false
 uan_swap: "/swap"
 uan_scratch: "/scratch"
 

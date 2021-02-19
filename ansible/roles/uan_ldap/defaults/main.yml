@@ -1,25 +1,13 @@
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 # Defaults for uan_ldap role
 
-## uan_ad_groups example:
-#  - { name: admin_grp, origin: ALL }
-#  - { name: dev_users, origin: ALL }
+# DO NOT SET VALUES IN THIS FILE.
+# Override these values in the Ansible inventory or in a playbook.
+
+# See the role README.md file for information about these variables.
+
 uan_ad_groups: []
 
-## uan_ldap_config example:
-# - domain: "mydomain-ldaps"
-#   search_base: "dc=...,dc=..."
-#   servers: ["ldaps://123.123.123.1", "ldaps://213.312.123.132"]
-#   chpass_uri: ["ldaps://123.123.123.1"]
-# - domain: "mydomain-ldap"
-#   search_base: "dc=...,dc=..."
-#   servers: ["ldap://123.123.123.1", "ldap://213.312.123.132"]
 uan_ldap_config: []
 
-## uan_pam_modules example:
-# 
-# uan_pam_modules:
-#   - name: "common-account"
-#     lines:
-#       - "account required\tpam_access.so"
 uan_pam_modules: []

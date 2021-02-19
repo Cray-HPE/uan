@@ -1,5 +1,10 @@
-# Copyright 2019-2020 Hewlett Packard Enterprise Development LP
+# Copyright 2019-2021 Hewlett Packard Enterprise Development LP
 # Defaults for uan_motd role
+
+# DO NOT SET VALUES IN THIS FILE.
+# Override these values in the Ansible inventory or in a playbook.
+
+# See the role README.md file for information about theis variable.
+
 ---
 uan_motd_content: ""
-

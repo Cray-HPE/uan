@@ -1,4 +1,3 @@
 {% if customer_access_gateway is defined %}
-default {{ customer_access_gateway }} 255.255.255.255 - table 3
-{{ customer_access_network }} {{ customer_access_gateway }} 255.255.255.255 vlan007
+default {{ customer_access_gateway }} - -
 {% endif %}

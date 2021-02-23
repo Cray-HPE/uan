@@ -1,86 +1,55 @@
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 ---
+- name: Get CAN IP from DNS
+  set_fact:
+    can_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-can.can') }}"
+
+- name: INFO
+  debug:
+    msg: "CAN IP - {{ can_ip }}"
+
+- name: Get Customer Access Network info from SLS
+  local_action:
+    module: uri
+    url: http://cray-sls/v1/search/networks?name=CAN
+    method: GET
+  register: sls_can
+
+- name: Get Customer Access Network CIDR from SLS, if network exists. 
+  # This assumes that the CAN network is _always_ the third item in the array. This makes the 
+  # implementation fragile. See CASMCMS-6714.
+  set_fact:
+    customer_access_network: "{{ sls_can.json[0].ExtraProperties.Subnets[2].CIDR }}"
+  when: sls_can.status == 200
+
+- name: Get Customer Access Network Gateway from SLS, if network exists
+  set_fact:
+    customer_access_gateway: "{{ sls_can.json[0].ExtraProperties.Subnets[2].Gateway }}"
+  when: sls_can.status == 200
+
+- name: WARNING
+  debug:
+    msg: "No Customer Access Network defined for the node, skipping CAN configuration."
+  when:
+    - can_ip == 'NXDOMAIN'
+    - customer_access_network is not defined
+    - customer_access_gateway is not defined
+
+- name: Initialize list of uan_can_devices
+  set_fact:
+    uan_can_devices: []
+    uan_25G_can_devices: []
+    uan_40G_can_devices: []
+
 - name: Configure CAN v2 on UANs
   block:
-
-  - name: Get Customer Access Network info from SLS
-    local_action:
-      module: uri
-      url: http://cray-sls/v1/search/networks?name=CAN
-      method: GET
-    register: sls_can
-
-  - name: Set Customer Access Network CIDR from SLS, if network exists
-    set_fact:
-      customer_access_network: "{{ sls_can.json[0].ExtraProperties.Subnets[0].CIDR }}"
-    when: sls_can.status == 200
-
-  - name: Set Customer Access Network Gateway from SLS, if network exists
-    set_fact:
-      customer_access_gateway: "{{ sls_can.json[0].ExtraProperties.Subnets[0].Gateway }}"
-    when: sls_can.status == 200
-
-  - debug:
-      msg: "No Customer Access Network defined, skipping CAN configuration."
-    when:
-      - customer_access_network is not defined
-      - customer_access_gateway is not defined
-
-  - name: Get Metal Network info from SLS
-    local_action:
-      module: uri
-      url: http://cray-sls/v1/search/networks?name=MTL
-      method: GET
-    register: sls_mtl
-    failed_when: sls_mtl.status != 200
-
-  - name: Get Metal Management Network CIDR from SLS
-    set_fact:
-      metal_mgmt_cidr: "{{ sls_mtl.json[0].IPRanges[0] }}"
-
-  - name: Get MTL network prefix
-    set_fact:
-      mtl_vlan1_prefix: "{{ metal_mgmt_cidr | ipaddr('prefix') }}"
-
-  - name: Get NMN IP
-    set_fact:
-      nmn_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-nmn.') }}"
-
-  - name: Get last octet of NMN IP
-    set_fact:
-      octet: "{{ nmn_ip.split('.')[3] }}"
-
-  # Uses the nth IP of the customer_access_network subnet where n is the last octet of the NMN IP
-  - name: Get CAN IP
-    set_fact:
-        can_ip: "{{ customer_access_network | ipaddr(octet|int) | ipaddr('address') }}"
 
   - name: Get CAN Prefix
     set_fact:
         can_prefix: "{{ customer_access_network | ipaddr('prefix') }}"
 
-  - name: Get Mountain NMN Services Network info from SLS
-    local_action:
-      module: uri
-      url: http://cray-sls/v1/search/networks?name=MNMN
-      method: GET
-    register: sls_mnmn_svcs
-    ignore_errors: yes
-
-  - name: Set Mountain NMN Services CIDR from SLS, if network exists
-    set_fact:
-      mnmn_svcs_cidr: "{{ sls_mnmn_svcs.json[0].IPRanges[0] }}"
-    when: sls_mnmn_svcs.status == 200
-
-  - name: Get MTL IP
-    set_fact:
-      mtl_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-mtl.') }}"
-
-  - debug:
-      msg: "NMN IP - {{ nmn_ip }}; CAN IP - {{ can_ip }}; MTL IP - {{ mtl_ip }}"
-
   - name: Get list of possible CAN interfaces
-    shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|vlan'"
+    shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|lan|nmn0'"
     register: uan_device_list
 
   - name: Ensure list of possible CAN interfaces are UP
@@ -93,31 +62,50 @@
     debug:
       msg: "{{uan_device_list.stdout_lines }}"
 
-  - name: Find the 40Gb devices
+  - name: Collect the ethernet device speeds of UAN devices
     shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
     register: uan_device_speed
     loop: "{{ uan_device_list.stdout_lines }}"
 
-  - name: Initialize list of uan_can_devices
+  - name: Build list of 25Gb uan_can_devices
     set_fact:
-      uan_can_devices: []
+      uan_25G_can_devices: "{{ uan_25G_can_devices }} + ['{{ item.item }}']"
+    when: item.stdout | regex_search('Speed:25000Mb')
+    loop: "{{ uan_device_speed.results }}"
 
-  - name: Build list of uan_can_devices
+  - name: Build list of 40Gb uan_can_devices
     set_fact:
-      uan_can_devices: "{{ uan_can_devices }} + ['{{ item.item }}']"
+      uan_40G_can_devices: "{{ uan_40G_can_devices }} + ['{{ item.item }}']"
     when: item.stdout | regex_search('Speed:40000Mb')
     loop: "{{ uan_device_speed.results }}"
 
-  - name: Set second CAN interface, if it is not connected
+  - name: Set uan_can_devices if only 2 25Gb devices are found
     set_fact:
-      uan_2nd_can_ifname: "{{ item | regex_replace('(.+)(\\d+$)', '\\1') }}{{ item | regex_replace('(.+)(\\d+$)', '\\2') | int +1 }}"
-    when: uan_can_devices | length == 1
-    loop: "{{ uan_can_devices }}"
+      uan_can_devices: [ "{{ uan_25G_can_devices[0] }}", "{{ uan_25G_can_devices[1] }}" ]
+    when: uan_25G_can_devices | length == 2
 
-  - name: Add second CAN interface to uan_can_devices
+  - name: Set uan_can_devices if more than 2 25Gb devices are found
     set_fact:
-      uan_can_devices: "{{ uan_can_devices }} + ['{{ uan_2nd_can_ifname }}']"
-    when: uan_can_devices | length == 1
+      uan_can_devices: [ "{{ uan_25G_can_devices[0] }}", "{{ uan_25G_can_devices[2] }}" ]
+    when: uan_25G_can_devices | length > 2
+
+  - name: Set uan_can_devices if one or more 40Gb devices are found
+    set_fact:
+      uan_can_devices: [ "{{ uan_40G_can_devices[0] }}", "{{ uan_40G_can_devices[1] }}" ]
+    when: uan_40G_can_devices | length >= 2
+
+  - debug:
+      msg: "No connected Customer Access Network interfaces found, skipping CAN configuration."
+    when:
+      - uan_can_devices | length < 2
+
+  when:
+    - can_ip != 'NXDOMAIN'
+    - customer_access_network is defined
+    - customer_access_gateway is defined
+
+- name: Configure CAN interfaces
+  block:
 
   - name: List uan_can_devices
     debug:
@@ -132,11 +120,13 @@
       mode: '0644'
     loop: "{{ uan_can_devices }}"
 
-  - name: Configure ifcfg-bond0
-    template:
+  - name: Configure bond0
+    copy:
       src: ifcfg-bond0.j2
-      dest: /etc/sysconfig/network/ifcfg-bond0
-      mode: 0644
+      dest: "/etc/sysconfig/network/ifcfg-bond0"
+      owner: root
+      group: root
+      mode: '0644'
 
   - name: Configure ifcfg-vlan007
     template:
@@ -151,26 +141,6 @@
       owner: root
       mode: 0600
 
-  - name: Ensure wicked script directories exist
-    file:
-      path: "/etc/wicked/scripts/{{ item }}"
-      state: directory
-    loop: [ "post-up", "post-down" ]
-
-  - name: Configure can-up.sh
-    template:
-      src: can-up.j2
-      dest: "/etc/wicked/scripts/post-up/can-up.sh"
-      owner: root
-      mode: 0755
-
-  - name: Configure can-down.sh
-    template:
-      src: can-down.j2
-      dest: "/etc/wicked/scripts/post-down/can-down.sh"
-      owner: root
-      mode: 0755
-
   - name: ifdown vlan007 and nmn0 interfaces to set the interface config and routes
     shell: "wicked ifdown {{ item }}"
     changed_when: result.rc == 0
@@ -184,7 +154,7 @@
     wait_for:
       timeout: 5
 
-  - name: Restarting wicked-nanny
+  - name: Restarting wicked-nanny for CAN
     shell: "systemctl restart wickedd-nanny"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
@@ -224,6 +194,4 @@
     register: result
 
   when:
-    - customer_access_network is defined
-    - customer_access_gateway is defined
-
+    - uan_can_devices | length == 2

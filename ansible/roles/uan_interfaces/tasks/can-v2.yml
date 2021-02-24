@@ -121,7 +121,7 @@
     loop: "{{ uan_can_devices }}"
 
   - name: Configure bond0
-    copy:
+    template:
       src: ifcfg-bond0.j2
       dest: "/etc/sysconfig/network/ifcfg-bond0"
       owner: root
@@ -176,8 +176,8 @@
     failed_when: result.rc != 0
     register: result
     with_items:
-      - vlan007
       - nmn0
+      - vlan007
 
   - name: Wait 10 seconds for the interfaces to come up
     wait_for:

@@ -175,8 +175,8 @@
     failed_when: result.rc != 0
     register: result
     with_items:
-      - vlan007
       - nmn0
+      - vlan007
 
   - name: Wait 10 seconds for the interfaces to come up
     wait_for:

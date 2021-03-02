@@ -6,6 +6,8 @@
 
 # See the role README.md file for information about these variables.
 
+uan_ldap_setup: yes
+
 uan_ad_groups: []
 
 uan_ldap_config: []

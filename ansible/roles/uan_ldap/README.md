@@ -13,6 +13,14 @@ Role Variables
 
 Available variables are listed below, along with default values (see defaults/main.yml):
 
+`uan_ldap_setup` is a boolean variable to selectively skip the setup of LDAP on nodes it
+would otherwise be configured due to `uan_ldap_config` being defined.  The default setting
+is to setup LDAP when `uan_ldap_config` is not empty.
+
+```yaml
+uan_ldap_setup: yes
+```
+
 `uan_ldap_config` configures LDAP domains and servers. If this list is empty,
 no LDAP configuration will be applied to the UAN targets and all role tasks will
 be skipped.

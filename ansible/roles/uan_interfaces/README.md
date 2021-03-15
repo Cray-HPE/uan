@@ -23,6 +23,38 @@ this value is falsey no CAN is configured on the nodes.
 uan_can_setup: no
 ```
 
+### `sls_nmn_name`
+
+`sls_nmn_name` is the Node Management Network name used by SLS.
+
+```yaml
+sls_nmn_name: "NMN"
+```
+
+### `sls_nmn_svcs_name`
+
+`sls_nmn_svcs_name` is the Node Management Services Network name used by SLS.
+
+```yaml
+sls_nmn_svcs_name: "NMNLB"
+```
+
+### `sls_mnmn_svcs_name`
+
+`sls_mnmn_svcs_name` is the Mountain Node Management Services Network name used by SLS.
+
+```yaml
+sls_mnmn_svcs_name: "NMN_MTN"
+```
+
+### `sls_can_name`
+
+`sls_can_name` is the Customer Access Network name used by SLS.
+
+```yaml
+sls_can_name: "CAN"
+```
+
 ### `customer_uan_interfaces`
 
 `customer_uan_interfaces` is as list of interface names used for constructing

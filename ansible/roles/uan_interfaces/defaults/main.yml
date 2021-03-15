@@ -9,6 +9,12 @@
 ---
 uan_can_setup: no
 
+# SLS Network names
+sls_nmn_name: "NMN"
+sls_nmn_svcs_name: "NMNLB"
+sls_mnmn_svcs_name: "NMN_MTN"
+sls_can_name: "CAN"
+
 # Example ifcfg fields available, not exhaustive:
 #  bootproto: ''
 #  device: ''

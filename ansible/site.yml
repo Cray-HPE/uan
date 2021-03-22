@@ -61,6 +61,7 @@
 
     # Filesystem mounts
     - role: configure_fs
+      when: not cray_cfs_image | default(false) | bool
 
     # Rebuild initrd for image customization
     - role: rebuild-initrd

@@ -1,0 +1,12 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+---
+# defaults file
+
+root_passwd: NOT_SET
+
+# Vault access information to get encryption keys
+uan_vault_url: "http://cray-vault.vault:8200"
+uan_vault_role_file: /var/run/secrets/kubernetes.io/serviceaccount/namespace
+uan_vault_jwt_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+uan_vault_path: secret/uan
+uan_vault_key: root_password

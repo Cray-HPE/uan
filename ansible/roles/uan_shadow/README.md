@@ -72,7 +72,7 @@ This role is included in the UAN `site.yml` play.
 License
 -------
 
-Copyright 2019-2021 Hewlett Packard Enterprise Development LP
+Copyright 2021 Hewlett Packard Enterprise Development LP
 
 Author Information
 ------------------

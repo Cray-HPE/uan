@@ -2,8 +2,6 @@
 ---
 # defaults file
 
-root_passwd: NOT_SET
-
 # Vault access information to get encryption keys
 uan_vault_url: "http://cray-vault.vault:8200"
 uan_vault_role_file: /var/run/secrets/kubernetes.io/serviceaccount/namespace

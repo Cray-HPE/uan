@@ -31,7 +31,6 @@
     - localtime
     - ntp
     - limits
-    - shadow
     - kdump
 
     # Allow trust of CSM generated keys for elective passwordless SSH during image customization
@@ -47,6 +46,7 @@
 
     # UAN-specific configuration
     - role: ca-cert
+    - role: uan_shadow
     - role: uan_disk_config
       when: not cray_cfs_image
     - role: uan_packages

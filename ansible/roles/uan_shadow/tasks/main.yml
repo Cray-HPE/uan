@@ -1,0 +1,31 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+---
+# The hashi_vault lookup plugin doesn't support kubernetes auth,
+# so we get the token using the REST API
+- name: Get vault token
+  uri:
+    url: "{{ uan_vault_url }}/v1/auth/kubernetes/login"
+    method: POST
+    body:
+      jwt: "{{ lookup('file', uan_vault_jwt_file) }}"
+      role: "{{ lookup('file', uan_vault_role_file) }}"
+    body_format: json
+  register: vault_login
+  delegate_to: 127.0.0.1
+  run_once: true
+  no_log: true
+
+- name: Retrieve UAN credential
+  set_fact:
+    root_passwd: "{{ lookup('hashi_vault',
+      'secret=' + uan_vault_path + ':' + uan_vault_key +
+      ' token=' + vault_login.json.auth.client_token +
+      ' url=' + uan_vault_url) }}"
+  no_log: true
+
+- name: Change root password in /etc/shadow
+  lineinfile:
+    path: /etc/shadow
+    regexp: '^(root:)[^:]*(:.*)$'
+    line: "\\1{{ root_passwd }}\\2"
+    backrefs: yes

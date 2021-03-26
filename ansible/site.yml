@@ -1,5 +1,5 @@
 #!/usr/bin/env ansible-playbook
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 # Top-level site.yml for User Access Nodes
 - hosts: Application
   gather_facts: yes
@@ -31,7 +31,6 @@
     - localtime
     - ntp
     - limits
-    - shadow
     - kdump
 
     # Allow trust of CSM generated keys for elective passwordless SSH during image customization
@@ -47,6 +46,7 @@
 
     # UAN-specific configuration
     - role: ca-cert
+    - role: uan_shadow
     - role: uan_disk_config
       when: not cray_cfs_image
     - role: uan_packages

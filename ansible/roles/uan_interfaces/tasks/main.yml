@@ -5,7 +5,7 @@
   - name: Get NMN Services Network info from SLS
     local_action:
       module: uri
-      url: http://cray-sls/v1/search/networks?name=NMNLB
+      url: "http://cray-sls/v1/search/networks?name={{ sls_nmn_svcs_name }}"
       method: GET
     register: sls_nmn_svcs
     failed_when: sls_nmn_svcs.status != 200
@@ -17,7 +17,7 @@
   - name: Get NMN Network info from SLS
     local_action:
       module: uri
-      url: http://cray-sls/v1/search/networks?name=NMN
+      url: "http://cray-sls/v1/search/networks?name={{ sls_nmn_name }}"
       method: GET
     register: sls_nmn
     failed_when: sls_nmn.status != 200
@@ -33,7 +33,7 @@
   - name: Get Mountain NMN Services Network info from SLS
     local_action:
       module: uri
-      url: http://cray-sls/v1/search/networks?name=MNMN
+      url: "http://cray-sls/v1/search/networks?name={{ sls_mnmn_svcs_name }}"
       method: GET
     register: sls_mnmn_svcs
     ignore_errors: yes

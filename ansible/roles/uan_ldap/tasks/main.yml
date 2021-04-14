@@ -82,12 +82,12 @@
       group: root
       mode: 0600
 
-  - name: Disable nscd and stop
+  - name: Start nscd and enable
     when: not cray_cfs_image|default(false)
     service:
       name: nscd
-      state: stopped
-      enabled: false
+      state: restarted
+      enabled: true
 
   - name: Start and enable sssd
     when: not cray_cfs_image|default(false)

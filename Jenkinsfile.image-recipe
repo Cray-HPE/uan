@@ -14,8 +14,8 @@ kiwiImageRecipeBuildPipeline {
   productVersionFile="./.version"
 
   // Location and name of the recipe/image for the IMS manifest
-  recipeDirectory="images/kiwi-ng/cray-sles15sp1-uan-cos"
-  imageName="cray-shasta-uan-cos-sles15sp1.x86_64"
+  recipeDirectory="images/kiwi-ng/cray-sles15sp2-uan-cos"
+  imageName="cray-shasta-uan-cos-sles15sp2.x86_64"
   distro="sles15"
 
   // Build Scripts

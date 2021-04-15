@@ -8,13 +8,13 @@
 set -ex
 source /base/vars.sh
 
-IMAGE_NAME=cray-shasta-uan-cos-sles15sp1.x86_64-${IMG_VER}
+IMAGE_NAME=cray-shasta-uan-cos-sles15sp2.x86_64-${IMG_VER}
 
 # Setup build directories
 mkdir -p /base/build/output /base/build/unpack
 
 # Set the value of the directory of the kiwi description and go there
-DESC_DIR=/base/images/kiwi-ng/cray-sles15sp1-uan-cos
+DESC_DIR=/base/images/kiwi-ng/cray-sles15sp2-uan-cos
 cd $DESC_DIR
 
 # Preprocess the Kiwi description config file (for on system use)
@@ -35,7 +35,7 @@ chmod 755 root/root/bin/zypper-addrepo.sh
 mkdir -p root/opt/cray/etc/release
 cat <<EOF > root/opt/cray/etc/release/uan
 PRODUCT="HPE Cray User Access Node"
-OS=SLES15SP1
+OS=SLES15SP2
 ARCH=x86_64
 VERSION=${IMG_VER}
 DATE=${BUILD_DATE}

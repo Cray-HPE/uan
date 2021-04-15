@@ -14,6 +14,6 @@ For UAN RPM packages see the [uan-rpms](https://stash.us.cray.com/projects/SCMS/
 ## Updates Required for Release Management
 
 * `vars.sh` - update the versions and locations of the UAN and its dependencies.
-* `images/kiwi-ng/cray-sles15sp1-uan-cos/values-cje.yaml.j2` - update the repo names and locations
-* `images/kiwi-ng/cray-sles15sp1-uan-cos/values-shasta.yaml.j2` - update the repo names and locations
+* `images/kiwi-ng/cray-sles15sp2-uan-cos/values-cje.yaml.j2` - update the repo names and locations
+* `images/kiwi-ng/cray-sles15sp2-uan-cos/values-shasta.yaml.j2` - update the repo names and locations
 

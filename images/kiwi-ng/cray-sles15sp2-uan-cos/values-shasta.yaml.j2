@@ -1,0 +1,235 @@
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
+#
+# This is a Jinja2 configuration file, used in processing the config-template
+# for use on CJE or the SMS.
+#
+# This lists URLs to repositories and groups of repositories.
+#
+#   RULES FOR EDITING
+#   =================
+#
+#   Recommended editor settings:
+#       - No hardtabs (spaces used instead of tab characters).
+#       - Indentation should be 4 spaces.
+#       - Avoid leaving whitespace at the end of lines.
+#       - Vi/Vim settings: set et sw=4 ts=4 (auto-set at top of file)
+#
+#   The following sections lay out the general rules for editing this
+#   file (General Rules), and working with repos (Repo Rules).
+#
+#   General Rules
+#   ~~~~~~~~~~~~~
+#   1. Changes will not be accepted if any rules are violated.
+#
+#   2. Changes must be tested. That means booting the image on a VM as
+#   the minimum test. If the change could impact operation specific to
+#   Shasta hardware, it must be booted on hardware. What to accept will
+#   be a judgement call by the reviewers.
+#
+#   3. No hard tabs!
+#
+#   4. Indentation levels use 4 spaces.  Lines with a single "-" use one
+#   space, to meet yaml syntax requirements
+#
+#   5. All URLs listed must be to local addresses. No remote addresses
+#   are allowed. A local address is a cray.com address. If it isn't a
+#   cray.com address, it is a remote address.
+#
+#   6. If a change is meant to be temporary, provide a comment listing
+#   the JIRA that identifies when the temporary change will be
+#   removed or replaced.
+#
+#   Repo Rules
+#   ~~~~~~~~~~
+#   Repos are listed in the values-{cje,sms}.yaml.j2 files. Repositories
+#   must be added to both files.
+#
+#   1. Repos are listed in case insensitive alphabetical order
+#   according to alias name.
+#
+#   2. Do not duplicate an existing repo.
+#
+#   3. If you add a repo, also add a comment line before it that
+#   indicates where this repo contents come from and what the repo
+#   provides. There are plenty of examples below.
+#
+#   4. Repo priorities are inverted. The lower number has the higher
+#   priority, 1 has precedence over 2. The highest number allowed is 99
+#   and the lowest number allowed is 0. Oddly, both 0 and 99 mean 'no
+#   priority' so they are the last repo searched for content. If a repo
+#   has no specified priority, it is interpreted as 'no priority', the
+#   same as 0 and 99.
+#
+#   5. Priority number 1 is reserved for use by development and must
+#   never be allowed to merge into a non-developer branch. The purpose is
+#   to provide developers with a mechanism to override any of the
+#   content in the recipe repos with a developer defined repo. The
+#   priority scheme in use:
+#
+#       - Priority "1"
+#           - Reserved for development use.
+#           - Must never be present in a released recipe.
+#           - Should only be used in developer bugfix/feature branches.
+#       - Priority "2"
+#           - UAN Repos (UAN/Application node repos)
+#       - Priority "3"
+#           - COS Repos
+#           - CSM Repos
+#       - Priority "4"
+#           - SUSE SLE product repos
+#           - SUSE SLE update repos
+#       - Priority "5"
+#           - SUSE SLE backports repos
+#
+#vim: et sw=4 ts=4
+repos:
+-  details: "Cray UAN SLES15sp2, Nexus repo"
+   alias: "uan-2.0.0-sle-15sp2"
+   priority: "2"
+   imageinclude: "true"
+   path: "https://packages.local/repository/uan-2.0.0-sle-15sp2/"
+
+-  details: "Cray COS SLES15sp2 CN, Nexus repo"
+   alias: "cos-1.4.0-sle-15sp2-compute"
+   priority: "3"
+   imageinclude: "true"
+   path: "https://packages.local/repository/cos-1.4.0-sle-15sp2-compute/"
+
+-  details: "Slingshot SLES15sp2 CN, Nexus repo"
+   alias: "slingshot-0.8.0-sle-15sp2-cn"
+   priority: "2"
+   imageinclude: "true"
+   path: "https://packages.local/repository/slingshot-0.8.0-sle-15sp2-cn/"
+
+-  details: "Cray CSM SLES15sp2 CN, Nexus repo"
+   alias: "csm-sle-15sp2-compute"
+   priority: "3"
+   imageinclude: "true"
+   path: "https://packages.local/repository/csm-sle-15sp2-compute/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Basesystem-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Basesystem-15-SP2-x86_64-Pool/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Basesystem-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Basesystem-15-SP2-x86_64-Updates/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Server-Applications-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Server-Applications-15-SP2-x86_64-Pool/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Server-Applications-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Server-Applications-15-SP2-x86_64-Updates/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Desktop-Applications-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Desktop-Applications-15-SP2-x86_64-Pool/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Desktop-Applications-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Desktop-Applications-15-SP2-x86_64-Updates/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Development-Tools-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Development-Tools-15-SP2-x86_64-Pool/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Development-Tools-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Development-Tools-15-SP2-x86_64-Updates/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-HPC-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-HPC-15-SP2-x86_64-Pool/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-HPC-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-HPC-15-SP2-x86_64-Updates/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Legacy-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Legacy-15-SP2-x86_64-Pool/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Legacy-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Legacy-15-SP2-x86_64-Updates/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Python2-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Python2-15-SP2-x86_64-Pool/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Module-Python2-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Module-Python2-15-SP2-x86_64-Updates/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Product-SLES-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Product-SLES-15-SP2-x86_64-Pool/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Product-SLES-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Product-SLES-15-SP2-x86_64-Updates/"
+ 
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Product-WE-15-SP2-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Product-WE-15-SP2-x86_64-Pool/"
+
+-  details: "SUSE SLE15sp2 packages, Nexus repo"
+   alias: "SUSE-SLE-Product-WE-15-SP2-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-SLE-Product-WE-15-SP2-x86_64-Updates/"
+
+-  details: "SUSE SLE15SP2 Storage 6 packages, Nexus repo"
+   alias: "SUSE-Storage-6-x86_64-Pool"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-Storage-6-x86_64-Pool/"
+
+-  details: "SUSE SLE15SP2 Storage 6 packages, Nexus repo"
+   alias: "SUSE-Storage-6-x86_64-Updates"
+   priority: "4"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-Storage-6-x86_64-Updates/"
+
+-  details: "SUSE SLE15SP2 Backports packages, Nexus repo"
+   alias: "SUSE-Backports-SLE-15-SP2-x86_64"
+   priority: "5"
+   imageinclude: "true"
+   path: "https://packages.local/repository/SUSE-Backports-SLE-15-SP2-x86_64/"
+

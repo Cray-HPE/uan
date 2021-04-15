@@ -11,7 +11,7 @@
 - name: Get Customer Access Network info from SLS
   local_action:
     module: uri
-    url: http://cray-sls/v1/search/networks?name=CAN
+    url: "http://cray-sls/v1/search/networks?name={{ sls_can_name }}"
     method: GET
   register: sls_can
 

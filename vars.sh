@@ -1,7 +1,6 @@
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 # Name and Version Information for the User Access Node Distribution
 export NAME="uan"
-export SLES_VERSION="sle15sp2"
 
 # For developing for a master distribution, use 'master' here.
 #  - List versions of dependencies here as well

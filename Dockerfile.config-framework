@@ -1,16 +1,16 @@
 # Dockerfile for importing UAN content into gitea instances on Shasta
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
-FROM arti.dev.cray.com/baseos-docker-master-local/sles15sp1:sles15sp1-build411 as product-content-base
+FROM arti.dev.cray.com/baseos-docker-master-local/sles15sp2:sles15sp2-build223 as product-content-base
 WORKDIR /
 
 ADD vars.sh /
 
 # Install dependencies as RPMs
 RUN source /vars.sh && \
-    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/csm/SCMS/sle15_sp1_ncn/x86_64/${RELEASE_PREFIX}/${CSM_RELEASE_VERSION}      shasta-scms && \
-    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/SHASTA-OS/sle15_sp1_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION} shasta-cos  && \
-    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/LUS/sle15_sp1_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-lus  && \
-    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/DVS/sle15_sp1_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-dvs  && \
+    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/csm/SCMS/sle15_sp2_ncn/x86_64/${RELEASE_PREFIX}/${CSM_RELEASE_VERSION}      shasta-scms && \
+    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/SHASTA-OS/sle15_sp2_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION} shasta-cos  && \
+    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/LUS/sle15_sp2_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-lus  && \
+    zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/DVS/sle15_sp2_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-dvs  && \
     zypper refresh && \
     zypper in -y \
         cf-cme-sysconfig-config-framework \

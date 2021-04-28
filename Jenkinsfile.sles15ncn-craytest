@@ -5,5 +5,5 @@ rpmBuild (
     slack_notify: ['SUCCESS','FAILURE'],
     product: "ct-tests",
     target_node: "ncn",
-    fanout_params: ["sle15sp1"],
+    fanout_params: ["sle15sp2"],
 )

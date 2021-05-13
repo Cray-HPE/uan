@@ -132,14 +132,16 @@ get_container_versions_on_branch() {
 get_container_versions() {
     if [[ "${GIT_BRANCH}" =~ release\/.* ]]; then
         echo "Release Branch: ${GIT_BRANCH}"
-        get_container_versions_on_branch "stable"
+        ARTIFACT_BRANCH="stable"
     elif [[ "${PARENT_BRANCH}" =~ release\/.* ]]; then
         echo "Parent Release Branch: ${PARENT_BRANCH}"
-        get_container_versions_on_branch "stable"
+        ARTIFACT_BRANCH="stable"
     else
         echo "non-Release Branch"
-        get_container_versions_on_branch "master"
+        ARTIFACT_BRANCH="master"
     fi
+    eval export ARTIFACT_BRANCH=$ARTIFACT_BRANCH
+    get_container_versions $ARTIFACT_BRANCH
 }
 
 pin_dependent_containers() {

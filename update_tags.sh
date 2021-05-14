@@ -141,7 +141,7 @@ get_container_versions() {
         ARTIFACT_BRANCH="master"
     fi
     eval export ARTIFACT_BRANCH=$ARTIFACT_BRANCH
-    get_container_versions $ARTIFACT_BRANCH
+    get_container_versions_on_branch $ARTIFACT_BRANCH
 }
 
 pin_dependent_containers() {
@@ -154,6 +154,9 @@ pin_dependent_containers() {
         tag=$(eval echo \${${var}})
         SED_CMD="${SED_CMD} -e s/${var}/${tag}/g"
     done
+
+    # Find and replace ARTIFACT_BRANCH
+    SED_CMD="${SED_CMD} -e s/ARTIFACT_BRANCH/${ARTIFACT_BRANCH}/g"
 
     for dfile in $(find . -name 'Dockerfile.*'); do
         if ! ${SED_CMD} ${dfile}; then

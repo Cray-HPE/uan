@@ -22,7 +22,7 @@ RUN source /vars.sh && \
         csm-ssh-keys-roles
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM arti.dev.cray.com/csm-docker-$ARTIFACT_BRANCH-local/cf-gitea-import:IMAGE_CF_GITEA_IMPORT_TAG
+FROM arti.dev.cray.com/csm-docker-ARTIFACT_BRANCH-local/cf-gitea-import:IMAGE_CF_GITEA_IMPORT_TAG
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

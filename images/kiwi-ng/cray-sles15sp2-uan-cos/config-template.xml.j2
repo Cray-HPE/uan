@@ -63,7 +63,7 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
     uncommented.
 
 -->
-<image schemaversion="6.8" name="cray-shasta-uan-cos-sles15sp1">
+<image schemaversion="6.8" name="cray-shasta-uan-cos-sles15sp2">
     <description type="system">
         <author>Cray Inc</author>
         <contact>keopp@hpe.com</contact>
@@ -133,8 +133,16 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
     <packages type="image">
         <!-- SECTION: Analytics Base SLES Packages  -->
         <package name="java-1_8_0-openjdk-devel"/>
-        <package name="python2"/>
         <package name="python3"/>
+
+        <!-- SECTION: CDST GUI Packages -->
+        <package name="libgcrypt20"/>
+        <package name="libgpg-error"/>
+        <package name="libopenblas_pthreads0"/>
+        <package name="librsvg2"/>
+        <package name="munge"/>
+        <package name="python3-gobject"/>
+        <package name="typelib-1_0-Gtk-3_0"/>
 
         <!-- SECTION: CSM General Packages -->
         <package name="cfs-state-reporter"/>
@@ -191,6 +199,18 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <package name="spire-agent"/>
         <package name="syscfg"/>
 
+        <!-- SECTION: GPU Support Packages  -->
+        <package name="dkms"/>
+        <package name="glu-devel"/>
+        <package name="libLLVM7"/>
+        <package name="libXext6-32bit"/>
+        <package name="libglut3"/>
+        <package name="libglvnd-32bit"/>
+        <package name="libnuma-devel"/>
+        <package name="libvdpau1"/>
+        <package name="libvulkan1"/>
+        <package name="perl-File-Which"/>
+        <package name="x11-tools"/>
 
         <!-- SECTION: Lustre cray-lustre:cray-2.11:cray_shasta_c Packages -->
         <package name="cray-lnet-dracut"/>
@@ -213,6 +233,8 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <!-- SECTION: UAN Packages -->
         <package name="cray-switchboard"/>
         <package name="cray-uan-boot-parameters-shasta-uan"/>
+        <package name="cray-uan-diagnostics"/>
+        <package name="cray-uan-goss"/>
         <package name="cray-uan-load-drivers-shasta-uan"/>
 
         <!-- SECTION: PE Base SLES Packages -->
@@ -297,7 +319,7 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <package name="libpango-1_0-0"/>
         <package name="libpciaccess0"/>
         <package name="libpng12-0"/>
-        <package name="libprocps6"/>
+        <package name="libprocps7"/>
         <package name="libquadmath0"/>
         <package name="libreadline7"/>
         <package name="libSM6"/>
@@ -348,7 +370,10 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         <package name="python2-PyYAML"/>
         <package name="python2-requests"/>
         <package name="python3-boto3"/>
+        <package name="python3-cairo"/>
+        <package name="python3-gobject-Gdk"/>
         <package name="python3-kubernetes"/>
+        <package name="python3-numpy"/>
         <package name="python3-PyYAML"/>
         <package name="rpcbind"/>
         <package name="rpm"/>

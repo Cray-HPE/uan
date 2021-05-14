@@ -5,4 +5,4 @@
 # /base directory prefix. See the pipeline definition here:
 #   https://stash.us.cray.com/projects/DST/repos/jenkins-shared-library/browse/vars/kiwiImageRecipeBuildPipeline.groovy
 
-/base/images/kiwi-ng/cray-sles15sp1-uan-cos/scripts/kiwi-image-build.sh
+/base/images/kiwi-ng/cray-sles15sp2-uan-cos/scripts/kiwi-image-build.sh

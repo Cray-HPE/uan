@@ -1,4 +1,4 @@
-@Library('dst-shared@master') _
+@Library('dst-shared@release/uan-2.1') _
 dockerBuildPipeline {
   repository = "cray"
   imagePrefix = "cray"

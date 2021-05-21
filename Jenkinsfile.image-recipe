@@ -1,4 +1,4 @@
-@Library("dst-shared@master") _
+@Library("dst-shared@release/uan-2.1") _
 kiwiImageRecipeBuildPipeline {
 
   // Docker image parameters for the image containing the IMS manifest for the image/recipe

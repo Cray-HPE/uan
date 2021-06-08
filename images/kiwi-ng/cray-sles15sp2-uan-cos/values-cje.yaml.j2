@@ -84,11 +84,11 @@
 # See vars.sh for definitions of "BLOBLET_*" variables
 #vim: et sw=4 ts=4
 repos:
--  details: "Slingshot SLES15SP2 CN, DST mirror"
-   alias: "slingshot-sles15-sp2-cn"
+-  details: "Slingshot Host Software SLES15SP2 CN, DST mirror"
+   alias: "slingshot-host-software-sles15-sp2-cn"
    priority: "2"
    imageinclude: "true"
-   path: "{{ env.BLOBLET_SLINGSHOT }}/rpms/cray-sles15-sp2-cn"
+   path: "{{ env.BLOBLET_SLINGSHOT }}/rpms/cos-2.1"
 -  details: "Cray UAN SLES15SP2 NCN, DST mirror"
    alias: "cray-uan-sles15-sp2-cn"
    priority: "2"
@@ -96,7 +96,7 @@ repos:
    path: "{{ env.BLOBLET_UAN }}/rpms/cray-sles15-sp2-ncn"
 -  details: "Cray COS SLES15SP2 CN, DST mirror"
    alias: "cray-sles15-sp2-cn"
-   priority: "3"
+   priority: "2"
    imageinclude: "true"
    path: "{{ env.BLOBLET_COS }}/rpms/cray-sles15-sp2-cn"
 -  details: "Cray CSM SLES15SP2 CN, DST mirror"

@@ -15,6 +15,11 @@ sls_nmn_svcs_name: "NMNLB"
 sls_mnmn_svcs_name: "NMN_MTN"
 sls_can_name: "CAN"
 
+# DNS Required Options
+# DO NOT CHANGE
+uan_required_dns_options:
+  - 'single-request'
+
 # Example ifcfg fields available, not exhaustive:
 #  bootproto: ''
 #  device: ''
@@ -47,4 +52,6 @@ customer_uan_global_routes: []
 external_dns_searchlist:
   - ''
 external_dns_servers:
+  - ''
+external_dns_options:
   - ''

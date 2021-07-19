@@ -61,6 +61,10 @@
       uan_existing_search_domains: "{{ item.split() }}"
     loop: "{{ resolv | default() | regex_findall( 'search (\\b(?:[a-zA-Z0-9])?(?:[a-zA-Z0-9-]{1,})?(?:\\.[a-zA-Z0-9-]{1,}){1,}\\b.*){1,}') }}"
 
+  - name: Parse existing options from /etc/resolv.conf
+    set_fact:
+      uan_existing_options: "{{ resolv | regex_findall( 'options (\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\\b') }}"
+
   - name: Slurp in /etc/sysconfig/network/config to get any DHCP added entries
     slurp:
       src: "/etc/sysconfig/network/config"
@@ -80,6 +84,11 @@
       uan_netconf_nameservers: "{{ item.split() }}"
     loop: "{{ netconf | default() | regex_findall( 'NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"') }}"
 
+  - name: Parse options from config list
+    set_fact:
+      uan_netconf_options: "{{ item.split() }}"
+    loop: "{{ netconf | default() | regex_findall( 'NETCONFIG_DNS_RESOLVER_OPTIONS=\"(.*)\"') }}"
+
   - name: Add existing search domains to uan_netconf_search_domains
     set_fact:
       uan_netconf_search_domains: "{{ uan_netconf_search_domains + [ item ] }}"
@@ -92,6 +101,12 @@
     when: (uan_existing_nameservers is defined) and (item not in uan_netconf_nameservers)
     loop: "{{ uan_existing_nameservers }}"
 
+  - name: Add existing options to uan_netconf_options
+    set_fact:
+      uan_netconf_options: "{{ uan_netconf_options + [ item ] }}"
+    when: (uan_existing_options is defined) and (item not in uan_netconf_options)
+    loop: "{{ uan_existing_options }}"
+
   - name: Add any customer defined search domains to uan_netconf_search_domains
     set_fact:
       uan_netconf_search_domains: "{{ uan_netconf_search_domains + [ item ] }}"
@@ -103,6 +118,18 @@
       uan_netconf_nameservers: "{{ uan_netconf_nameservers + [ item ] }}"
     when: item not in uan_netconf_nameservers
     loop: "{{ external_dns_servers }}"
+
+  - name: Add required options to uan_netconf_options
+    set_fact:
+      uan_netconf_options: "{{ uan_netconf_options + [ item ] }}"
+    when: item not in uan_netconf_options
+    loop: "{{ uan_required_dns_options }}"
+
+  - name: Add any customer defined options to uan_netconf_options
+    set_fact:
+      uan_netconf_options: "{{ uan_netconf_options + [ item ] }}"
+    when: item not in uan_netconf_options
+    loop: "{{ external_dns_options }}"
 
   - name: Set DNS STATIC SEARCHLIST entries
     when: uan_netconf_search_domains is defined
@@ -118,6 +145,14 @@
       dest: /etc/sysconfig/network/config
       regex: '^NETCONFIG_DNS_STATIC_SERVERS=\"(.*)\"$'
       line: "NETCONFIG_DNS_STATIC_SERVERS=\"{{ uan_netconf_nameservers | join(' ') }}\""
+      backrefs: yes
+
+  - name: Set DNS_RESOLVER_OPTIONS entries
+    when: uan_netconf_options is defined
+    lineinfile:
+      dest: /etc/sysconfig/network/config
+      regex: '^NETCONFIG_DNS_RESOLVER_OPTIONS=\"(.*)\"$'
+      line: "NETCONFIG_DNS_RESOLVER_OPTIONS=\"{{ uan_netconf_options | join(' ') }}\""
       backrefs: yes
 
   - name: Generate updated /etc/resolv.conf by restarting wicked

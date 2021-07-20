@@ -72,21 +72,17 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
         </specification>
     </description>
 
-    <preferences>
-        <type image="iso" primary="true" flags="overlay" hybrid="true" firmware="efi" kernelcmdline="splash" hybridpersistent_filesystem="ext4" hybridpersistent="true"/>
-        <version>CRAY.VERSION.HERE</version>
-        <packagemanager>zypper</packagemanager>
-        <locale>en_US</locale>
-        <keytable>us</keytable>
-        <timezone>America/Chicago</timezone>
-        <rpm-excludedocs>false</rpm-excludedocs>
-        <rpm-check-signatures>false</rpm-check-signatures>
-        <bootsplash-theme>openSUSE</bootsplash-theme>
-        <bootloader-theme>openSUSE</bootloader-theme>
+    <profiles>
+        <profile name="Live" description="Live image" import="true"/>
+        <profile name="Virtual" description="Simple Disk image"/>
+        <profile name="Disk" description="Expandable Disk image"/>
+        <profile name="PXE" description="Example PXE Image"/>
+    </profiles>
+
+    <preferences profiles="Live">
+	    <type image="iso" flags="overlay" hybrid="true" firmware="efi" kernelcmdline="splash" hybridpersistent_filesystem="ext4" hybridpersistent="true"/>
     </preferences>
-    <preferences>
-        <type image="pxe" filesystem="squashfs" boot="netboot/suse-leap42.3"/>
-        <type image="vmx" filesystem="ext4" bootloader="grub2" kernelcmdline="splash" firmware="efi"/>
+    <preferences profiles="Disk">
         <type image="oem" filesystem="ext4" initrd_system="dracut" bootloader="grub2" kernelcmdline="splash console=ttyS0 console=tty0 ignore_loglevel" firmware="bios">
             <oemconfig>
                 <oem-systemsize>2048</oem-systemsize>
@@ -99,8 +95,25 @@ Copyright 2019-2021 Hewlett Packard Enterprise Development LP
                 <vmnic driver="e1000" interface="0" mode="bridged"/>
             </machine>
         </type>
-        <type image="squashfs"/>
+    </preferences>
+    <preferences profiles="Virtual">
+        <type image="vmx" filesystem="ext4" bootloader="grub2" kernelcmdline="splash" firmware="efi"/>
+    </preferences>
+    <preferences profiles="PXE">
+        <type image="pxe" filesystem="squashfs" boot="netboot/suse-leap42.3"/>
+    </preferences>
+    <preferences>
+        <type image="squashfs" primary="true"/>
         <type image="tbz"/>
+        <version>0.2.27-20210622184744-gf5d96b1</version>
+        <packagemanager>zypper</packagemanager>
+        <locale>en_US</locale>
+        <keytable>us</keytable>
+        <timezone>America/Chicago</timezone>
+        <rpm-excludedocs>false</rpm-excludedocs>
+        <rpm-check-signatures>false</rpm-check-signatures>
+        <bootsplash-theme>openSUSE</bootsplash-theme>
+        <bootloader-theme>openSUSE</bootloader-theme>
     </preferences>
 
     <users>

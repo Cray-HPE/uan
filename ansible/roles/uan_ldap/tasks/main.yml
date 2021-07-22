@@ -114,3 +114,4 @@
   when:
     - uan_ldap_setup
     - uan_ldap_config
+    - not cray_cfs_image|default(false)

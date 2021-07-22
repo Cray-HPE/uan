@@ -54,6 +54,7 @@
       when: not cray_cfs_image
     - role: uan_motd
     - role: uan_ldap
+      when: not cray_cfs_image
 
     # Nvidia developer toolkit
     - role: cray_nvidia_customize  # cf-cme-sysconfig

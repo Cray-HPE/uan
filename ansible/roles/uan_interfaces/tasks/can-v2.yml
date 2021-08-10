@@ -2,7 +2,7 @@
 ---
 - name: Get CAN IP from DNS
   set_fact:
-    can_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '-can.can') }}"
+    can_ip: "{{ lookup('dig', ansible_hostname | regex_replace('(-nmn)$|(-can)$') + '.can') }}"
 
 - name: INFO
   debug:

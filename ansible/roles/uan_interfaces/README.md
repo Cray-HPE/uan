@@ -177,6 +177,62 @@ external_dns_options:
   - 'single-request'
 ```
 
+### `hmn_api_gw`
+
+`hmn_api_gw` is the IP address of the HMN API gateway.
+
+```yaml
+hmn_api_gw: "10.94.100.71"
+```
+
+### `nmn_local_api_gw`
+
+`nmn_local_api_gw` is the IP address of the NMN local API gateway.
+
+```yaml
+nmn_local_api_gw: "10.92.100.81"
+```
+
+### `nmn_api_gw`
+
+`nmn_api_gw` is the IP address of the NMN API gateway.
+
+```yaml
+nmn_api_gw: "10.92.100.71"
+```
+
+### `kubeapi_vip`
+
+`kubeapi_vip` is the IP of the Kubernetes API.
+
+```yaml
+kubeapi_vip: "10.252.1.2"
+```
+
+### `api_gw_ips`
+
+`api_gw_ips` is a list of the gateway IPs to protect.
+
+```yaml
+api_gw_ips: "10.94.100.71,10.92.100.81,10.92.100.71,10.252.1.2"
+```
+
+### `api_gw_ports`
+
+`api_gw_ports` is a list of gateway ports to protect.
+
+```yaml
+api_gw_ports: "80,443,8081,8888"
+```
+
+### `sls_url`
+
+`sls_url` is the SLS URL.
+
+```yaml
+sls_url: "http://cray-sls"
+```
+
 Dependencies
 ------------
 

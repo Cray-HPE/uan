@@ -1,0 +1,48 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+---
+- name: Set non-CAN access rules to k8s api gw
+  command:  "{{item }}"
+  with_items:
+    - bash -c "iptables -F OUTPUT"
+    - bash -c "iptables -A OUTPUT -p tcp -m multiport --dports {{api_gw_ports}} -d {{api_gw_ips}} -m owner --uid-owner root -j ACCEPT"
+    - bash -c "iptables -A OUTPUT -p tcp -m multiport --dports {{api_gw_ports}} -d {{api_gw_ips}} -j DROP"
+  when: api_gw_ips|length > 0
+
+- name: Get CAN Network info from SLS
+  local_action:
+    module: uri
+    url: "{{ sls_url }}/v1/search/networks?name=CAN"
+    headers: "{{ api_header }}"
+    method: GET
+  register: sls_can
+  run_once: True
+  failed_when: sls_can.status != 200
+
+- block:
+  - name: Get CAN CIDR from SLS
+    set_fact:
+      can_cidr: "{{ sls_can.json[0].ExtraProperties.CIDR }}"
+
+  - name: Show CAN
+    debug:
+      msg: "{{ can_cidr }}"
+    when: can_cidr is defined
+
+  - name: Set access rules to k8s api gw
+    command:  "{{item }}"
+    with_items:
+      - bash -c "iptables -A OUTPUT -d {{can_cidr}} -m owner --uid-owner root -j ACCEPT"
+      - bash -c "iptables -A OUTPUT -d {{can_cidr}} -j DROP"
+    when: can_cidr is defined
+
+  when: uan_can_setup
+
+- name: Read access rules to k8s api gw
+  command:  bash -c "iptables -L -n --line-numbers"
+  register: iptables_list
+  when: api_gw_ips|length > 0
+
+- name: List resutling iptables
+  debug:
+    msg: "{{ iptables_list.stdout_lines }}"
+  when: iptables_list is defined

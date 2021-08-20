@@ -63,6 +63,17 @@ uan_pam_modules:
     lines:
       - "account required\tpam_access.so"
 ```
+Sensitive Role Variables
+------------------------
+
+Any sssd.conf variables which are sensitive in nature should be stored in the secret/uan_ldap hashicorp vault path using the
+variable name as the key.
+
+To use these sensitive variables in sssd.conf, list them in the `uan_ldap_keys` list.
+
+```yaml
+uan_ldap_keys: [ "ldap_default_authtok" ]
+```
 
 Dependencies
 ------------

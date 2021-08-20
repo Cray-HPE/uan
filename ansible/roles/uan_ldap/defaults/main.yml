@@ -13,3 +13,10 @@ uan_ad_groups: []
 uan_ldap_config: []
 
 uan_pam_modules: []
+
+# Vault access information to get encryption keys
+uan_vault_url: "http://cray-vault.vault:8200"
+uan_vault_role_file: /var/run/secrets/kubernetes.io/serviceaccount/namespace
+uan_vault_jwt_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+uan_vault_path: secret/uan_ldap
+uan_ldap_keys: []

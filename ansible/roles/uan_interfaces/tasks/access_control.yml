@@ -1,12 +1,39 @@
 # Copyright 2021 Hewlett Packard Enterprise Development LP
 ---
-- name: Set non-CAN access rules to k8s api gw
-  command:  "{{item }}"
-  with_items:
-    - bash -c "iptables -F OUTPUT"
-    - bash -c "iptables -A OUTPUT -p tcp -m multiport --dports {{api_gw_ports}} -d {{api_gw_ips}} -m owner --uid-owner root -j ACCEPT"
-    - bash -c "iptables -A OUTPUT -p tcp -m multiport --dports {{api_gw_ports}} -d {{api_gw_ips}} -j DROP"
-  when: api_gw_ips|length > 0
+- name: Get API gateway IPs from DNS using a list
+  set_fact:
+    gw_lookup_list: '{{ lookup("dig", "{{ item }}.") }}'
+  loop: "{{ api_gateways }}"
+  register: gw_lookup_list
+
+- name: Split strings in gw_ip_list
+  set_fact:
+     gw_split_ips: "{{ item.split(',') }}"
+  loop: "{{ gw_lookup_list.results|map(attribute='ansible_facts.gw_lookup_list')|list }}"
+  register: gw_split_ips
+
+- name: Flatten list of IPs
+  set_fact:
+    gw_ip_list: "{{ item }}"
+  with_items: "{{ gw_split_ips.results|map(attribute='ansible_facts.gw_split_ips')|list }}"
+  register: gw_ip_list
+
+- name: Make gw_ip_list unique
+  set_fact:
+    gw_ip_list: "{{ gw_ip_list.results|map(attribute='ansible_facts.gw_ip_list')|list|unique }}"
+
+- name: Clear iptables OUTPUT chain
+  command: "iptables -F OUTPUT"
+
+- name: Setup root user iptables
+  command: "iptables -A OUTPUT -p tcp -m multiport --dports {{ api_gw_ports }} -d {{ item }} -m owner --uid-owner root -j ACCEPT"
+  with_items: "{{ gw_ip_list }}"
+  when: gw_ip_list|length > 0
+
+- name: Setup non-root user iptables
+  command: "iptables -A OUTPUT -p tcp -m multiport --dports {{ api_gw_ports }} -d {{ item }} -j DROP"
+  with_items: "{{ gw_ip_list }}"
+  when: gw_ip_list|length > 0
 
 - block:
   - name: Show CAN
@@ -14,8 +41,8 @@
       msg: "{{ customer_access_network }}"
     when: customer_access_network is defined
 
-  - name: Set access rules to k8s api gw
-    command:  "{{item }}"
+  - name: Set access rules to CAN
+    command:  "{{ item }}"
     with_items:
       - bash -c "iptables -A OUTPUT -d {{customer_access_network}} -m owner --uid-owner root -j ACCEPT"
       - bash -c "iptables -A OUTPUT -d {{customer_access_network}} -j DROP"
@@ -26,9 +53,9 @@
 - name: Read access rules to k8s api gw
   command:  bash -c "iptables -L -n --line-numbers"
   register: iptables_list
-  when: api_gw_ips|length > 0
+  when: gw_ip_list|length > 0
 
-- name: List resutling iptables
+- name: List resulting iptables
   debug:
     msg: "{{ iptables_list.stdout_lines }}"
   when: iptables_list is defined

@@ -177,44 +177,25 @@ external_dns_options:
   - 'single-request'
 ```
 
-### `hmn_api_gw`
+### `uan_access_control`
 
-`hmn_api_gw` is the IP address of the HMN API gateway.
+`uan_access_control` is a boolean variable to control whether non-root access control is enabled
+Default is `no`
 
 ```yaml
-hmn_api_gw: "10.94.100.71"
+uan_access_control: no
 ```
 
-### `nmn_local_api_gw`
+### `api_gateways`
 
-`nmn_local_api_gw` is the IP address of the NMN local API gateway.
-
-```yaml
-nmn_local_api_gw: "10.92.100.81"
-```
-
-### `nmn_api_gw`
-
-`nmn_api_gw` is the IP address of the NMN API gateway.
+`api_gateways` is a list of API gateway DNS names to block non-user access
 
 ```yaml
-nmn_api_gw: "10.92.100.71"
-```
-
-### `kubeapi_vip`
-
-`kubeapi_vip` is the IP of the Kubernetes API.
-
-```yaml
-kubeapi_vip: "10.252.1.2"
-```
-
-### `api_gw_ips`
-
-`api_gw_ips` is a list of the gateway IPs to protect.
-
-```yaml
-api_gw_ips: "10.94.100.71,10.92.100.81,10.92.100.71,10.252.1.2"
+api_gateways:
+  - "api-gw-service"
+  - "api-gw-service.local"
+  - "api-gw-service-nmn.local"
+  - "kubeapi-vip"
 ```
 
 ### `api_gw_ports`

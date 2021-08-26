@@ -57,10 +57,11 @@ external_dns_options:
   - ''
 
 # Non-root user access restriction data
-hmn_api_gw: "10.94.100.71"
-nmn_local_api_gw: "10.92.100.81"
-nmn_api_gw: "10.92.100.71"
-kubeapi_vip: "10.252.1.2"
-api_gw_ips: "10.94.100.71,10.92.100.81,10.92.100.71,10.252.1.2"
+api_gateways:
+  - "api-gw-service"
+  - "api-gw-service.local"
+  - "api-gw-service-nmn.local"
+  - "kubeapi-vip"
 api_gw_ports: "80,443,8081,8888"
 sls_url: "http://cray-sls"
+uan_access_control: no

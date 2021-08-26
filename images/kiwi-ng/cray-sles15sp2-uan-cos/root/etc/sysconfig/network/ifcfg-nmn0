@@ -1,2 +1,0 @@
-STARTMODE=nfsroot
-BOOTPROTO=dhcp

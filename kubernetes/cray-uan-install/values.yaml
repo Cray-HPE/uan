@@ -4,17 +4,6 @@
 #   runBuildPrep-config-framework.sh script.
 #
 
-# For products that import Kiwi recipes and built-out images
-cray-import-kiwi-recipe-image:
-  import_image:
-    name: cray-uan-image-recipe
-    # tag: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
-
-  import_job:
-    # name: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
-    PRODUCT_NAME: "uan"
-    # PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
-
 # For products that import Ansible configuration content
 cray-import-config:
   config_image:

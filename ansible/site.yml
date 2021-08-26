@@ -6,7 +6,6 @@
   any_errors_fatal: true
   remote_user: root
 
-
   pre_tasks:
     - name: Disallow login to the UANs during post-boot configuration
       file:
@@ -25,6 +24,9 @@
       when: not cray_cfs_image and uan_login_config_protect|default(true)
 
   roles:
+
+    # UAN repo and rpm configuration
+    - uan_packages
 
     # Standard UNIX configuration
     - rsyslog
@@ -49,7 +51,6 @@
     - role: uan_shadow
     - role: uan_disk_config
       when: not cray_cfs_image
-    - role: uan_packages
     - role: uan_interfaces
       when: not cray_cfs_image
     - role: uan_motd

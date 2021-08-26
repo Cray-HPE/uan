@@ -55,3 +55,13 @@ external_dns_servers:
   - ''
 external_dns_options:
   - ''
+
+# Non-root user access restriction data
+api_gateways:
+  - "api-gw-service"
+  - "api-gw-service.local"
+  - "api-gw-service-nmn.local"
+  - "kubeapi-vip"
+api_gw_ports: "80,443,8081,8888"
+sls_url: "http://cray-sls"
+uan_access_control: no

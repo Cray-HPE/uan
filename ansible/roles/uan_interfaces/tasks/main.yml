@@ -195,8 +195,4 @@
   # Configure Customer defined interfaces, routes, and rules
   - include_tasks: customer_interfaces.yml
 
-  # Configure non-root user access controls
-  - include_tasks: access_control.yml
-    when: uan_access_control
-
   when: not cray_cfs_image

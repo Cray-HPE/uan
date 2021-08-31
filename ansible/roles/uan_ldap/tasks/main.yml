@@ -23,14 +23,24 @@
   # a list of keys in an Ansible list variable named uan_ldap_keys.
   # The user is responsible for adding the necessary tasks and templates
   # to use any key values stored in hashi_vault.
-  - name: Retrieve UAN vault value for uan_ldap_keys
+    - name: Retrieve UAN vault value for uan_ldap_keys
     set_fact:
-      uan_ldap_vars: "{{ lookup('hashi_vault',
-        'secret=' + uan_vault_path + ':' + {{ item }} +
+        uan_ldap_vars: "{{ lookup('hashi_vault',
+        'secret=' + uan_vault_path + ':' + item +
         ' token=' + vault_login.json.auth.client_token +
         ' url=' + uan_vault_url) }}"
     no_log: true
+    register: uan_ldap_vars
+    delegate_to: 127.0.0.1
     loop: "{{ uan_ldap_keys }}"
+    when: uan_ldap_keys|length > 0
+
+  - name: Generate uan_ldap_vars_dict
+    set_fact:
+      uan_ldap_vars_dict: "{{ uan_ldap_vars_dict|default({}) | combine( { item.item : item.ansible_facts.uan_ldap_vars } ) }}"
+    no_log: true
+    delegate_to: 127.0.0.1
+    loop: "{{ uan_ldap_vars.results }}"
     when: uan_ldap_keys|length > 0
 
   - name: Set ldap_port

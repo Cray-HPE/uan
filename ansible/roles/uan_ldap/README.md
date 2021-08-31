@@ -69,10 +69,48 @@ Sensitive Role Variables
 Any sssd.conf variables which are sensitive in nature should be stored in the secret/uan_ldap hashicorp vault path using the
 variable name as the key.
 
-To use these sensitive variables in sssd.conf, list them in the `uan_ldap_keys` list.
+To use these sensitive variables in sssd.conf, list them in the `uan_ldap_keys` list and they will be set in the `[domain]` section
+of sssd.conf.
 
 ```yaml
+uan_ldap_keys: []
+```
+
+# Example
+```yaml
 uan_ldap_keys: [ "ldap_default_authtok" ]
+```
+
+### `uan_vault_url`
+
+`uan_vault_url` is the URL for the HashiCorp Vault
+
+```yaml
+uan_vault_url: "http://cray-vault.vault:8200"
+```
+
+### `uan_vault_role_file`
+
+`uan_vault_role_file` is the required Kubernetes role file for HashiCorp Vault access.
+
+```yaml
+uan_vault_role_file: /var/run/secrets/kubernetes.io/serviceaccount/namespace
+```
+
+### `uan_vault_jwt_file`
+
+`uan_vault_jwt_file` is the path to the required Kubernetes token file for HashiCorp Vault access.
+
+```yaml
+uan_vault_jwt_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+```
+
+### `uan_vault_path`
+
+`uan_vault_path` is the path to use for storing uan_ldap data for UANs in HashiCorp Vault.
+
+```yaml
+uan_vault_path: secret/uan_ldap
 ```
 
 Dependencies

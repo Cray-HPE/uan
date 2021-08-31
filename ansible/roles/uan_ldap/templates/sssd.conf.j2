@@ -56,6 +56,8 @@
 {% endif %}
 {% endfor %}
 
-{% for key, value in uan_ldap_vars %}
-  {{ key }}={{ value }}
+{% if uan_ldap_vars_dict is defined %}
+{% for key, value in uan_ldap_vars_dict.items() %}
+  {{ key }} = {{ value }}
 {% endfor %}
+{% endif %}

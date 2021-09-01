@@ -54,6 +54,10 @@
   krb5_server={% for item in cfg.krb5_server %}{{ item }}{{ "," if not loop.last else ""}}{% endfor %}{{''}}
   krb5_realm={{ cfg.krb5_realm }}
 {% endif %}
-
 {% endfor %}
 
+{% if uan_ldap_vars_dict is defined %}
+{% for key, value in uan_ldap_vars_dict.items() %}
+  {{ key }} = {{ value }}
+{% endfor %}
+{% endif %}

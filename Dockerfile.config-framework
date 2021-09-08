@@ -1,6 +1,6 @@
 # Dockerfile for importing UAN content into gitea instances on Shasta
 # Copyright 2020-2021 Hewlett Packard Enterprise Development LP
-FROM arti.dev.cray.com/baseos-docker-master-local/sles15sp2:sles15sp2-build223 as product-content-base
+FROM arti.dev.cray.com/baseos-docker-master-local/sles15sp2:sles15sp2-build241 as product-content-base
 WORKDIR /
 
 ADD vars.sh /

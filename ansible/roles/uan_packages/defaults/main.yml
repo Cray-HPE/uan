@@ -14,12 +14,10 @@ uan_sles15_repositories_add:
 
 uan_sles15_packages_remove:
   - cray-cos-release
-  - cray-boot-parameters-shasta-compute
 uan_sles15_packages_add:
   - cfs-trust
   - cray-diags-fabric
   - cray-switchboard
-  - cray-uan-boot-parameters-shasta-uan
   - cray-uan-diagnostics
   - cray-uan-goss
   - cray-uan-load-drivers-shasta-uan

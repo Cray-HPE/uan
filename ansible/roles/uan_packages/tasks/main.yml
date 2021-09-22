@@ -1,8 +1,36 @@
-# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
 # Tasks for uan_packages role
-- name: Install additional UAN RPMs
-  zypper:
-    name: "{{ uan_additional_sles15_packages }}"
-    disable_gpg_check: yes
+
+- name: Add UAN zypper repositories
+  zypper_repository:
+    name: "{{ item.name }}"
+    description: "{{ item.description }}"
+    repo: "{{ item.url }}"
+    priority: "{{ item.priority }}"
     state: present
-  when: ansible_distribution == "SLES"
+    disable_gpg_check: yes
+  with_items: "{{ uan_sles15_repositories_add }}"
+  when:
+    - ansible_distribution == "SLES"
+    - cray_cfs_image|default(false)|bool
+
+- name: Remove RPMs not needed by the UAN
+  zypper:
+    name: "{{ uan_sles15_packages_remove }}"
+    state: absent
+  when:
+    - ansible_distribution == "SLES"
+    - cray_cfs_image|default(false)|bool
+
+- name: Add UAN RPMs
+  zypper:
+    name: "{{ uan_sles15_packages_add }}"
+    state: present
+    disable_gpg_check: yes
+  when:
+    - ansible_distribution == "SLES"
+    - cray_cfs_image|default(false)|bool
+  register: result
+  until: result is not failed
+  retries: 3
+  delay: 3

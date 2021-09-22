@@ -11,7 +11,6 @@ pipeline {
     }
 
     environment {
-        NAME_RECIPE_IMAGE = "cray-uan-image-recipe"
         NAME_CONFIG_IMAGE = "cray-uan-config"
         DESCRIPTION = "Cray UAN Recipes and Images"
         IS_STABLE = getBuildIsStable()
@@ -24,12 +23,6 @@ pipeline {
     stages {
         stage("Build") {
             parallel {
-                stage('Kiwi Image') {
-                    steps {
-                        sh "make kiwi_image"
-                    }
-                }
-
                 stage('Config Image') {
                     steps {
                         sh "make config_image"
@@ -48,7 +41,6 @@ pipeline {
             steps {
                 script {
                     publishCsmDockerImage(image: env.NAME_CONFIG_IMAGE, tag: env.VERSION, isStable: env.IS_STABLE, snykTargetFile: "Dockerfile.config-framework")
-                    publishCsmDockerImage(image: env.NAME_RECIPE_IMAGE, tag: env.VERSION, isStable: env.IS_STABLE, snykTargetFile: "Dockerfile.image-recipe")
                     publishCsmHelmCharts(component: env.CHART_NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
                 }
             }

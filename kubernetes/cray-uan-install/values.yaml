@@ -12,7 +12,7 @@ cray-import-kiwi-recipe-image:
 
   import_job:
     # name: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
-    PRODUCT_NAME: "@product_name@"
+    PRODUCT_NAME: "uan"
     # PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 
 # For products that import Ansible configuration content
@@ -22,7 +22,7 @@ cray-import-config:
     # tag: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 
   import_job:
-    CF_IMPORT_GITEA_REPO: "@product_name@-config-management"
-    CF_IMPORT_PRODUCT_NAME: "@product_name@"
+    CF_IMPORT_GITEA_REPO: "uan-config-management"
+    CF_IMPORT_PRODUCT_NAME: "uan"
     # CF_IMPORT_PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 

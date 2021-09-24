@@ -15,9 +15,7 @@ uan_sles15_repositories_add:
 uan_sles15_packages_remove:
   - cray-cos-release
 uan_sles15_packages_add:
-  - cfs-trust
   - cray-diags-fabric
-  - cray-switchboard
   - cray-uan-diagnostics
   - cray-uan-goss
   - cray-uan-load-drivers-shasta-uan

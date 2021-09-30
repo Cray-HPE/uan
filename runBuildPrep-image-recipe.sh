@@ -6,10 +6,8 @@ source ./vars.sh
 sed -i s/CRAY.VERSION.HERE/${IMG_VER}/g images/kiwi-ng/cray-sles15sp1-uan-cos/config-template.xml.j2
 
 # Set the cray-ims-load-artifacts image version
-wget http://car.dev.cray.com/artifactory/csm/SCMS/noos/noarch/${RELEASE_PREFIX}/${CSM_RELEASE_VERSION}/cms-team/manifest.txt
-ims_load_artifacts_image_tag=$(cat manifest.txt | grep cray-ims-load-artifacts | sed s/.*://g | tr -d '[:space:]')
+ims_load_artifacts_image_tag="1.3.6"
 sed -i s/@ims_load_artifacts_image_tag@/${ims_load_artifacts_image_tag}/g Dockerfile.image-recipe
-rm manifest.txt
 
 # Set the product version in the Dockerfile.image-recipe file
 sed -i s/@product_version@/${VERSION}/g Dockerfile.image-recipe

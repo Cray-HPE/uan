@@ -1,6 +1,6 @@
 # Dockerfile for importing UAN content into gitea instances on Shasta
 # Copyright 2020 Hewlett Packard Enterprise Development LP
-FROM arti.dev.cray.com/baseos-docker-master-local/sles15sp1:sles15sp1-build411 as product-content-base
+FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.1 as product-content-base
 WORKDIR /
 
 ADD vars.sh /
@@ -22,7 +22,7 @@ RUN source /vars.sh && \
         csm-ssh-keys-roles
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM arti.dev.cray.com/csm-docker-stable-local/cf-gitea-import:@cf_gitea_import_image_tag@
+FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:@cf_gitea_import_image_tag@
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

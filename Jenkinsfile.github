@@ -40,8 +40,8 @@ pipeline {
         stage('Publish ') {
             steps {
                 script {
-                    publishCsmDockerImage(image: env.NAME_CONFIG_IMAGE, tag: env.VERSION, isStable: env.IS_STABLE, snykTargetFile: "Dockerfile.config-framework")
-                    publishCsmHelmCharts(component: env.CHART_NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
+                    publishCsmDockerImage(artifactoryRepo: "uan-docker", image: env.NAME_CONFIG_IMAGE, tag: env.VERSION, isStable: env.IS_STABLE, snykTargetFile: "Dockerfile.config-framework")
+                    publishCsmHelmCharts(artifactoryRepo: "uan-helm-charts", component: env.CHART_NAME, chartsPath: "${WORKSPACE}/kubernetes/.packaged", isStable: env.IS_STABLE)
                 }
             }
         }

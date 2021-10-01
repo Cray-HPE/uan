@@ -52,9 +52,9 @@ Example Playbook
          uan_sles15_packages_remove:
            - baz
          uan_sles15_repositories_add:
-           - name: UAN SLE 15 SP2
+           - name: UAN SLE 15 SP3
              description: UAN SUSE Linux Enterprise 15 SP2 Packages
-             url: https://packages.local/repository/uan-2.1.0-sle-15sp2
+             url: https://packages.local/repository/uan-2.3.0-sle-15sp3
              priority: 2
 ```
 

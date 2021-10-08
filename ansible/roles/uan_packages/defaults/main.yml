@@ -9,7 +9,7 @@
 uan_sles15_repositories_add:
   - name: UAN SLE 15 SP3
     description: UAN SUSE Linux Enterprise 15 SP3 Packages
-    url: https://packages.local/repository/uan-2.1.0-sle-15sp3
+    url: https://packages.local/repository/uan-2.3-sle-15sp3
     priority: 2
 
 uan_sles15_packages_remove:

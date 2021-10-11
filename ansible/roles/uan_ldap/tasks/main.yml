@@ -23,7 +23,7 @@
   # a list of keys in an Ansible list variable named uan_ldap_keys.
   # The user is responsible for adding the necessary tasks and templates
   # to use any key values stored in hashi_vault.
-    - name: Retrieve UAN vault value for uan_ldap_keys
+  - name: Retrieve UAN vault value for uan_ldap_keys
     set_fact:
         uan_ldap_vars: "{{ lookup('hashi_vault',
         'secret=' + uan_vault_path + ':' + item +

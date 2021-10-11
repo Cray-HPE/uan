@@ -20,7 +20,6 @@
 #
 # (MIT License)
 
-NAME_RECIPE_IMAGE ?= cray-uan-image-recipe
 NAME_CONFIG_IMAGE ?= cray-uan-config
 VERSION ?= $(shell cat .version)-local
 export VERSION
@@ -29,58 +28,17 @@ PRODUCT_VERSION ?= uan-2.1
 BUILD_DATE ?= $(shell date +'%Y%m%d%H%M%S')
 GIT_BRANCH ?= local
 GIT_TAG ?= $(shell git rev-parse --short HEAD)
-IMG_VER ?= ${PRODUCT_VERSION}-${BUILD_DATE}-g${GIT_TAG}
-export IMG_VER
 
-IMAGE_NAME ?= cray-shasta-uan-cos-sles15sp2.x86_64
-DISTRO ?= sles15
-
-DOCKERFILE_IMAGE ?= Dockerfile.image-recipe
 DOCKERFILE_CONFIG ?= Dockerfile.config-framework
-BUILD_IMAGE ?= arti.dev.cray.com/cos-docker-master-local/cray-kiwi:latest
-BUILD_SCRIPT ?= runKiwiBuild.sh
-RECIPE_DIRECTORY ?= images/kiwi-ng/cray-sles15sp2-uan-cos
 
 CHART_NAME ?= cray-uan-install
 CHART_PATH ?= kubernetes
 CHART_VERSION ?= local
 HELM_UNITTEST_IMAGE ?= quintush/helm-unittest:3.3.0-0.2.5
 
-all : kiwi_image config_docker_image chart
-kiwi_image: kiwi_build_prep kiwi_build_image kiwi_build_manifest kiwi_docker_image
+all : config_docker_image chart
 config_image: config_docker_image
 chart: chart_setup chart_package chart_test
-
-kiwi_build_prep:
-	docker run -v ${PWD}:/base \
-		${BUILD_IMAGE}
-		rm -rf /base/build
-	echo "IMG_VER: ${IMG_VER}"
-	sh ./runBuildPrep-image-recipe.sh
-
-kiwi_build_image:
-	docker run --rm --privileged \
-		-e PARENT_BRANCH=${GIT_BRANCH} -e PRODUCT_VERSION=${PRODUCT_VERSION} \
-		-e IMG_VER=${IMG_VER} -e BUILD_DATE=${BUILD_DATE} -e GIT_TAG=${GIT_TAG} \
-		-v ${PWD}/build:/build -v ${PWD}:/base \
-		${BUILD_IMAGE} \
-		/bin/bash /base/${BUILD_SCRIPT} ${RECIPE_DIRECTORY}
-
-kiwi_build_manifest:
-	$(eval FILES := $(shell find build/output/* -maxdepth 0 | tr '\r\n' ' ' ))
-
-	docker run --rm --privileged \
-		-e PARENT_BRANCH=${GIT_BRANCH} -e PRODUCT_VERSION=${PRODUCT_VERSION} \
-		-e IMG_VER=${IMG_VER} -e BUILD_TS=${BUILD_DATE} -e GIT_TAG=${GIT_TAG} \
-		-v ${PWD}/build:/build -v ${PWD}:/root \
-		--workdir /root \
-		${BUILD_IMAGE} \
-		bash -c 'ls -al /build && pwd && python3 create_init_ims_manifest.py --distro "${DISTRO}" --files "${FILES}" ${IMAGE_NAME}-${PRODUCT_VERSION}'
-
-	cat manifest.yaml
-
-kiwi_docker_image:
-	DOCKER_BUILDKIT=1 docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_IMAGE} --tag '${NAME_RECIPE_IMAGE}:${VERSION}' .
 
 config_docker_image:
 	./runBuildPrep-config-framework.sh

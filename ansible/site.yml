@@ -41,6 +41,10 @@
 
     # DVS/LNET/FS
     - overlay-preload
+    - role: cray_lnet_install
+      when: cray_cfs_image|default(false)|bool
+    - role: cray_dvs_install
+      when: cray_cfs_image|default(false)|bool
     - role: cray_lnet_load
       when: cray_cfs_image|default(false)|bool
     - role: cray_dvs_load

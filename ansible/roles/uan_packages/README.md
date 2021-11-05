@@ -16,6 +16,8 @@ Requirements
 
 Zypper must be installed.
 
+The `csm.gpg_keys` Ansible role must be installed. (see meta/main.yml)
+
 Role Variables
 --------------
 
@@ -27,8 +29,8 @@ uan_sles15_packages_add:[]
 uan_sles15_packages_remove:[]
 ```
 
-This role uses the `zypper_repository` module. The `name`, `description`, `url`, and
-`priority` fields are supported.
+This role uses the `zypper_repository` module. The `name`, `description`, `repo`,
+`disable_gpg_check`, and `priority` fields are supported.
 
 `uan_sles15_repositories_add` contains the list of repositories to add.
 `uan_sles15_packages_add` contains the list of RPM packages to add.
@@ -52,9 +54,10 @@ Example Playbook
          uan_sles15_packages_remove:
            - baz
          uan_sles15_repositories_add:
-           - name: UAN SLE 15 SP3
-             description: UAN SUSE Linux Enterprise 15 SP2 Packages
-             url: https://packages.local/repository/uan-2.3.0-sle-15sp3
+           - name: "uan-2.3.0-sle-15sp3"
+             description: "UAN SUSE Linux Enterprise 15 SP2 Packages"
+             repo: "https://packages.local/repository/uan-2.3.0-sle-15sp3"
+             disable_gpg_check: no
              priority: 2
 ```
 

@@ -1,15 +1,25 @@
-# Copyright 2020-2021 Hewlett Packard Enterprise Development LP
-# Tasks for uan_packages role
+# Copyright 2020 Hewlett Packard Enterprise Development LP
+# Tasks for the uan_packages role
 
-- name: Add UAN zypper repositories
+- name: Configure UAN RPM Repos (SLES-based)
   zypper_repository:
     name: "{{ item.name }}"
     description: "{{ item.description }}"
-    repo: "{{ item.url }}"
-    priority: "{{ item.priority }}"
+    repo: "{{ item.repo }}"
     state: present
-    disable_gpg_check: yes
+    disable_gpg_check: "{{ item.disable_gpg_check | default('no') }}"
+  when:
+    - ansible_distribution == "SLES"
+    - cray_cfs_image|default(false)|bool
   with_items: "{{ uan_sles15_repositories_add }}"
+
+# UAN repos are generated during the release distribution creation and
+# therefore repo metadata is not signed. Allow for the repo metadata to be
+# unsigned, but still check the signature on individual packages.
+- name: Allow unsigned repo metadata
+  command: "zypper modifyrepo --gpgcheck-allow-unsigned-repo --all"
+  args:
+    warn: no  # Ansible's Zypper module does not provide this feature
   when:
     - ansible_distribution == "SLES"
     - cray_cfs_image|default(false)|bool
@@ -22,11 +32,11 @@
     - ansible_distribution == "SLES"
     - cray_cfs_image|default(false)|bool
 
-- name: Add UAN RPMs
+- name: Install UAN RPMs (SLES-based)
   zypper:
     name: "{{ uan_sles15_packages_add }}"
-    state: present
-    disable_gpg_check: yes
+    state: latest
+    update_cache: yes
   when:
     - ansible_distribution == "SLES"
     - cray_cfs_image|default(false)|bool
@@ -34,3 +44,4 @@
   until: result is not failed
   retries: 3
   delay: 3
+

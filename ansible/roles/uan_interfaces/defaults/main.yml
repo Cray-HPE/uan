@@ -29,13 +29,22 @@
 # See the role README.md file for information about these variables.
 
 ---
-uan_can_setup: no
+# Customer Access Network Setup
+uan_can_setup: no 
+uan_user_access_cfg: "{{ 'CAN' if uan_can_setup else 'DIRECT' }}"
+uan_customer_default_route: no
+
+# Allowable Customer Access Values
+# DO NOT CHANGE
+valid_uan_user_access_cfgs:
+  - "DIRECT"
+  - "CAN"
+  - "CHN"
 
 # SLS Network names
 sls_nmn_name: "NMN"
 sls_nmn_svcs_name: "NMNLB"
 sls_mnmn_svcs_name: "NMN_MTN"
-sls_can_name: "CAN"
 
 # DNS Required Options
 # DO NOT CHANGE

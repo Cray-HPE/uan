@@ -7,13 +7,14 @@
 # See the role README.md file for information about this variable.
 ---
 uan_sles15_repositories_add:
-  - name: UAN SLE 15 SP3
-    description: UAN SUSE Linux Enterprise 15 SP3 Packages
-    url: https://packages.local/repository/uan-2.3-sle-15sp3
+  - name: "uan-2.3-sle-15sp3"
+    description: "UAN SUSE Linux Enterprise 15 SP3 Packages"
+    repo: "https://packages.local/repository/uan-2.3-sle-15sp3"
     priority: 2
 
 uan_sles15_packages_remove:
   - cray-cos-release
+
 uan_sles15_packages_add:
   - cray-diags-fabric
   - cray-uan-diagnostics
@@ -22,3 +23,4 @@ uan_sles15_packages_add:
   - sssd-tools
   - wget
   - qlgc-fastlinq-kmp-cray_shasta_c
+

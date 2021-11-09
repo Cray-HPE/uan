@@ -1,0 +1,7 @@
+# Copyright 2021 Hewlett Packard Enterprise Development LP
+#
+---
+# The csm.gpg_keys role installs the HPE RPM signing key in the rpmdb of the image.
+dependencies:
+  - csm.gpg_keys
+

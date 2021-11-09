@@ -6,6 +6,7 @@
     name: "{{ item.name }}"
     description: "{{ item.description }}"
     repo: "{{ item.repo }}"
+    priority: "{{ item.priority }}"
     state: present
     disable_gpg_check: "{{ item.disable_gpg_check | default('no') }}"
   when:

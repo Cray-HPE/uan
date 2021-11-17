@@ -25,11 +25,10 @@ NAME_CONFIG_IMAGE ?= cray-uan-config
 VERSION ?= $(shell cat .version)-local
 export VERSION
 
-PRODUCT_VERSION ?= uan-2.1
 BUILD_DATE ?= $(shell date +'%Y%m%d%H%M%S')
 GIT_BRANCH ?= local
 GIT_TAG ?= $(shell git rev-parse --short HEAD)
-IMG_VER ?= ${PRODUCT_VERSION}-${BUILD_DATE}-g${GIT_TAG}
+IMG_VER ?= ${VERSION}-${BUILD_DATE}-g${GIT_TAG}
 export IMG_VER
 
 IMAGE_NAME ?= cray-shasta-uan-cos-sles15sp2.x86_64
@@ -60,7 +59,7 @@ kiwi_build_prep:
 
 kiwi_build_image:
 	docker run --rm --privileged \
-		-e PARENT_BRANCH=${GIT_BRANCH} -e PRODUCT_VERSION=${PRODUCT_VERSION} \
+		-e PARENT_BRANCH=${GIT_BRANCH} -e PRODUCT_VERSION=${VERSION} \
 		-e IMG_VER=${IMG_VER} -e BUILD_DATE=${BUILD_DATE} -e GIT_TAG=${GIT_TAG} \
 		-v ${PWD}/build:/build -v ${PWD}:/base \
 		${BUILD_IMAGE} \
@@ -70,12 +69,12 @@ kiwi_build_manifest:
 	$(eval FILES := $(shell find build/output/* -maxdepth 0 | tr '\r\n' ' ' ))
 
 	docker run --rm --privileged \
-		-e PARENT_BRANCH=${GIT_BRANCH} -e PRODUCT_VERSION=${PRODUCT_VERSION} \
+		-e PARENT_BRANCH=${GIT_BRANCH} -e PRODUCT_VERSION=${VERSION} \
 		-e IMG_VER=${IMG_VER} -e BUILD_TS=${BUILD_DATE} -e GIT_TAG=${GIT_TAG} \
 		-v ${PWD}/build:/build -v ${PWD}:/root \
 		--workdir /root \
 		${BUILD_IMAGE} \
-		bash -c 'ls -al /build && pwd && python3 create_init_ims_manifest.py --distro "${DISTRO}" --files "${FILES}" ${IMAGE_NAME}-${PRODUCT_VERSION}'
+		bash -c 'ls -al /build && pwd && python3 create_init_ims_manifest.py --distro "${DISTRO}" --files "${FILES}" ${IMAGE_NAME}-${VERSION}'
 
 	cat manifest.yaml
 

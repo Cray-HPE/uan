@@ -4,11 +4,11 @@ export NAME="uan"
 
 # For developing for a master distribution, use 'master' here.
 #  - List versions of dependencies here as well
-export RELEASE_PREFIX="dev"
-export RELEASE_VERSION="master"
-export SLINGSHOT_RELEASE_VERSION="master"
-export CSM_RELEASE_VERSION="master"
-export COS_RELEASE_VERSION="master"
+export RELEASE_PREFIX="release"
+export RELEASE_VERSION="uan-2.1"
+export SLINGSHOT_RELEASE_VERSION="cos-2.1"
+export CSM_RELEASE_VERSION="csm-1.0"
+export COS_RELEASE_VERSION="cos-2.1"
 
 # Artifact Bloblet Locations for UAN and its dependencies
 export BLOBLET_UAN="https://artifactory.algol60.net/artifactory/uan-rpms/hpe/stable"

@@ -23,6 +23,15 @@
 #
 # Tasks for the uan_packages role
 
+- name: Check for csm.gpg_keys role
+  local_action: stat path="{{ role_path | dirname }}/csm.gpg_keys"
+  register: csm_gpg_keys
+
+- name: Run csm.gpg_keys role, if it exists
+  include_role:
+    name: csm.gpg_keys
+  when: csm_gpg_keys.stat.exists
+
 - name: Configure UAN RPM Repos (SLES-based)
   zypper_repository:
     name: "{{ item.name }}"
@@ -30,7 +39,7 @@
     repo: "{{ item.repo }}"
     priority: "{{ item.priority }}"
     state: present
-    disable_gpg_check: "{{ item.disable_gpg_check | default('no') }}"
+    disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
   when:
     - ansible_distribution == "SLES"
     - cray_cfs_image|default(false)|bool
@@ -57,9 +66,10 @@
 
 - name: Install UAN RPMs (SLES-based)
   zypper:
-    name: "{{ uan_sles15_packages_add }}"
+    name: "{{ item.name }}"
     state: latest
     update_cache: yes
+    disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
   when:
     - ansible_distribution == "SLES"
     - cray_cfs_image|default(false)|bool
@@ -67,4 +77,5 @@
   until: result is not failed
   retries: 3
   delay: 3
+  loop: "{{ uan_sles15_packages_add }}"
 

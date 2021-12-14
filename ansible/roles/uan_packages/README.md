@@ -17,7 +17,7 @@ Requirements
 Zypper must be installed.
 
 The `csm.gpg_keys` Ansible role must be installed if `uan_disable_gpg_check`
-is falsey.
+is false.
 
 Role Variables
 --------------

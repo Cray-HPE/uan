@@ -16,7 +16,8 @@ Requirements
 
 Zypper must be installed.
 
-The `csm.gpg_keys` Ansible role must be installed. (see meta/main.yml)
+The `csm.gpg_keys` Ansible role must be installed if `uan_disable_gpg_check`
+is false.
 
 Role Variables
 --------------
@@ -24,6 +25,7 @@ Role Variables
 Available variables are listed below, along with default values (see defaults/main.yml):
 
 ```yaml
+uan_disable_gpg_check: no
 uan_sles15_repositories_add:[]
 uan_sles15_packages_add:[]
 uan_sles15_packages_remove:[]
@@ -31,6 +33,12 @@ uan_sles15_packages_remove:[]
 
 This role uses the `zypper_repository` module. The `name`, `description`, `repo`,
 `disable_gpg_check`, and `priority` fields are supported.
+
+This role uses the `zypper` modules.  The `name` and `disable_gpg_check` fields are supported.
+
+`uan_disable_gpg_check` sets the `disable_gpg_check` field on zypper repos and
+packages listed in the `uan_sles15_repositories add` and `uan_sles15_packages_add`
+lists.  The `disable_gpg_check` field can be overridden for each repo or package.
 
 `uan_sles15_repositories_add` contains the list of repositories to add.
 `uan_sles15_packages_add` contains the list of RPM packages to add.
@@ -49,8 +57,9 @@ Example Playbook
      - role: uan_packages
        vars:
          uan_sles15_packages_add:
-           - foo
-           - bar
+           - name: "foo"
+             disable_gpg_check: yes
+           - name: "bar"
          uan_sles15_packages_remove:
            - baz
          uan_sles15_repositories_add:

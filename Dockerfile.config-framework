@@ -29,7 +29,7 @@ ADD vars.sh /
 
 # Install dependencies as RPMs
 RUN source /vars.sh && \
-    zypper ar --no-gpgcheck https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable/                                                shasta-scms && \
+    zypper ar --no-gpgcheck https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable/sle-15sp3                                       shasta-scms && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/SHASTA-OS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION} shasta-cos  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/LUS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-lus  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/DVS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-dvs  && \

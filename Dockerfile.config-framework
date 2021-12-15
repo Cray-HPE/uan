@@ -25,10 +25,11 @@
 FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.3 as product-content-base
 WORKDIR /
 
-ADD vars.sh /
+ARG RELEASE_PREFIX=release
+ARG COS_RELEASE_VERSION=cos-2.2
 
 # Install dependencies as RPMs
-RUN source /vars.sh && \
+RUN \
     zypper ar --no-gpgcheck https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable/sle-15sp3                                       shasta-scms && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/SHASTA-OS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION} shasta-cos  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/LUS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-lus  && \
@@ -44,7 +45,7 @@ RUN source /vars.sh && \
         csm-ssh-keys-roles
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:@cf_gitea_import_image_tag@
+FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.61
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

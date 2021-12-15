@@ -41,7 +41,6 @@ config_image: config_docker_image
 chart: chart_setup chart_package chart_test
 
 config_docker_image:
-	./runBuildPrep-config-framework.sh
 	docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --tag '${NAME_CONFIG_IMAGE}:${VERSION}' .
 
 chart_setup:

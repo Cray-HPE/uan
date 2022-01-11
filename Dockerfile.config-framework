@@ -28,9 +28,13 @@ WORKDIR /
 ARG RELEASE_PREFIX=release
 ARG COS_RELEASE_VERSION=cos-2.2
 
+# CASMUSER-2926: Pin to CSM 1.0 RPMS until they are backwards 
+#                compatible and the CSM 1.2 rpms may be used
+ARG CSM_SLES_VERSION=sle-15sp2
+
 # Install dependencies as RPMs
 RUN \
-    zypper ar --no-gpgcheck https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable/sle-15sp3                                       shasta-scms && \
+    zypper ar --no-gpgcheck https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable/${CSM_SLES_VERSION}                             shasta-scms && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/SHASTA-OS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION} shasta-cos  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/LUS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-lus  && \
     zypper ar --no-gpgcheck http://car.dev.cray.com/artifactory/cos/DVS/sle15_sp3_ncn/x86_64/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}       shasta-dvs  && \
@@ -38,11 +42,14 @@ RUN \
     zypper in -y \
         cf-cme-sysconfig-config-framework \
         cf-cme-overlay-preload-config-framework \
-        cf-ca-cert-config-framework \
         lustre-cfs-config-framework \
         cray-dvs-helper-config-framework \
         cray-lnet-helper-config-framework \
-        csm-ssh-keys-roles
+        # CASMUSER-2926: Pin to CSM 1.0 RPMS until they are backwards 
+        #                compatible and the CSM 1.2 rpms may be used
+        csm-ssh-keys-1.1.18-1.noarch \
+        cf-ca-cert-config-framework-2.1.18-1.x86_64 \
+        csm-ssh-keys-roles-1.1.18-1.noarch
 
 # Use the cf-gitea-import as a base image with UAN content copied in
 FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.61

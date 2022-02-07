@@ -21,22 +21,26 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Dockerfile for importing UAN content into gitea instances on Shasta
-FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.3 as product-content-base
-WORKDIR /
 
+ARG ARTI=https://arti.dev.cray.com:443/artifactory
+ARG ALGOL=https://artifactory.algol60.net/artifactory
 ARG RELEASE_PREFIX=release
 ARG COS_RELEASE_VERSION=cos-2.2
 ARG COS_SLES_VERSION=sle15_sp3_ncn
 
+# Dockerfile for importing UAN content into gitea instances on Shasta
+FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.3 as product-content-base
+WORKDIR /
+
+ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION
 # CASMUSER-2926: Pin to CSM 1.0 RPMS until they are backwards 
 #                compatible and the CSM 1.2 rpms may be used
 ARG CSM_SLES_VERSION=sle-15sp2
 
 # Install dependencies as RPMs
 RUN \
-    zypper ar --no-gpgcheck https://artifactory.algol60.net/artifactory/csm-rpms/hpe/stable/${CSM_SLES_VERSION}                                         shasta-scms && \
-    zypper ar --no-gpgcheck https://arti.dev.cray.com:443/artifactory/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION} shasta-cos  && \
+    zypper ar --no-gpgcheck ${ALGOL}/csm-rpms/hpe/stable/${CSM_SLES_VERSION}                                          shasta-scms && \
+    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION} shasta-cos  && \
     zypper refresh && \
     zypper in -y \
         cf-cme-sysconfig-config-framework \
@@ -50,6 +54,49 @@ RUN \
         cf-ca-cert-config-framework-2.1.18-1.x86_64 \
         csm-ssh-keys-roles-1.1.18-1.noarch
 
+FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.81 as testing
+
+ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION
+ARG COS_SLES_VERSION=sle15_sp3_cn
+
+# Configure repos to simulate what nexus will provide
+# uan-rpms: UAN rpms
+# cos-rpms: qlgc, lustre, dvs rpms
+# shs-rpms: Slingshot, cray-diags-fabric rpms
+# Install timezone for ca-cert and vim for debugging
+RUN \
+    zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3                                                                         uan-rpms    && \
+    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}                      cos-rpms-cn && \
+    zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}  shs-rpms-cn && \
+    zypper refresh && \
+    zypper install -y timezone vim
+
+COPY --from=product-content-base /opt/cray/ansible/ /opt/cray/ansible/
+COPY ansible/ /opt/cray/ansible
+COPY tests/uan-aee-test-helper.sh /
+
+# Install some fake versions of these ansible modules for testing
+COPY tests/csm_read_configmap.py /usr/share/ansible/plugins/modules/
+COPY tests/csm_read_secret.py /usr/share/ansible/plugins/modules/
+
+# Remove this ansible callback as it produces misleading errors for testing
+RUN rm /usr/share/ansible/plugins/callback/cfs_aggregator.py
+
+# Prep the test environment
+RUN /uan-aee-test-helper.sh
+
+# Running ansible-playbook with --syntax-check
+RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local --syntax-check
+
+# Running ansible-playbook with --check and cray_cfs_image=true to simulate CFS image customization
+RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=true  --check
+
+# Running ansible-playbook with --check and cray_cfs_image=false to simulate CFS node personalization
+RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=false --check
+
+# Use this entrypoint to allow for easy debugging
+ENTRYPOINT /bin/sh
+
 # Use the cf-gitea-import as a base image with UAN content copied in
 FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.61
 
@@ -58,8 +105,8 @@ ENV CF_IMPORT_PRODUCT_NAME=uan
 
 # Copy in dependencies' Ansible content
 COPY --from=product-content-base /opt/cray/ansible/group_vars/ /content/group_vars/
-COPY --from=product-content-base /opt/cray/ansible/roles/     /content/roles/
-COPY --from=product-content-base /opt/cray/ansible/playbooks/ /content/playbooks/
+COPY --from=product-content-base /opt/cray/ansible/roles/      /content/roles/
+COPY --from=product-content-base /opt/cray/ansible/playbooks/  /content/playbooks/
 
 # Copy in UAN Ansible content
 COPY ansible/ /content/

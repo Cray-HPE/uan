@@ -36,6 +36,7 @@
   delegate_to: 127.0.0.1
   run_once: true
   no_log: true
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Retrieve UAN credential
   set_fact:
@@ -44,6 +45,7 @@
       ' token=' + vault_login.json.auth.client_token +
       ' url=' + uan_vault_url) }}"
   no_log: true
+  ignore_errors: "{{ ansible_check_mode }}"
 
 - name: Change root password in /etc/shadow
   lineinfile:

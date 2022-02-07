@@ -47,9 +47,6 @@
 
   roles:
 
-    # UAN repo and rpm configuration
-    - uan_packages
-
     # Standard UNIX configuration
     - rsyslog
     - localtime
@@ -58,43 +55,29 @@
     - role: kdump
       kdump_target_uan: yes
 
+
     # Allow trust of CSM generated keys for elective passwordless SSH during image customization
-    - role: trust-csm-ssh-keys
-      when: cray_cfs_image|default(false)|bool
+    - { role: trust-csm-ssh-keys, when: cray_cfs_image|default(false)|bool}
+    - { role: ca-cert,            when: not cray_cfs_image|default(false)|bool }
 
     # DVS/LNET/FS
     - overlay-preload
-    - role: cray_lnet_install
-      when: cray_cfs_image|default(false)|bool
-    - role: cray_dvs_install
-      when: cray_cfs_image|default(false)|bool
-    - role: cray_lnet_load
-      when: cray_cfs_image|default(false)|bool
-    - role: cray_dvs_load
-      when: cray_cfs_image|default(false)|bool
+    - { role: cray_lnet_install,  when: cray_cfs_image|default(false)|bool }
+    - { role: cray_dvs_install,   when: cray_cfs_image|default(false)|bool }
+    - { role: cray_lnet_load,     when: cray_cfs_image|default(false)|bool }
+    - { role: cray_dvs_load,      when: cray_cfs_image|default(false)|bool }
+    - { role: configure_fs,       when: not cray_cfs_image|default(false)|bool }
 
     # UAN-specific configuration
-    - role: ca-cert
-    - role: uan_shadow
-    - role: uan_disk_config
-      when: not cray_cfs_image
-    - role: uan_interfaces
-      when: not cray_cfs_image
-    - role: uan_motd
-    - role: uan_ldap
-      when: not cray_cfs_image
-
-    # Nvidia developer toolkit
-    - role: cray_nvidia_customize  # cf-cme-sysconfig
-      when: gpu is defined and gpu|lower == "nvidia" and cray_cfs_image
-
-    # Filesystem mounts
-    - role: configure_fs
-      when: not cray_cfs_image | default(false) | bool
+    - { role: uan_packages,       when: cray_cfs_image|default(false)|bool }
+    - { role: uan_shadow,         when: cray_cfs_image|default(false)|bool }
+    - { role: uan_motd,           when: cray_cfs_image|default(false)|bool }
+    - { role: uan_disk_config,    when: not cray_cfs_image|default(false)|bool }
+    - { role: uan_interfaces,     when: not cray_cfs_image|default(false)|bool }
+    - { role: uan_ldap,           when: not cray_cfs_image|default(false)|bool }
 
     # Rebuild initrd for image customization
-    - role: rebuild-initrd
-      when: cray_cfs_image | default(false) | bool
+    - { role: rebuild-initrd,     when: cray_cfs_image|default(false)|bool }
 
     # Install GPU support
     - { role: cray_gpu_customize,

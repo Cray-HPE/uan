@@ -30,6 +30,10 @@
 ---
 uan_disable_gpg_check: no
 
+uan_gpg_key_k8s_secret: "hpe-signing-key"
+uan_gpg_key_k8s_namespace: "services"
+uan_gpg_key_k8s_field: "gpg-pubkey"
+
 uan_sles15_repositories_add:
   - name: "uan-2.3-sle-15sp3"
     description: "UAN SUSE Linux Enterprise 15 SP3 Packages"

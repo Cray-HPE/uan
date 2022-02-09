@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright [2020-2022] Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -23,14 +23,37 @@
 #
 # Tasks for the uan_packages role
 
-- name: Check for csm.gpg_keys role
-  local_action: stat path="{{ role_path | dirname }}/csm.gpg_keys"
-  register: csm_gpg_keys
+# Note: csm_read_secret is provided by the AEE (Ansible Execution Environment) image
+- name: Fetch the HPE GPG Signing Key from the K8S secret
+  no_log: false
+  local_action:
+    module: csm_read_secret
+    name: "{{ uan_gpg_key_k8s_secret }}"
+    namespace: "{{ uan_gpg_key_k8s_namespace }}"
+    key: "{{ uan_gpg_key_k8s_field }}"
+    decrypt: True
+  register: hpe_gpg_pubkey
+  when: not uan_disable_gpg_check
+  ignore_errors: "{{ ansible_check_mode }}"
 
-- name: Run csm.gpg_keys role, if it exists
-  include_role:
-    name: csm.gpg_keys
-  when: csm_gpg_keys.stat.exists
+- name: Create a temporary file to store the key content
+  tempfile:
+    state: file
+    suffix: key
+  register: temp_key_file
+  when: not uan_disable_gpg_check
+
+- name: Copy the key content to a temporary file
+  copy:
+    content: "{{ hpe_gpg_pubkey.response }}"
+    dest: "{{ temp_key_file.path }}"
+  when: not uan_disable_gpg_check
+
+- name: Install the HPE Signing Key
+  rpm_key:
+    state: present
+    key: "{{ temp_key_file.path }}"
+  when: not uan_disable_gpg_check
 
 - name: Configure UAN RPM Repos (SLES-based)
   zypper_repository:
@@ -42,7 +65,6 @@
     disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
   when:
     - ansible_distribution == "SLES"
-    - cray_cfs_image|default(false)|bool
   with_items: "{{ uan_sles15_repositories_add }}"
 
 # UAN repos are generated during the release distribution creation and
@@ -54,7 +76,6 @@
     warn: no  # Ansible's Zypper module does not provide this feature
   when:
     - ansible_distribution == "SLES"
-    - cray_cfs_image|default(false)|bool
 
 - name: Remove RPMs not needed by the UAN
   zypper:
@@ -62,7 +83,6 @@
     state: absent
   when:
     - ansible_distribution == "SLES"
-    - cray_cfs_image|default(false)|bool
 
 - name: Install UAN RPMs (SLES-based)
   zypper:
@@ -72,7 +92,6 @@
     disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
   when:
     - ansible_distribution == "SLES"
-    - cray_cfs_image|default(false)|bool
   register: result
   until: result is not failed
   retries: 3

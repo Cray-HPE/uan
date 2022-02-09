@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2019-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -41,40 +41,46 @@
 #
 # (MIT License)
 
-NAME_CONFIG_IMAGE ?= cray-uan-config
-VERSION ?= $(shell cat .version)-local
-export VERSION
+"""
+The purpose of this ansible module is to assist with the interaction
+of the kubernetes binaries using the python kubernetes library from within the cluster.
+This is a thin wrapper to the python-kubernetes client, designed exclusively to read
+values from an already stored secrets.
+"""
 
-PRODUCT_VERSION ?= uan-2.1
-BUILD_DATE ?= $(shell date +'%Y%m%d%H%M%S')
-GIT_BRANCH ?= local
-GIT_TAG ?= $(shell git rev-parse --short HEAD)
+import base64
+import logging
+import os
 
-DOCKERFILE_CONFIG ?= Dockerfile.config-framework
+from ansible.module_utils.basic import AnsibleModule
 
-CHART_NAME ?= cray-uan-install
-CHART_PATH ?= kubernetes
-CHART_VERSION ?= local
-HELM_UNITTEST_IMAGE ?= quintush/helm-unittest:3.3.0-0.2.5
 
-all : test_docker_image config_docker_image chart
-config_image: config_docker_image
-chart: chart_setup chart_package chart_test
+ORGANIZATION = 'hpe'
+ANSIBLE_METADATA = {
+    'metadata_version': '1.0',
+    'status': ['preview', 'stableinterface'],
+    'supported_by': ORGANIZATION
+}
 
-config_docker_image:
-	docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --tag '${NAME_CONFIG_IMAGE}:${VERSION}' .
 
-test_docker_image:
-	docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --progress=plain --target testing .
+class ReadSecretModule(AnsibleModule):
 
-chart_setup:
-	mkdir -p ${CHART_PATH}/.packaged
-	printf "\nglobal:\n  appVersion: ${VERSION}" >> ${CHART_PATH}/${CHART_NAME}/values.yaml
+    def __call__(self):
+        result = {}
+        result['changed'] = True
+        result['response'] = '0xDEADBEEF'
+        self.exit_json(**result)
 
-chart_package:
-	helm dep up ${CHART_PATH}/${CHART_NAME}
-	helm package ${CHART_PATH}/${CHART_NAME} -d ${CHART_PATH}/.packaged --app-version ${VERSION} --version ${CHART_VERSION}
 
-chart_test:
-	helm lint "${CHART_PATH}/${CHART_NAME}"
-	docker run --rm -v ${PWD}/${CHART_PATH}:/apps ${HELM_UNITTEST_IMAGE} -3 ${CHART_NAME}
+def main():
+    fields = {# Authentication Information
+              'name': {'required': True, "type": 'str'},
+              'namespace': {'required': False, "type": "str", 'default': 'services'},
+              'key': {'required': False, "type": 'str', 'default': ''},
+              'decrypt': {'required': False, "type": "bool", "default": True}}
+    module = ReadSecretModule(argument_spec=fields)
+    module()
+
+
+if __name__ == '__main__':
+    main()

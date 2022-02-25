@@ -30,6 +30,7 @@ localhost
 EOF
 
 # Write out an ansible group_var file for testing
+mkdir -p /opt/cray/ansible/group_vars/Application_UAN
 cat << EOF > /opt/cray/ansible/group_vars/Application_UAN/test.yml
 csm_public_key_test: {
     'response': '0xB105F00D'
@@ -120,6 +121,9 @@ touch /etc/cray/ca/certificate_authority.crt
 mkdir -p /var/run/secrets/kubernetes.io/serviceaccount/
 touch /var/run/secrets/kubernetes.io/serviceaccount/token
 touch /var/run/secrets/kubernetes.io/serviceaccount/namespace
+
+# This file would exist in an image that was run with CFS image customization
+touch /etc/modprobe.d/dvs.conf
 
 # Running ansible-playbook with --syntax-check
 #ansible-playbook /opt/cray/ansible/site.yml --connection=local --syntax-check

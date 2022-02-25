@@ -99,18 +99,6 @@
       - "{{ customer_uan_global_routes }}"
       - routes
 
-  - name: ifdown interfaces to set the interface config and routes
-    shell: "wicked ifdown {{ item.name }}"
-    changed_when: result.rc == 0
-    failed_when: result.rc != 0
-    register: result
-    when: item.name is defined
-    loop: "{{ customer_uan_interfaces }}"
-
-  - name: Wait 5 seconds for the interface to go down
-    wait_for:
-      timeout: 5
-
   - name: Restarting wicked-nanny for customer interfaces
     shell: "systemctl restart wickedd-nanny"
     changed_when: result.rc == 0
@@ -122,19 +110,18 @@
       timeout: 5
 
   - name: Remove existing default route
-    when: not uan_can_setup
+    when: uan_customer_default_route | bool
     command: "ip route delete default"
     changed_when: result.rc != 0 or result.rc == 2
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  - name: ifup interfaces to set the interface config and routes
-    shell: "wicked ifup {{ item.name }}"
+  - name: Restart wicked to start interface config and routes
+    shell: "systemctl restart wicked"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
-    when: item.name is defined
-    loop: "{{ customer_uan_interfaces }}"
+    when: (uan_customer_default_route | bool) or (customer_uan_interfaces | length)
 
   - name: Wait 10 seconds for the interfaces to come up
     wait_for:
@@ -147,4 +134,4 @@
     when: (item.name is defined) and (item.settings.ipaddr is defined)
     loop: "{{ customer_uan_interfaces }}"
   
-  when: not cray_cfs_image
+  when: not cray_cfs_image | bool

@@ -1,0 +1,7 @@
+{% if customer_access_gateway is defined %}
+{% if not uan_customer_default_route %}
+default {{ customer_access_gateway }} - -
+{% else %}
+{{ customer_access_network | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network | ipaddr('netmask') }} -
+{% endif %}
+{% endif %}

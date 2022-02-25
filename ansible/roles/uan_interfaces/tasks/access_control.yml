@@ -58,19 +58,19 @@
   when: gw_ip_list|length > 0
 
 - block:
-  - name: Show CAN
+  - name: Show User Access Network
     debug:
       msg: "{{ customer_access_network }}"
     when: customer_access_network is defined
 
-  - name: Set access rules to CAN
+  - name: Set access rules to the User Access Network
     command:  "{{ item }}"
     with_items:
       - bash -c "iptables -A OUTPUT -d {{customer_access_network}} -m owner --uid-owner root -j ACCEPT"
       - bash -c "iptables -A OUTPUT -d {{customer_access_network}} -j DROP"
     when: customer_access_network is defined
 
-  when: uan_can_setup
+  when: (uan_user_access_cfg | upper) != "DIRECT"
 
 - name: Read access rules to k8s api gw
   command:  bash -c "iptables -L -n --line-numbers"

@@ -24,6 +24,11 @@
 # uan_interfaces tasks
 ---
 - block:
+  - name: Validate customer access network selection
+    fail:
+     msg: "ERROR: INVALID uan_user_access_cfg setting {{ uan_user_access_cfg }}.  Valid values are {{ valid_uan_user_access_cfgs }}."
+    when: (uan_user_access_cfg | upper) is not in valid_uan_user_access_cfgs
+
   - name: Get NMN Services Network info from SLS
     local_action:
       module: uri
@@ -210,15 +215,15 @@
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  # Configure CAN v2 - Uses external subnet on vlan007
-  - include_tasks: can-v2.yml
-    when: uan_can_setup
+  # "Configure Customer Access Network {{ uan_user_access_cfg | upper }}"
+  - include_tasks: can.yml
+    when: (uan_user_access_cfg | upper) != "DIRECT"
 
   # Configure Customer defined interfaces, routes, and rules
   - include_tasks: customer_interfaces.yml
 
   # Configure non-root user access controls
   - include_tasks: access_control.yml
-    when: uan_access_control
+    when: uan_access_control | bool
 
   when: not cray_cfs_image

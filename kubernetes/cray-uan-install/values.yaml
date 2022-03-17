@@ -28,8 +28,9 @@
 # For products that import Ansible configuration content
 cray-import-config:
   config_image:
-    image: artifactory.algol60.net/uan-docker/stable/cray-uan-config
-    tag: 0.4.0
+    image:
+      repository: artifactory.algol60.net/uan-docker/stable/cray-uan-config
+      tag: 0.4.0
   catalog:
     image:
       repository: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update

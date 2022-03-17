@@ -28,11 +28,11 @@
 # For products that import Ansible configuration content
 cray-import-config:
   config_image:
-    name: cray-uan-config
-    # tag: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
+    image: artifactory.algol60.net/uan-docker/stable/cray-uan-config
+    tag: 0.4.0
 
   import_job:
-    CF_IMPORT_GITEA_REPO: "uan-config-management"
-    CF_IMPORT_PRODUCT_NAME: "uan"
+    CF_IMPORT_GITEA_REPO: uan-config-management
+    CF_IMPORT_PRODUCT_NAME: uan
     # CF_IMPORT_PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
 

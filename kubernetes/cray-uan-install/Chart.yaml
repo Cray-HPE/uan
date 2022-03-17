@@ -33,9 +33,6 @@ dependencies:
   - name: cray-import-config
     version: 2.0.0
     repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
-  - name: cray-import-kiwi-recipe-image
-    version: 2.0.0
-    repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
 maintainers:
   - name: keopp
     email: keopp@hpe.com

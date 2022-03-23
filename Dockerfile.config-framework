@@ -22,20 +22,18 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
-ARG ARTI=https://arti.dev.cray.com:443/artifactory
+ARG ARTI=https://arti.hpc.amslabs.hpecorp.net:443/artifactory
 ARG ALGOL=https://artifactory.algol60.net/artifactory
 ARG RELEASE_PREFIX=release
-ARG COS_RELEASE_VERSION=cos-2.2
+ARG COS_RELEASE_VERSION=cos-2.3
 ARG COS_SLES_VERSION=sle15_sp3_ncn
+ARG CSM_SLES_VERSION=sle-15sp3
 
 # Dockerfile for importing UAN content into gitea instances on Shasta
 FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.3 as product-content-base
 WORKDIR /
 
-ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION
-# CASMUSER-2926: Pin to CSM 1.0 RPMS until they are backwards 
-#                compatible and the CSM 1.2 rpms may be used
-ARG CSM_SLES_VERSION=sle-15sp2
+ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION CSM_SLES_VERSION
 
 # Install dependencies as RPMs
 RUN \
@@ -48,26 +46,25 @@ RUN \
         lustre-cfs-config-framework \
         cray-dvs-helper-config-framework \
         cray-lnet-helper-config-framework \
-        # CASMUSER-2926: Pin to CSM 1.0 RPMS until they are backwards 
-        #                compatible and the CSM 1.2 rpms may be used
-        csm-ssh-keys-1.1.18-1.noarch \
-        cf-ca-cert-config-framework-2.1.18-1.x86_64 \
-        csm-ssh-keys-roles-1.1.18-1.noarch
+        cf-ca-cert-config-framework \
+        csm-ssh-keys-1.3.79-1.noarch \
+        csm-ssh-keys-roles-1.3.79-1.noarch
 
 FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.83 as testing
 
 ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION
 ARG COS_SLES_VERSION=sle15_sp3_cn
+ARG COS_SHS_SLES_VERSION=shs_master_sle15_sp3_cn
+ARG COS_BASE_SLES_VERSION=sle15_sp3_base_cn
 
 # Configure repos to simulate what nexus will provide
-# uan-rpms: UAN rpms
-# cos-rpms: qlgc, lustre, dvs rpms
-# shs-rpms: Slingshot, cray-diags-fabric rpms
 # Install timezone for ca-cert and vim for debugging
 RUN \
-    zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3                                                                         uan-rpms    && \
-    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}                      cos-rpms-cn && \
-    zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}  shs-rpms-cn && \
+    zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3                                                         uan-rpms         && \
+    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}      cos-rpms-cn      && \
+    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SHS_SLES_VERSION}  cos-shs-rpms-cn  && \
+    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_BASE_SLES_VERSION} cos-base-rpms-cn && \
+    zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-master-local/dev/master/${COS_SLES_VERSION}                shs-rpms-cn      && \
     zypper refresh && \
     zypper install -y timezone vim
 
@@ -98,7 +95,7 @@ RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_i
 ENTRYPOINT /bin/sh
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.69
+FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.6.1
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

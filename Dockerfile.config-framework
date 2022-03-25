@@ -54,7 +54,7 @@ RUN \
         cf-ca-cert-config-framework-2.1.18-1.x86_64 \
         csm-ssh-keys-roles-1.1.18-1.noarch
 
-FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.81 as testing
+FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.83 as testing
 
 ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION
 ARG COS_SLES_VERSION=sle15_sp3_cn
@@ -98,7 +98,7 @@ RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_i
 ENTRYPOINT /bin/sh
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.61
+FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.69
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

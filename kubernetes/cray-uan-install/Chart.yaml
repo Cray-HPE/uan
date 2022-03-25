@@ -23,7 +23,7 @@
 #
 apiVersion: v2
 name: cray-uan-install
-version: 1.4.0
+version: 1.2.7
 description: Kubernetes resources for installing UAN
 keywords:
   - uan

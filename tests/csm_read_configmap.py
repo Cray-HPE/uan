@@ -75,7 +75,8 @@ class ReadConfigMapModule(AnsibleModule):
 
 def main():
     fields = {'name': {'required': True, "type": 'str'},
-              'namespace': {'required': False, "type": "str", 'default': 'services'}}
+              'namespace': {'required': False, "type": "str", 'default': 'services'},
+              'key': {'required': False, "type": "str", 'default': 'foo'}}
     module = ReadConfigMapModule(argument_spec=fields)
     module()
 

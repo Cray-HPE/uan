@@ -45,7 +45,6 @@ NAME_CONFIG_IMAGE ?= cray-uan-config
 VERSION ?= $(shell cat .version)-local
 export VERSION
 
-PRODUCT_VERSION ?= uan-2.1
 BUILD_DATE ?= $(shell date +'%Y%m%d%H%M%S')
 GIT_BRANCH ?= local
 GIT_TAG ?= $(shell git rev-parse --short HEAD)

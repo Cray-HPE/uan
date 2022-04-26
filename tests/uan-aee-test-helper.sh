@@ -56,6 +56,89 @@ filesystems:
     fstype: nfs4
     opts: rw
     state: mounted
+
+sls_cab_test:
+  status: 200
+  json: [
+  {
+    "Parent": "s0",
+    "Children": [
+      "x3000c0r40b0",
+      "x3000c0r39b0",
+      "x3000m0",
+      "x3000m1"
+    ],
+    "Xname": "x3000",
+    "Type": "comptype_cabinet",
+    "Class": "River",
+    "TypeString": "Cabinet",
+    "LastUpdated": 1648068726,
+    "LastUpdatedTime": "2022-03-23 20:52:06.162352 +0000 +0000",
+    "ExtraProperties": {
+      "Networks": {
+        "cn": {
+          "HMN": {
+            "CIDR": "10.107.0.0/22",
+            "Gateway": "10.107.0.1",
+            "VLan": 1513
+          },
+          "NMN": {
+            "CIDR": "10.106.0.0/22",
+            "Gateway": "10.106.0.1",
+            "VLan": 1770
+          }
+        },
+        "ncn": {
+          "HMN": {
+            "CIDR": "10.107.0.0/22",
+            "Gateway": "10.107.0.1",
+            "VLan": 1513
+          },
+          "NMN": {
+            "CIDR": "10.106.0.0/22",
+            "Gateway": "10.106.0.1",
+            "VLan": 1770
+          }
+        }
+      }
+    }
+  },
+  {
+    "Parent": "s0",
+    "Children": [
+      "x1000c5",
+      "x1000c1",
+      "x1000c4",
+      "x1000c0",
+      "x1000c3",
+      "x1000c2",
+      "x1000c7",
+      "x1000c6"
+    ],
+    "Xname": "x1000",
+    "Type": "comptype_cabinet",
+    "Class": "Mountain",
+    "TypeString": "Cabinet",
+    "LastUpdated": 1648068726,
+    "LastUpdatedTime": "2022-03-23 20:52:06.162352 +0000 +0000",
+    "ExtraProperties": {
+      "Networks": {
+        "cn": {
+          "HMN": {
+            "CIDR": "10.104.0.0/22",
+            "Gateway": "10.104.0.1",
+            "VLan": 3000
+          },
+          "NMN": {
+            "CIDR": "10.100.0.0/22",
+            "Gateway": "10.100.0.1",
+            "VLan": 2000
+          }
+        }
+      }
+    }
+  }
+  ]
 EOF
 
 # This is a meaningless PGP public key, it will not work for checking
@@ -114,6 +197,7 @@ sed -i 's/^display_ok_hosts      = no/display_ok_hosts      = yes/g' /etc/ansibl
 sed -i 's/csm_public_key\[/csm_public_key_test\[/g' /opt/cray/ansible/roles/trust-csm-ssh-keys/tasks/main.yaml
 sed -i 's/hpe_gpg_pubkey\./hpe_gpg_pubkey_test\./g' /opt/cray/ansible/roles/uan_packages/tasks/main.yml
 sed -i 's/temp_key_file\./temp_key_file_test\./g' /opt/cray/ansible/roles/uan_packages/tasks/main.yml
+sed -i 's/sls_cab\./sls_cab_test/g' /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
 
 # Add dummy files for ca-cert role
 mkdir -p /etc/cray/ca

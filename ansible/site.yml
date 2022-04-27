@@ -84,3 +84,12 @@
         when: gpu is defined and (cray_cfs_image|default(false)) }
     - { role: cray_gpu_deploy, cray_gpu_ld_drivers: true,
         when: gpu is defined and (not cray_cfs_image | default(false)) }
+
+- hosts: Compute
+  gather_facts: yes
+  any_errors_fatal: true
+  remote_user: root
+
+  roles:
+    - role: uan_interfaces
+      uan_can_setup: yes

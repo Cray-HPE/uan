@@ -70,7 +70,7 @@
       - bash -c "iptables -A OUTPUT -d {{customer_access_network}} -j DROP"
     when: customer_access_network is defined
 
-  when: (uan_user_access_cfg | upper) != "DIRECT"
+  when: uan_can_setup
 
 - name: Read access rules to k8s api gw
   command:  bash -c "iptables -L -n --line-numbers"

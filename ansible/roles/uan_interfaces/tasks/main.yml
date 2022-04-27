@@ -23,11 +23,37 @@
 #
 # uan_interfaces tasks
 ---
+- name: "Get BICAN info from SLS"
+  local_action:
+    module: uri
+    url: "http://cray-sls/v1/search/networks?name=BICAN"
+    method: GET
+  register: sls_bican
+  ignore_errors: yes
+
+- name: "Get BICAN System Default Route Network Name"
+  set_fact:
+    uan_user_access_cfg: "{{ item.ExtraProperties.SystemDefaultRoute }}"
+  when: sls_bican.status == 200
+  loop: "{{ sls_bican.json | list }}"
+      
 - block:
-  - name: Validate customer access network selection
-    fail:
-     msg: "ERROR: INVALID uan_user_access_cfg setting {{ uan_user_access_cfg }}.  Valid values are {{ valid_uan_user_access_cfgs }}."
-    when: (uan_user_access_cfg | upper) is not in valid_uan_user_access_cfgs
+  - name: Get Cabinet info from SLS
+    local_action:
+      module: uri
+      url: "http://cray-sls/v1/search/hardware?type=comptype_cabinet"
+      method: GET
+    register: sls_cab
+    failed_when: sls_cab.status != 200
+
+  - name: Find NMN gateway for node from cabinet info
+    set_fact:
+      node_nmn_gateway: "{{ item.0.ExtraProperties.Networks.cn.NMN.Gateway }}"
+      node_nmn_cidr: "{{ item.0.ExtraProperties.Networks.cn.NMN.CIDR }}"
+    when: item.1 in ansible_host
+    loop: "{{ sls_cab.json|subelements('Children') }}"
+    loop_control:
+      label: "{{ item.0.Xname }}"
 
   - name: Get NMN Services Network info from SLS
     local_action:
@@ -39,9 +65,9 @@
 
   - name: Get NMN Services CIDR from SLS
     set_fact:
-      nmn_svcs_cidr: "{{ sls_nmn_svcs.json[0].IPRanges[0] }}"
+      nmn_svcs_cidr: "{{ sls_nmn_svcs.json[0].ExtraProperties.CIDR }}"
 
-  - name: Get NMN Network info from SLS
+  - name: Get River NMN Network info from SLS
     local_action:
       module: uri
       url: "http://cray-sls/v1/search/networks?name={{ sls_nmn_name }}"
@@ -51,9 +77,9 @@
 
   - name: Get NMN CIDR from SLS
     set_fact:
-      nmn_cidr: "{{ sls_nmn.json[0].IPRanges[0] }}"
+      nmn_cidr: "{{ sls_nmn.json[0].ExtraProperties.CIDR }}"
 
-  - name: Get NMN gateway
+  - name: Get River NMN gateway
     set_fact:
       nmn_gateway: "{{ nmn_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
 
@@ -65,10 +91,20 @@
     register: sls_mnmn_svcs
     ignore_errors: yes
 
-  - name: Set Mountain NMN Services CIDR from SLS, if network exists
+  - name: Get Mountain NMN Services CIDR from SLS, if network exists
     set_fact:
       mnmn_svcs_cidr: "{{ sls_mnmn_svcs.json[0].IPRanges[0] }}"
     when: sls_mnmn_svcs.status == 200
+
+  - name: Get Mountain NMN gateway
+    set_fact:
+      mnmn_gateway: "{{ mnmn_svcs_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
+
+  - name: Register node NMN Gateway
+    set_fact:
+      node_nmn_gateway: "{{ nmn_gateway }}"
+      node_nmn_cidr: "{{ nmn_cidr }}"
+    when: node_nmn_gateway is not defined
 
   - name: Slurp in /etc/resolv.conf to get any DHCP added entries
     slurp:
@@ -182,12 +218,6 @@
       line: "NETCONFIG_DNS_RESOLVER_OPTIONS=\"{{ uan_netconf_options | join(' ') }}\""
       backrefs: yes
 
-  - name: Generate updated /etc/resolv.conf by restarting wicked
-    shell: "systemctl restart wicked;sleep 5"
-    changed_when: result.rc == 0
-    failed_when: result.rc != 0
-    register: result
-
   - name: Configure ifcfg-nmn0
     copy:
       src: ifcfg-nmn0
@@ -209,21 +239,32 @@
       regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
       line: DHCLIENT_SET_DEFAULT_ROUTE="no"
 
+  - name: Restart networks to update /etc/resolv.conf and set routes before removing default route
+    shell: "systemctl restart wicked;sleep 5"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+    
   - name: Remove existing default route
     command: "ip route delete default"
     changed_when: result.rc != 0 or result.rc == 2
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  # "Configure Customer Access Network {{ uan_user_access_cfg | upper }}"
+  # "Configure Customer Access Network"
   - include_tasks: can.yml
-    when: (uan_user_access_cfg | upper) != "DIRECT"
+    when: uan_can_setup
 
   # Configure Customer defined interfaces, routes, and rules
   - include_tasks: customer_interfaces.yml
+    when: "'Compute' not in group_names"
 
   # Configure non-root user access controls
   - include_tasks: access_control.yml
-    when: uan_access_control | bool
+    when: 
+      - uan_access_control | bool
+      - "'Compute' not in group_names"
 
-  when: not cray_cfs_image
+  when:
+    - not cray_cfs_image
+    - ('Compute' not in group_names) or ('Compute' in group_names and uan_user_access_cfg == 'CHN')

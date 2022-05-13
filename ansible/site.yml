@@ -85,12 +85,14 @@
         name: cray_gpu_deploy
       vars:
         cray_gpu_ld_drivers: true
+        gpu_forced_project: true
       loop:
         - amd
         - nvidia
       loop_control:
         loop_var: gpu
-      when: not cray_cfs_image|default(false)|bool
+      when: not cray_cfs_image|default(false)|bool and
+            not ansible_check_mode
 
 - hosts: Compute
   gather_facts: yes

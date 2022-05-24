@@ -45,8 +45,6 @@ uan_sles15_packages_remove:
   - cray-cos-release
 
 uan_sles15_packages_add:
-  - name: "cray-diags-fabric"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
   - name: "cray-uan-diagnostics"
     disable_gpg_check: "{{ uan_disable_gpg_check }}"
   - name: "cray-uan-goss"

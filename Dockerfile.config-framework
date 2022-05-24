@@ -56,6 +56,8 @@ ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION
 ARG COS_SLES_VERSION=sle15_sp3_cn
 ARG COS_SHS_SLES_VERSION=shs_master_sle15_sp3_cn
 ARG COS_BASE_SLES_VERSION=sle15_sp3_base_cn
+ARG SHS_RELEASE_PREFIX=release/slingshot-1.7
+ARG SHS_COS_VERSION=cos_2_3_sle15_sp3_cn
 
 # Configure repos to simulate what nexus will provide
 # Install timezone for ca-cert and vim for debugging
@@ -63,7 +65,7 @@ RUN \
     zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3                                                         uan-rpms         && \
     zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}      cos-rpms-cn      && \
     zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SHS_SLES_VERSION}  cos-shs-rpms-cn  && \
-    zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-master-local/dev/master/${COS_SLES_VERSION}                shs-rpms-cn      && \
+    zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-stable-local/${SHS_RELEASE_PREFIX}/${SHS_COS_VERSION}      shs-rpms-cn      && \
     zypper refresh && \
     zypper install -y timezone vim
 

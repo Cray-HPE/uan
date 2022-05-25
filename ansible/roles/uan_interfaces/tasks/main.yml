@@ -46,12 +46,16 @@
     register: sls_cab
     failed_when: sls_cab.status != 200
 
+  - name: Store Cabinet NMN info
+    set_fact:
+      cab_info: "{{ sls_cab.json|subelements('Children') }}"
+
   - name: Find NMN gateway for node from cabinet info
     set_fact:
       node_nmn_gateway: "{{ item.0.ExtraProperties.Networks.cn.NMN.Gateway }}"
       node_nmn_cidr: "{{ item.0.ExtraProperties.Networks.cn.NMN.CIDR }}"
-    when: item.1 in ansible_host
-    loop: "{{ sls_cab.json|subelements('Children') }}"
+    when: (item.1 in ansible_host) and (cab_info is defined)
+    loop: "{{ cab_info }}"
     loop_control:
       label: "{{ item.0.Xname }}"
 

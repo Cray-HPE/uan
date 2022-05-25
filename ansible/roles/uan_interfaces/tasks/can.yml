@@ -22,63 +22,59 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 ---
-- name: "Get User Access Network info from SLS (non-compute)"
+- name: "Get {{ uan_user_access_cfg | upper }} info from SLS"
+  local_action:
+    module: uri
+    url: "http://cray-sls/v1/search/networks?name={{ uan_user_access_cfg | upper }}"
+    method: GET
+  register: sls_can
+
+- name: "Construct {{ uan_user_access_cfg | upper }} full name"
+  set_fact:
+    sls_can_fullname: "{{ uan_user_access_cfg | upper }} Bootstrap DHCP Subnet"
+
+- name: "Get {{ uan_user_access_cfg | upper }} Subnets"
+  set_fact:
+    can_subnets: "{{ item.ExtraProperties.Subnets }}"
+  loop: "{{ sls_can.json }}"
+
+- name: "Get {{ uan_user_access_cfg | upper }} CIDR from SLS, if network exists."
+  set_fact:
+    customer_access_ips: "{{ item.IPReservations }}"
+    customer_access_network: "{{ item.CIDR }}"
+    customer_access_gateway: "{{ item.Gateway }}"
+    customer_access_vlan_id: "{{ item.VlanID }}"
+  loop: "{{ can_subnets }}"
+  when: (sls_can.status == 200) and (item.FullName == sls_can_fullname)
+
+- name: "Get {{ uan_user_access_cfg | upper }} IP from SLS"
+  set_fact:
+    can_ip: "{{ item.IPAddress }}"
+  loop: "{{ customer_access_ips }}"
+  when: (sls_can.status == 200) and (item.Name == ansible_hostname)
+
+- name: "FAIL if {{ uan_user_access_cfg | upper }} IP is not defined"
+  fail:
+    msg: "{{ uan_user_access_cfg | upper }} IP is not defined for {{ ansible_hostname }}"
+  when: can_ip is not defined
+
+- name: "FAIL if {{ uan_user_access_cfg | upper }} is not defined"
+  fail:
+    msg: "{{ uan_user_access_cfg | upper }} is not defined for the node, skipping {{ uan_user_access_cfg | upper }} configuration."
+  when: (customer_access_network is not defined) or (customer_access_gateway is not defined)
+
+- name: "Get {{ uan_user_access_cfg | upper }} Prefix"
+  set_fact:
+      can_prefix: "{{ customer_access_network | ipaddr('prefix') }}"
+
+- name: Configure CAN interfaces
   block:
-
-  - name: "Get {{ uan_user_access_cfg | upper }} info from SLS"
-    local_action:
-      module: uri
-      url: "http://cray-sls/v1/search/networks?name={{ uan_user_access_cfg | upper }}"
-      method: GET
-    register: sls_can
-
-  - name: "Construct {{ uan_user_access_cfg | upper }} full name"
-    set_fact:
-      sls_can_fullname: "{{ uan_user_access_cfg | upper }} Bootstrap DHCP Subnet"
-
-  - name: "Get {{ uan_user_access_cfg | upper }} Subnets"
-    set_fact:
-      can_subnets: "{{ item.ExtraProperties.Subnets }}"
-    loop: "{{ sls_can.json }}"
-
-  - name: "Get {{ uan_user_access_cfg | upper }} CIDR from SLS, if network exists."
-    set_fact:
-      customer_access_ips: "{{ item.IPReservations }}"
-      customer_access_network: "{{ item.CIDR }}"
-      customer_access_gateway: "{{ item.Gateway }}"
-    loop: "{{ can_subnets }}"
-    when: (sls_can.status == 200) and (item.FullName == sls_can_fullname)
-
-  - name: "Get {{ uan_user_access_cfg | upper }} IP from SLS"
-    set_fact:
-      can_ip: "{{ item.IPAddress }}"
-    loop: "{{ customer_access_ips }}"
-    when: (sls_can.status == 200) and (item.Name == ansible_hostname)
-
-  - name: "FAIL if {{ uan_user_access_cfg | upper }} IP is not defined"
-    fail:
-      msg: "{{ uan_user_access_cfg | upper }} IP is not defined for {{ ansible_hostname }}"
-    when: can_ip is not defined
-
-  - name: "FAIL if {{ uan_user_access_cfg | upper }} is not defined"
-    fail:
-      msg: "{{ uan_user_access_cfg | upper }} is not defined for the node, skipping {{ uan_user_access_cfg | upper }} configuration."
-    when: (customer_access_network is not defined) or (customer_access_gateway is not defined)
 
   - name: Initialize list of uan_can_devices
     set_fact:
       uan_can_devices: []
       uan_25G_can_devices: []
       uan_40G_can_devices: []
-
-  - name: "Get {{ uan_user_access_cfg | upper }} Prefix"
-    set_fact:
-        can_prefix: "{{ customer_access_network | ipaddr('prefix') }}"
-
-  when: "'Compute' not in group_names"
-
-- name: Configure CAN interfaces
-  block:
 
   - name: Get list of possible CAN interfaces
     shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|lan|nmn0'"
@@ -158,22 +154,22 @@
       group: root
       mode: '0644'
 
-  - name: Configure ifcfg-vlan007
+  - name: Configure ifcfg-can0
     template:
-      src: ifcfg-vlan007.j2
-      dest: /etc/sysconfig/network/ifcfg-vlan007
+      src: ifcfg-can0.j2
+      dest: /etc/sysconfig/network/ifcfg-can0
       mode: 0644
 
-  - name: Configure ifroute-vlan007
+  - name: Configure ifroute-can0
     template:
       src: ifroute-customer_access.j2
-      dest: /etc/sysconfig/network/ifroute-vlan007
+      dest: /etc/sysconfig/network/ifroute-can0
       owner: root
       mode: 0600
 
   - name: Set list of interfaces to restart for CAN
     set_fact:
-      uan_interface: "vlan007"
+      uan_interface: "can0"
 
   when:
     - (uan_user_access_cfg | upper) == "CAN"
@@ -200,14 +196,46 @@
     debug:
       msg: "{{chn_device_list.stdout_lines }}"
 
+  - name: "Determine if ifcfg-{{ chn_device_list.stdout_lines | first }} exists"
+    stat:
+      path: "/etc/sysconfig/network/ifcfg-{{ chn_device_list.stdout_lines | first }}"
+    register: ifcfg_chn
+    
+  - name: "Add CHN IP to {{ chn_device_list.stdout_lines | first }}"
+    when: (can_ip is defined) and (not ifcfg_chn.stat.exists)
+    shell: "ip address add {{ can_ip }}/{{ can_prefix }} dev {{ chn_device_list.stdout_lines | first }}"
+    register: cmd_out
+    failed_when: cmd_out.rc not in [0, 1, 2]
+
+  - name: "Add static route for {{ customer_access_gateway }}"
+    when:
+      - can_ip is defined
+      - not ifcfg_chn.stat.exists
+    shell: "ip route add {{ customer_access_network }} dev {{ chn_device_list.stdout_lines | first }} src {{ can_ip }}"
+    register: cmd_out
+    failed_when: cmd_out.rc not in [0, 1, 2]
+
+  - name: "Set default route for {{ customer_access_gateway }}"
+    when:
+      - can_ip is defined
+      - not ifcfg_chn.stat.exists
+    shell: "ip route add default via {{ customer_access_gateway }} dev {{ chn_device_list.stdout_lines | first }}"
+    register: cmd_out
+    failed_when: cmd_out.rc not in [0, 1, 2]
+
   - name: Set IPADDR1 entry for CHN
-    when: can_ip is defined
+    when:
+      - can_ip is defined
+      - ifcfg_chn.stat.exists
     lineinfile:
       dest: "/etc/sysconfig/network/ifcfg-{{ chn_device_list.stdout_lines | first }}"
       regex: '^IPADDR1=(.*)$'
       line: "IPADDR1={{ can_ip }}/{{ can_prefix }}"
 
   - name: "Configure ifroute-{{ chn_device_list.stdout_lines | first }}"
+    when:
+      - can_ip is defined
+      - ifcfg_chn.stat.exists
     template:
       src: ifroute-customer_access.j2
       dest: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
@@ -220,70 +248,30 @@
 
   when: 
     - (uan_user_access_cfg | upper) == "CHN"
-    - "'Compute' not in group_names"
-
-- name: Get HSN info for compute node default route change (CHN must be active)
-  block:
-
-  - name: "Get HSN info from SLS"
-    local_action:
-      module: uri
-      url: "http://cray-sls/v1/search/networks?name=HSN"
-      method: GET
-    register: sls_hsn
-
-  - name: "Get HSN Subnets"
-    set_fact:
-      hsn_subnets: "{{ item.ExtraProperties.Subnets }}"
-    loop: "{{ sls_hsn.json }}"
-
-  - name: "Get HSN gateway from SLS, if network exists."
-    set_fact:
-      customer_access_gateway: "{{ item.Gateway }}"
-    loop: "{{ hsn_subnets }}"
-    when: (sls_hsn.status == 200) and (item.FullName == "HSN Base Subnet")
-
-  - name: "FAIL if HSN Gateway is not defined"
-    fail:
-      msg: "HSN Gateway is not defined }}"
-    when: customer_access_gateway is not defined
-
-  - name: Add default route to ifroute-hsn0
-    lineinfile:
-      dest: "/etc/sysconfig/network/ifroute-hsn0"
-      state: present
-      create: yes
-      regex: "default {{ customer_access_gateway }} - -"
-      line: "default {{ customer_access_gateway }} - -"
-    when: customer_access_gateway is defined
-
-  - name: Set list of interfaces to restart for HSN default route setting
-    set_fact:
-      uan_interface: "hsn0"
-
-  when: 
-    - (uan_user_access_cfg | upper) == "CHN"
-    - "'Compute' in group_names"
 
 - name: Restarting wicked to set new routes
+  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
   shell: "systemctl restart wicked;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0
   register: result
 
 - name: Restarting wicked-nanny
+  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
   shell: "systemctl restart wickedd-nanny;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0
   register: result
 
 - name: Remove existing default route
+  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
   command: "ip route delete default"
   changed_when: result.rc != 0 or result.rc == 2
   failed_when: result.rc != 0 and result.rc != 2
   register: result
 
 - name: Restart networks to update default route 
+  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
   shell: "systemctl restart wicked;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0

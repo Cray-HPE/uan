@@ -83,7 +83,7 @@
       port: "{{ ldap_port }}"
       state: started
       delay: 0
-      timeout: 3
+      timeout: 30
     with_subelements:
       - "{{ uan_ldap_config }}"
       - servers

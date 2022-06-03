@@ -276,28 +276,28 @@
     - (uan_user_access_cfg | upper) == "CHN"
 
 - name: Restarting wicked to set new routes
-  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
   shell: "systemctl restart wicked;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0
   register: result
 
 - name: Restarting wicked-nanny
-  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
   shell: "systemctl restart wickedd-nanny;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0
   register: result
 
 - name: Remove existing default route
-  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
   command: "ip route delete default"
   changed_when: result.rc != 0 or result.rc == 2
   failed_when: result.rc != 0 and result.rc != 2
   register: result
 
 - name: Restart networks to update default route 
-  when: (ifcfg_chn.stat.exists and (uan_user_access_cfg | upper) == "CHN") or (uan_user_access_cfg | upper) == "CAN"
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
   shell: "systemctl restart wicked;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0

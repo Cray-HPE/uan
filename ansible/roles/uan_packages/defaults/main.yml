@@ -35,9 +35,9 @@ uan_gpg_key_k8s_namespace: "services"
 uan_gpg_key_k8s_field: "gpg-pubkey"
 
 uan_sles15_repositories_add:
-  - name: "uan-2.3-sle-15sp3"
+  - name: "uan-2.4-sle-15sp3"
     description: "UAN SUSE Linux Enterprise 15 SP3 Packages"
-    repo: "https://packages.local/repository/uan-2.3-sle-15sp3"
+    repo: "https://packages.local/repository/uan-2.4-sle-15sp3"
     priority: 2
     disable_gpg_check: "{{ uan_disable_gpg_check }}"
 

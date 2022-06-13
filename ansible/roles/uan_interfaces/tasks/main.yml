@@ -103,6 +103,7 @@
   - name: Get Mountain NMN gateway
     set_fact:
       mnmn_gateway: "{{ mnmn_svcs_cidr | ipaddr('network/prefix') | ipaddr('next_usable') }}"
+    when: mnmn_svcs_cidr is defined
 
   - name: Register node NMN Gateway
     set_fact:

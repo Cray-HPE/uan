@@ -218,38 +218,43 @@
     stat:
       path: "/etc/sysconfig/network/ifcfg-{{ chn_device_list.stdout_lines | first }}"
     register: ifcfg_chn
+
+  - name: "Determine if ifroute-{{ chn_device_list.stdout_lines | first }} exists"
+    stat:
+      path: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
+    register: ifroute_chn
     
-  - name: "Add CHN IP to {{ chn_device_list.stdout_lines | first }}"
+  - name: "Add CHN IP to {{ chn_device_list.stdout_lines | first }} if no ifcfg file exists"
     when: (can_ip is defined) and (not ifcfg_chn.stat.exists)
     shell: "ip address add {{ can_ip }}/{{ can_prefix }} dev {{ chn_device_list.stdout_lines | first }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
-  - name: "Add static route for {{ customer_access_gateway }}"
+  - name: "Add static route for {{ customer_access_gateway }} if no ifroute file exists"
     when:
       - can_ip is defined
-      - not ifcfg_chn.stat.exists
+      - not ifroute_chn.stat.exists
     shell: "ip route add {{ customer_access_network }} dev {{ chn_device_list.stdout_lines | first }} src {{ can_ip }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
-  - name: "Add static route for {{ customer_access_gateway }} MetalLB services"
+  - name: "Add static route for {{ customer_access_gateway }} MetalLB services if no ifroute file exists"
     when:
       - can_ip is defined
-      - not ifcfg_chn.stat.exists
+      - not ifroute_chn.stat.exists
     shell: "ip route add {{ customer_access_network_metallb }} via {{ customer_access_gateway }} dev {{ chn_device_list.stdout_lines | first }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
-  - name: "Set default route for {{ customer_access_gateway }}"
+  - name: "Set default route for {{ customer_access_gateway }} if no ifroute file exists"
     when:
       - can_ip is defined
-      - not ifcfg_chn.stat.exists
+      - not ifroute_chn.stat.exists
     shell: "ip route add default via {{ customer_access_gateway }} dev {{ chn_device_list.stdout_lines | first }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
-  - name: Set IPADDR1 entry for CHN
+  - name: Set IPADDR1 entry for CHN if ifcfg file exists
     when:
       - can_ip is defined
       - ifcfg_chn.stat.exists
@@ -258,15 +263,25 @@
       regex: '^IPADDR1=(.*)$'
       line: "IPADDR1={{ can_ip }}/{{ can_prefix }}"
 
-  - name: "Configure ifroute-{{ chn_device_list.stdout_lines | first }}"
+  - name: "Setup ifroute-{{ chn_device_list.stdout_lines | first }} default if ifroute file exists"
     when:
       - can_ip is defined
-      - ifcfg_chn.stat.exists
-    template:
-      src: ifroute-customer_access.j2
+      - ifroute_chn.stat.exists
+    lineinfile:
       dest: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
-      owner: root
-      mode: 0600
+      state: present
+      regex: "default {{ customer_access_gateway }} - -"
+      line: "default {{ customer_access_gateway }} - -"
+
+  - name: "Setup ifroute-{{ chn_device_list.stdout_lines | first }} for MetalLB services if ifroute exists"
+    when:
+      - can_ip is defined
+      - ifroute_chn.stat.exists
+    lineinfile:
+      dest: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
+      state: present
+      regex: "{{ customer_access_network_metallb | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network_metallb | ipaddr('netmask') }} -"
+      line: "{{ customer_access_network_metallb | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network_metallb | ipaddr('netmask') }} -"
 
   - name: Set list of interfaces to restart for CHN
     set_fact:

@@ -185,6 +185,13 @@
       owner: root
       mode: 0600
 
+  - name: Setup ifroute-can0 for MetalLB services
+    lineinfile:
+      dest: /etc/sysconfig/network/ifroute-can0
+      state: present
+      regex: "{{ customer_access_network_metallb | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network_metallb | ipaddr('netmask') }} -"
+      line: "{{ customer_access_network_metallb | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network_metallb | ipaddr('netmask') }} -"
+
   - name: Set list of interfaces to restart for CAN
     set_fact:
       uan_interface: "can0"

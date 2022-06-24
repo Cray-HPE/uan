@@ -30,7 +30,7 @@ cray-import-config:
   config_image:
     image:
       repository: artifactory.algol60.net/uan-docker/stable/cray-uan-config
-      tag: 1.8.3
+      tag: 1.8.4
   catalog:
     image:
       repository: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update

@@ -21,27 +21,13 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-#   @***@ variables in this file are sed replaced using this repository's
-#   runBuildPrep-config-framework.sh script.
-#
+# Defaults for uan_hardening role
 
-# For products that import Ansible configuration content
-cray-import-config:
-  config_image:
-    image:
-      repository: artifactory.algol60.net/uan-docker/stable/cray-uan-config
-<<<<<<< HEAD
-      tag: 1.8.5
-=======
-      tag: 1.8.3
->>>>>>> d67ec86 (CASMUSER-3021 Bump version to 1.8.3)
-  catalog:
-    image:
-      repository: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update
-      tag: 1.3.1
+# DO NOT SET VALUES IN THIS FILE.
+# Override these values in the Ansible inventory or in a playbook.
 
-  import_job:
-    CF_IMPORT_GITEA_REPO: uan-config-management
-    CF_IMPORT_PRODUCT_NAME: uan
-    # CF_IMPORT_PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
+# See the role README.md file for information about these variables.
 
+---
+disable_ssh_out_nmn_to_management_ncns: yes
+disable_ssh_out_uan_to_nmn_lb: yes

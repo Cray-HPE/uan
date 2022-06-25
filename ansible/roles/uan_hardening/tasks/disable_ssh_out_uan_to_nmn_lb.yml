@@ -21,33 +21,38 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-apiVersion: v2
-name: cray-uan-install
-<<<<<<< HEAD
-version: 1.8.5
-=======
-version: 1.8.3
->>>>>>> d67ec86 (CASMUSER-3021 Bump version to 1.8.3)
-description: Kubernetes resources for installing UAN
-keywords:
-  - uan
-  - cfs
-home: https://github.com/Cray-HPE/uan
-dependencies:
-  - name: cray-import-config
-    version: 2.0.0
-    repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
-maintainers:
-  - name: keopp
-    email: keopp@hpe.com
-annotations:
-  artifacthub.io/images: |
-    - name: cray-uan-config
-<<<<<<< HEAD
-      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.8.5
-=======
-      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.8.3
->>>>>>> d67ec86 (CASMUSER-3021 Bump version to 1.8.3)
-    - name: cray-product-catalog-update
-      image: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update:1.3.1
-  artifacthub.io/license: MIT
+---
+- hosts: Application_UAN
+  gather_facts: no
+  tasks:
+    - name: "Get NMNLB subnet info from SLS"
+      local_action:
+        module: uri
+        url: "http://cray-sls/v1/search/networks?name=NMNLB"
+        method: GET
+      register: sls_nmnlb
+      failed_when: sls_nmnlb.status != 200
+      run_once: true
+
+    - name: "Set NMNLB subnet details"
+      set_fact:
+        nmnlb_subnet_details: "{{ item.ExtraProperties.Subnets }}"
+      loop: "{{ sls_nmnlb.json }}"
+
+    - name: "Set NMNLB subnet facts from SLS API retrieved details"
+      set_fact:
+        nmnlb_network_cidr: "{{ item.CIDR }}"
+      loop: "{{ nmnlb_subnet_details }}"
+
+    #Add iptables drop rule, for outbound only traffic, only out the nmn0
+    # UAN interface, only to the NMN Load Balancer(LB) subnet, and only
+    # for destination TCP port 22 ssh traffic. Does not affect inbound
+    # traffic.
+    - name: Block ssh to NMN LB subnet from UAN NMN interface
+      iptables:
+        chain: OUTPUT
+        jump: DROP
+        protocol: tcp
+        out_interface: nmn0
+        destination_port: 22
+        destination: "{{ nmnlb_network_cidr }}"

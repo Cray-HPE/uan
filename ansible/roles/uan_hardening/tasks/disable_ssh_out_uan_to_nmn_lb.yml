@@ -46,7 +46,7 @@
 # UAN interface, only to the NMN Load Balancer(LB) subnet, and only
 # for destination TCP port 22 ssh traffic. Does not affect inbound
 # traffic.
-- name: Block ssh to NMN LB subnet from UAN NMN interface
+- name: "Block ssh to NMN LB subnet from UAN NMN interface"
   iptables:
     chain: OUTPUT
     jump: DROP

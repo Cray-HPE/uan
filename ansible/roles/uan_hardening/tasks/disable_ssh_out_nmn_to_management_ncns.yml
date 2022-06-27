@@ -37,7 +37,7 @@
 #Add iptables drop rule, for outbound only traffic, only out the nmn0
 # UAN interface, and only for destination TCP port 22 ssh traffic.
 # Does not affect inbound traffic.
-- name: Block ssh to NCN IPs from UAN NMN$
+- name: "Block ssh to NCN IPs from UAN NMN"
   iptables:
     chain: OUTPUT
     jump: DROP

@@ -67,7 +67,7 @@ RUN \
     zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SHS_SLES_VERSION}  cos-shs-rpms-cn  && \
     zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-stable-local/${SHS_RELEASE_PREFIX}/${SHS_COS_VERSION}      shs-rpms-cn      && \
     zypper refresh && \
-    zypper install -y timezone vim
+    zypper install -y iptables timezone vim
 
 COPY --from=product-content-base /opt/cray/ansible/ /opt/cray/ansible/
 COPY ansible/ /opt/cray/ansible

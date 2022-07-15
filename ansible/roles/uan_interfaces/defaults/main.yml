@@ -33,6 +33,7 @@
 uan_can_setup: no
 uan_customer_default_route: no
 uan_user_access_cfg: 'CAN'
+uan_set_compute_default_route: no
 
 # SLS Network names
 sls_nmn_name: "NMN"

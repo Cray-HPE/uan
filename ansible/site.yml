@@ -103,3 +103,8 @@
   roles:
     - role: uan_interfaces
       uan_can_setup: yes
+      when:
+        - not cray_cfs_image|default(false)|bool
+        - uan_set_compute_default_route
+    - role: uan_hardening
+      when: not cray_cfs_image|default(false)|bool

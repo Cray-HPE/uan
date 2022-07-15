@@ -28,11 +28,8 @@
 - include_tasks: disable_ssh_out_nmn_to_management_ncns.yml
   when:
     - disable_ssh_out_nmn_to_management_ncns | bool
-    - "'Compute' not in group_names"
 
 # Block port 22 outbound from nmn0 interface on UAN to NMN LB subnet.
 - include_tasks: disable_ssh_out_uan_to_nmn_lb.yml
   when: 
     - disable_ssh_out_uan_to_nmn_lb | bool
-    - "'Compute' not in group_names"
-

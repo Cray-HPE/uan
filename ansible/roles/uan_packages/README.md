@@ -63,9 +63,9 @@ Example Playbook
          uan_sles15_packages_remove:
            - baz
          uan_sles15_repositories_add:
-           - name: "uan-2.3.0-sle-15sp3"
-             description: "UAN SUSE Linux Enterprise 15 SP2 Packages"
-             repo: "https://packages.local/repository/uan-2.3.0-sle-15sp3"
+           - name: "uan-2.5.0-sle-15sp4"
+             description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
+             repo: "https://packages.local/repository/uan-2.5.0-sle-15sp4"
              disable_gpg_check: no
              priority: 2
 ```

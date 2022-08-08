@@ -71,7 +71,7 @@
     # UAN-specific configuration
     - { role: uan_packages,       when: cray_cfs_image|default(false)|bool }
     - { role: uan_shadow,         when: cray_cfs_image|default(false)|bool }
-    - { role: uan_motd,           when: cray_cfs_image|default(false)|bool }
+    - { role: uan_motd,           when: not cray_cfs_image|default(false)|bool }
     - { role: uan_disk_config,    when: not cray_cfs_image|default(false)|bool }
     - { role: uan_interfaces,     when: not cray_cfs_image|default(false)|bool }
     - { role: uan_ldap,           when: not cray_cfs_image|default(false)|bool }

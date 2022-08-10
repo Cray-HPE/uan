@@ -30,7 +30,7 @@ cray-import-config:
   config_image:
     image:
       repository: artifactory.algol60.net/uan-docker/stable/cray-uan-config
-      tag: 1.8.7
+      tag: 1.9.0
   catalog:
     image:
       repository: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update
@@ -40,4 +40,3 @@ cray-import-config:
     CF_IMPORT_GITEA_REPO: uan-config-management
     CF_IMPORT_PRODUCT_NAME: uan
     # CF_IMPORT_PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
-

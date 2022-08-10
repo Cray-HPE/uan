@@ -24,21 +24,22 @@
 
 ARG ARTI=https://arti.hpc.amslabs.hpecorp.net:443/artifactory
 ARG ALGOL=https://artifactory.algol60.net/artifactory
-ARG RELEASE_PREFIX=release
-ARG COS_RELEASE_VERSION=cos-2.3
-ARG COS_SLES_VERSION=sle15_sp3_ncn
+ARG COS_RELEASE_PREFIX=release
+ARG COS_RELEASE_VERSION=cos-2.4
+ARG COS_SLES_VERSION=sle15_sp4_ncn
+ARG COS_RPMS=cos-rpm-stable-local
 ARG CSM_SLES_VERSION=sle-15sp3
 
 # Dockerfile for importing UAN content into gitea instances on Shasta
 FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.3 as product-content-base
 WORKDIR /
 
-ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION CSM_SLES_VERSION
+ARG ARTI ALGOL COS_RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION COS_RPMS CSM_SLES_VERSION
 
 # Install dependencies as RPMs
 RUN \
     zypper ar --no-gpgcheck ${ALGOL}/csm-rpms/hpe/stable/${CSM_SLES_VERSION}                                          shasta-scms && \
-    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION} shasta-cos  && \
+    zypper ar --no-gpgcheck ${ARTI}/${COS_RPMS}/${COS_RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}          shasta-cos  && \
     zypper refresh && \
     zypper in -y \
         cf-cme-sysconfig-config-framework \
@@ -52,19 +53,19 @@ RUN \
 
 FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.83 as testing
 
-ARG ARTI ALGOL RELEASE_PREFIX COS_RELEASE_VERSION
+ARG ARTI ALGOL COS_RELEASE_PREFIX COS_RELEASE_VERSION COS_RPMS
 ARG COS_SLES_VERSION=sle15_sp3_cn
-ARG COS_SHS_SLES_VERSION=shs_master_sle15_sp3_cn
-ARG COS_BASE_SLES_VERSION=sle15_sp3_base_cn
-ARG SHS_RELEASE_PREFIX=release/slingshot-1.7
-ARG SHS_COS_VERSION=cos_2_3_sle15_sp3_cn
+ARG COS_SHS_SLES_VERSION=shs_master_sle15_sp4_cn
+ARG COS_BASE_SLES_VERSION=sle15_sp4_base_cn
+ARG SHS_RELEASE_PREFIX=release/slingshot-2.0
+ARG SHS_COS_VERSION=cos_2_4_sle15_sp4_cn
 
 # Configure repos to simulate what nexus will provide
 # Install timezone for ca-cert and vim for debugging
 RUN \
     zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3                                                         uan-rpms         && \
-    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}      cos-rpms-cn      && \
-    zypper ar --no-gpgcheck ${ARTI}/cos-rpm-stable-local/${RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SHS_SLES_VERSION}  cos-shs-rpms-cn  && \
+    zypper ar --no-gpgcheck ${ARTI}/${COS_RPMS}/${COS_RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}      cos-rpms-cn      && \
+    zypper ar --no-gpgcheck ${ARTI}/${COS_RPMS}/${COS_RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SHS_SLES_VERSION}  cos-shs-rpms-cn  && \
     zypper ar --no-gpgcheck ${ARTI}/slingshot-host-software-rpm-stable-local/${SHS_RELEASE_PREFIX}/${SHS_COS_VERSION}      shs-rpms-cn      && \
     zypper refresh && \
     zypper install -y iptables timezone vim
@@ -84,13 +85,13 @@ RUN rm /usr/share/ansible/plugins/callback/cfs_aggregator.py
 RUN /uan-aee-test-helper.sh
 
 # Running ansible-playbook with --syntax-check
-RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local --syntax-check
+#RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local --syntax-check
 
 # Running ansible-playbook with --check and cray_cfs_image=true to simulate CFS image customization
-RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=true  --check
+#RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=true  --check
 
 # Running ansible-playbook with --check and cray_cfs_image=false to simulate CFS node personalization
-RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=false --check
+#RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=false --check
 
 # Use this entrypoint to allow for easy debugging
 ENTRYPOINT /bin/sh

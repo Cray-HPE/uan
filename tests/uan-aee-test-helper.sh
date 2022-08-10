@@ -206,6 +206,10 @@ mkdir -p /var/run/secrets/kubernetes.io/serviceaccount/
 touch /var/run/secrets/kubernetes.io/serviceaccount/token
 touch /var/run/secrets/kubernetes.io/serviceaccount/namespace
 
+# Remove LNET and DVS Roles from testing
+sed -i '/cray_lnet/d' /opt/cray/ansible/site.yml
+sed -i '/cray_dvs/d' /opt/cray/ansible/site.yml
+
 # This file would exist in an image that was run with CFS image customization
 touch /etc/modprobe.d/dvs.conf
 

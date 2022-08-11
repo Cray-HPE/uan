@@ -88,8 +88,8 @@
         cray_gpu_ld_drivers: true
         gpu_forced_project: true
       loop:
-        - amd
         - nvidia
+        - amd
       loop_control:
         loop_var: gpu
       when: not cray_cfs_image|default(false)|bool and

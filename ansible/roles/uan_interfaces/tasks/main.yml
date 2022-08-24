@@ -30,6 +30,7 @@
     method: GET
   register: sls_bican
   ignore_errors: yes
+  run_once: true
 
 - name: "Get BICAN System Default Route Network Name"
   set_fact:
@@ -45,6 +46,7 @@
       method: GET
     register: sls_cab
     failed_when: sls_cab.status != 200
+    run_once: true
 
   - name: Store Cabinet NMN info
     set_fact:
@@ -66,6 +68,7 @@
       method: GET
     register: sls_nmn_svcs
     failed_when: sls_nmn_svcs.status != 200
+    run_once: true
 
   - name: Get NMN Services CIDR from SLS
     set_fact:
@@ -78,6 +81,7 @@
       method: GET
     register: sls_nmn
     failed_when: sls_nmn.status != 200
+    run_once: true
 
   - name: Get NMN CIDR from SLS
     set_fact:
@@ -94,6 +98,7 @@
       method: GET
     register: sls_mnmn_svcs
     ignore_errors: yes
+    run_once: true
 
   - name: Get Mountain NMN Services CIDR from SLS, if network exists
     set_fact:

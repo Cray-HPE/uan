@@ -29,6 +29,7 @@
     method: GET
   register: sls_can
   failed_when: sls_can.status != 200
+  run_once: true
 
 - name: "Construct {{ uan_user_access_cfg | upper }} full names"
   set_fact:

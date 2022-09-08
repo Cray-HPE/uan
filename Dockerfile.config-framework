@@ -26,7 +26,7 @@ ARG ARTI=https://arti.hpc.amslabs.hpecorp.net:443/artifactory
 ARG ALGOL=https://artifactory.algol60.net/artifactory
 ARG COS_RELEASE_PREFIX=release
 ARG COS_RELEASE_VERSION=cos-2.4
-ARG COS_SLES_VERSION=sle15_sp4_ncn
+ARG COS_SLES_VERSION=sle15_sp3_ncn
 ARG COS_RPMS=cos-rpm-stable-local
 ARG CSM_SLES_VERSION=sle-15sp3
 

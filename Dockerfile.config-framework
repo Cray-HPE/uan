@@ -97,7 +97,7 @@ RUN /uan-aee-test-helper.sh
 ENTRYPOINT /bin/sh
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.4.69
+FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.7.0
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

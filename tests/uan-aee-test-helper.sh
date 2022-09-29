@@ -50,13 +50,6 @@ uan_vault_jwt_file: /tmp/token
 
 uan_motd_content: "MOTD goes here"
 
-filesystems:
-  - src: 127.0.0.1:/fakelus
-    mount_point: /lus
-    fstype: nfs4
-    opts: rw
-    state: mounted
-
 sls_cab_test:
   'status': 200
   'json': 
@@ -194,24 +187,17 @@ sed -i 's/^display_ok_hosts      = no/display_ok_hosts      = yes/g' /etc/ansibl
 # file writes some vars with a "_test" suffix
 sed -i 's/csm_public_key\[/csm_public_key_test\[/g' /opt/cray/ansible/roles/trust-csm-ssh-keys/tasks/main.yaml
 sed -i 's/hpe_gpg_pubkey\./hpe_gpg_pubkey_test\./g' /opt/cray/ansible/roles/uan_packages/tasks/main.yml
-sed -i 's/temp_key_file\./temp_key_file_test\./g' /opt/cray/ansible/roles/uan_packages/tasks/main.yml
-sed -i 's/sls_cab\./sls_cab_test\./g' /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
-sed -i 's/sls_bican\./sls_bican_test\./g' /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
-sed -i 's/sls_nmnlb\./sls_nmnlb_test\./g' /opt/cray/ansible/roles/uan_hardening/tasks/disable_ssh_out_uan_to_nmn_lb.yml
+sed -i 's/temp_key_file\./temp_key_file_test\./g'   /opt/cray/ansible/roles/uan_packages/tasks/main.yml
+sed -i 's/sls_cab\./sls_cab_test\./g'               /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
+sed -i 's/sls_bican\./sls_bican_test\./g'           /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
+sed -i 's/sls_nmnlb\./sls_nmnlb_test\./g'           /opt/cray/ansible/roles/uan_hardening/tasks/disable_ssh_out_uan_to_nmn_lb.yml
 
 # Add dummy files for ca-cert role
-mkdir -p /etc/cray/ca
-touch /etc/cray/ca/certificate_authority.crt
-mkdir -p /var/run/secrets/kubernetes.io/serviceaccount/
-touch /var/run/secrets/kubernetes.io/serviceaccount/token
-touch /var/run/secrets/kubernetes.io/serviceaccount/namespace
-
-# Remove LNET and DVS Roles from testing
-sed -i '/cray_lnet/d' /opt/cray/ansible/site.yml
-sed -i '/cray_dvs/d' /opt/cray/ansible/site.yml
-
-# This file would exist in an image that was run with CFS image customization
-touch /etc/modprobe.d/dvs.conf
+#mkdir -p /etc/cray/ca
+#touch /etc/cray/ca/certificate_authority.crt
+#mkdir -p /var/run/secrets/kubernetes.io/serviceaccount/
+#touch /var/run/secrets/kubernetes.io/serviceaccount/token
+#touch /var/run/secrets/kubernetes.io/serviceaccount/namespace
 
 # Running ansible-playbook with --syntax-check
 #ansible-playbook /opt/cray/ansible/site.yml --connection=local --syntax-check

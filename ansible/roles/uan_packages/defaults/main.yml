@@ -55,5 +55,3 @@ uan_sles15_packages_add:
     disable_gpg_check: "{{ uan_disable_gpg_check }}"
   - name: "wget"
     disable_gpg_check: "{{ uan_disable_gpg_check }}"
-  - name: "qlgc-fastlinq-kmp-cray_shasta_c"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"

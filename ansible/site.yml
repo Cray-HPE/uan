@@ -22,51 +22,55 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 #!/usr/bin/env ansible-playbook
-# Top-level site.yml for User Access Nodes
-- hosts: Application_UAN
+---
+- name: setup cfs_image host group
+  gather_facts: false
+  hosts: all
+  tasks:
+    - name: Add image customization hosts to the cfs_image host group.
+      add_host:
+        name: '{{ inventory_hostname }}'
+        groups: cfs_image
+      when: cray_cfs_image
+
+- hosts: Application_UAN:&cfs_image
+  gather_facts: true
+  any_errors_fatal: true
+  remote_user: root
+
+  tasks:
+    - name: Application_UAN image customization play
+      include_role:
+        name: "{{ item }}"
+      with_items:
+        - uan_packages
+        - uan_shadow
+        - uan_motd
+
+- hosts: Application_UAN:!cfs_image
+  gather_facts: true
+  any_errors_fatal: true
+  remote_user: root
+
+  tasks:
+    - name: Application_UAN node personalization play
+      include_role:
+        name: "{{ item }}"
+      with_items:
+        - uan_disk_config
+        - uan_interfaces
+        - uan_ldap
+        - uan_hardening
+
+- hosts: Compute:!cfs_image
   gather_facts: yes
   any_errors_fatal: true
   remote_user: root
 
-  pre_tasks:
-    - name: Disallow login to the UANs during post-boot configuration
-      file:
-        path: /etc/nologin
-        owner: root
-        group: root
-        mode: 0644
-        state: touch
-      when: not cray_cfs_image and uan_login_config_protect|default(true)
-
-  post_tasks:
-    - name: Allow user logins to the UANs after configuration
-      file:
-        path: /etc/nologin
-        state: absent
-      when: not cray_cfs_image and uan_login_config_protect|default(true)
-
-  roles:
-
-    # UAN-specific configuration
-    - { role: uan_packages,       when: cray_cfs_image|default(false)|bool }
-    - { role: uan_shadow,         when: cray_cfs_image|default(false)|bool }
-    - { role: uan_motd,           when: cray_cfs_image|default(false)|bool }
-    - { role: uan_disk_config,    when: not cray_cfs_image|default(false)|bool }
-    - { role: uan_interfaces,     when: not cray_cfs_image|default(false)|bool }
-    - { role: uan_ldap,           when: not cray_cfs_image|default(false)|bool }
-    - { role: uan_hardening,      when: not cray_cfs_image|default(false)|bool }
-
-    # Rebuild initrd for image customization
-    - { role: rebuild-initrd,     when: cray_cfs_image|default(false)|bool }
-
-- hosts: Compute
-  gather_facts: yes
-  any_errors_fatal: true
-  remote_user: root
-
-  roles:
-    - role: uan_interfaces
-      when:
-        - not cray_cfs_image|default(false)|bool
-        - uan_can_setup
-    - { role: uan_hardening,  when: not cray_cfs_image|default(false)|bool }
+  tasks:
+    - name: Application_UAN node personalization play
+      include_role:
+        name: "{{ item }}"
+      with_items:
+        - uan_interfaces
+        - uan_hardening

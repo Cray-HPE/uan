@@ -100,7 +100,6 @@
       - services
 
   - name: Configure pam to use sss and enable mkhomedir
-    when: not cray_cfs_image|default(false)
     command: "pam-config -a --sss --mkhomedir"
 
   - name: Test if /etc/pam.d/<module> is a symlink
@@ -144,14 +143,12 @@
       mode: 0600
 
   - name: Start nscd and enable
-    when: not cray_cfs_image|default(false)
     service:
       name: nscd
       state: restarted
       enabled: true
 
   - name: Start and enable sssd
-    when: not cray_cfs_image|default(false)
     service:
       name: sssd
       state: restarted
@@ -175,4 +172,3 @@
   when:
     - uan_ldap_setup
     - uan_ldap_config
-    - not cray_cfs_image|default(false)

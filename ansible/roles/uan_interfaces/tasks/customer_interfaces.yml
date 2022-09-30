@@ -133,5 +133,3 @@
     register: result
     when: (item.name is defined) and (item.settings.ipaddr is defined)
     loop: "{{ customer_uan_interfaces }}"
-  
-  when: not cray_cfs_image | bool

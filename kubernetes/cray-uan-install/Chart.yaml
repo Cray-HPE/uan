@@ -23,7 +23,7 @@
 #
 apiVersion: v2
 name: cray-uan-install
-version: 1.9.5
+version: 1.9.6
 description: Kubernetes resources for installing UAN
 keywords:
   - uan
@@ -39,7 +39,7 @@ maintainers:
 annotations:
   artifacthub.io/images: |
     - name: cray-uan-config
-      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.9.5
+      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.9.6
     - name: cray-product-catalog-update
       image: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update:1.3.1
   artifacthub.io/license: MIT

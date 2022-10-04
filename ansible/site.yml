@@ -81,6 +81,16 @@
     - { role: rebuild-initrd,     when: cray_cfs_image|default(false)|bool }
 
   tasks:
+    - name: Check if cray-ifconf systemd unit file exists
+      stat:
+        path: "/usr/lib/systemd/system/cray-ifconf.service"
+      register: ifconf
+    - name: Disable cray-ifconf
+      systemd:
+        name: cray-ifconf
+        enabled: no
+      when: cray_cfs_image|default(false)|bool and
+            ifconf.stat.exists
     - name: Loop over gpu deploy
       include_role:
         name: cray_gpu_deploy

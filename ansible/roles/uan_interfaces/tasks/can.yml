@@ -313,7 +313,7 @@
   register: result
 
 - name: Remove existing default route
-  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifroute_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
   command: "ip route delete default"
   changed_when: result.rc != 0 or result.rc == 2
   failed_when: result.rc != 0 and result.rc != 2

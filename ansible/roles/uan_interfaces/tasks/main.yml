@@ -276,5 +276,4 @@
       - "'Compute' not in group_names"
 
   when:
-    - not cray_cfs_image
     - ('Compute' not in group_names) or ('Compute' in group_names and uan_user_access_cfg == 'CHN')

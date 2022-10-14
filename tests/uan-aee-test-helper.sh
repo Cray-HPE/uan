@@ -127,9 +127,32 @@ sls_nmnlb_test:
   "status": 200
   "json":
     - "ExtraProperties":
+        "CIDR": "10.92.100.0/24"
         "Subnets":
           - "CIDR": "10.92.100.0/24"
             "FullName": "NMN MetalLB"
+
+sls_nmn_test:
+  "status": 200
+  "json":
+    - "ExtraProperties":
+        "CIDR": "10.252.0.0/17"
+        "Subnets":
+          - "CIDR": "10.252.0.0/17"
+            "FullName": "NMN Management Network Infrastructure"
+
+sls_nmn_mtn_test:
+  "status": 200
+  "json":
+    - "IPRanges":
+      - "10.100.0.0/17"
+    - "ExtraProperties":
+        "CIDR": "10.100.0.0/17"
+        "Subnets":
+          - "CIDR": "10.100.0.0/22"
+            "Name": "cabinet_1000"
+
+
 EOF
 
 # This is a meaningless PGP public key, it will not work for checking
@@ -190,6 +213,9 @@ sed -i 's/hpe_gpg_pubkey\./hpe_gpg_pubkey_test\./g' /opt/cray/ansible/roles/uan_
 sed -i 's/temp_key_file\./temp_key_file_test\./g'   /opt/cray/ansible/roles/uan_packages/tasks/main.yml
 sed -i 's/sls_cab\./sls_cab_test\./g'               /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
 sed -i 's/sls_bican\./sls_bican_test\./g'           /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
+sed -i 's/sls_nmn_svcs\./sls_nmnlb_test\./g'        /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
+sed -i 's/sls_nmn\./sls_nmn_test\./g'               /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
+sed -i 's/sls_mnmn_svcs\./sls_nmn_mtn_test\./g'               /opt/cray/ansible/roles/uan_interfaces/tasks/main.yml
 sed -i 's/sls_nmnlb\./sls_nmnlb_test\./g'           /opt/cray/ansible/roles/uan_hardening/tasks/disable_ssh_out_uan_to_nmn_lb.yml
 
 # Add dummy files for ca-cert role

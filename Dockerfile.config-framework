@@ -29,11 +29,10 @@ FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.83 as testing
 ARG ARTI ALGOL
 
 # Configure repos to simulate what nexus will provide
-# Install timezone for ca-cert and vim for debugging
 RUN \
     zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3 uan-rpms && \
     zypper refresh && \
-    zypper install -y iptables timezone vim
+    zypper install -y iptables sysconfig vim
 
 COPY ansible/ /opt/cray/ansible
 COPY tests/uan-aee-test-helper.sh /

@@ -45,7 +45,6 @@
       with_items:
         - uan_packages
         - uan_shadow
-        - uan_motd
 
 - hosts: Application_UAN:!cfs_image
   gather_facts: true
@@ -57,6 +56,7 @@
       include_role:
         name: "{{ item }}"
       with_items:
+        - uan_motd
         - uan_disk_config
         - uan_interfaces
         - uan_ldap

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,25 +21,15 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-apiVersion: v2
-name: cray-uan-install
-version: 1.10.1
-description: Kubernetes resources for installing UAN
-keywords:
-  - uan
-  - cfs
-home: https://github.com/Cray-HPE/uan
-dependencies:
-  - name: cray-import-config
-    version: 2.0.0
-    repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
-maintainers:
-  - name: keopp
-    email: keopp@hpe.com
-annotations:
-  artifacthub.io/images: |
-    - name: cray-uan-config
-      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.10.1
-    - name: cray-product-catalog-update
-      image: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update:1.3.1
-  artifacthub.io/license: MIT
+# Packages to install on a COS based UAN
+uan_sles_packages:
+  - "cray-uan-diagnostics"
+  - "cray-uan-goss"
+  - "cray-uan-load-drivers-shasta-uan"
+  - "sssd-tools"
+  - "wget"
+
+# Packages to install on a SLE based Application Node
+uan_sle_hpc_packages:
+  - "cray-uan-diagnostics"
+  - "cray-uan-goss"

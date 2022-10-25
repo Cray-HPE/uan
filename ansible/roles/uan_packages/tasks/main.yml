@@ -23,49 +23,14 @@
 #
 # Tasks for the uan_packages role
 
-# Note: csm_read_secret is provided by the AEE (Ansible Execution Environment) image
-- name: Fetch the HPE GPG Signing Key from the K8S secret
-  no_log: false
-  local_action:
-    module: csm_read_secret
-    name: "{{ uan_gpg_key_k8s_secret }}"
-    namespace: "{{ uan_gpg_key_k8s_namespace }}"
-    key: "{{ uan_gpg_key_k8s_field }}"
-    decrypt: True
-  register: hpe_gpg_pubkey
-  when: not uan_disable_gpg_check
-  ignore_errors: "{{ ansible_check_mode }}"
-
-- name: Create a temporary file to store the key content
-  tempfile:
-    state: file
-    suffix: key
-  register: temp_key_file
-  when: not uan_disable_gpg_check
-
-- name: Copy the key content to a temporary file
-  copy:
-    content: "{{ hpe_gpg_pubkey.response }}"
-    dest: "{{ temp_key_file.path }}"
-  when: not uan_disable_gpg_check
-
-- name: Install the HPE Signing Key
-  rpm_key:
-    state: present
-    key: "{{ temp_key_file.path }}"
-  when: not uan_disable_gpg_check
-
 - name: Configure UAN RPM Repos (SLES-based)
   zypper_repository:
     name: "{{ item.name }}"
     description: "{{ item.description }}"
     repo: "{{ item.repo }}"
-    priority: "{{ item.priority }}"
     state: present
     disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
-  when:
-    - ansible_distribution == "SLES"
-  with_items: "{{ uan_sles15_repositories_add }}"
+  loop: "{{ uan_sles_repositories }}"
 
 # UAN repos are generated during the release distribution creation and
 # therefore repo metadata is not signed. Allow for the repo metadata to be
@@ -74,27 +39,15 @@
   command: "zypper modifyrepo --gpgcheck-allow-unsigned-repo --all"
   args:
     warn: no  # Ansible's Zypper module does not provide this feature
-  when:
-    - ansible_distribution == "SLES"
 
-- name: Remove RPMs not needed by the UAN
+- name: Uninstall RPMs (SLES-based)
   zypper:
-    name: "{{ uan_sles15_packages_remove }}"
+    name: "{{ packages_remove }}"
     state: absent
-  when:
-    - ansible_distribution == "SLES"
+    update_cache: yes
 
-- name: Install UAN RPMs (SLES-based)
+- name: Install RPMs (SLES-based)
   zypper:
-    name: "{{ item.name }}"
+    name: "{{ packages_add }}"
     state: latest
     update_cache: yes
-    disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
-  when:
-    - ansible_distribution == "SLES"
-  register: result
-  until: result is not failed
-  retries: 3
-  delay: 3
-  loop: "{{ uan_sles15_packages_add }}"
-

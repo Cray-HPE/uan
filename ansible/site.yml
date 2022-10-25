@@ -33,18 +33,44 @@
         groups: cfs_image
       when: cray_cfs_image
 
-- hosts: Application_UAN:&cfs_image
+- hosts: Application:&cfs_image
+  gather_facts: true
+  any_errors_fatal: true
+  remote_user: root
+  vars_files:
+    - vars/uan_repos.yml
+    - vars/uan_packages.yml
+
+  tasks:
+    - name: Application image customization play
+      include_role:
+        name: uan_ca_cert
+        name: uan_gpg_key
+        name: uan_shadow
+    - name: Application image customization play for SLES
+      include_role:
+        name: uan_packages
+      vars:
+        packages_add: "{{ uan_sles_packages }}"
+      when: ansible_distribution == "SLES"
+    - name: Application image customization play for SLE_HPC
+      include_role:
+        name: uan_packages
+      vars:
+        packages_add: "{{ uan_sle_hpc_packages }}"
+      when: ansible_distribution == "SLE_HPC"
+
+- hosts: Application:!cfs_image
   gather_facts: true
   any_errors_fatal: true
   remote_user: root
 
   tasks:
-    - name: Application_UAN image customization play
+    - name: Application node personalization play
       include_role:
         name: "{{ item }}"
       with_items:
-        - uan_packages
-        - uan_shadow
+        - uan_motd
 
 - hosts: Application_UAN:!cfs_image
   gather_facts: true
@@ -56,7 +82,6 @@
       include_role:
         name: "{{ item }}"
       with_items:
-        - uan_motd
         - uan_disk_config
         - uan_interfaces
         - uan_ldap

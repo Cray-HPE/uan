@@ -29,7 +29,7 @@
     description: "{{ item.description }}"
     repo: "{{ item.repo }}"
     state: present
-    disable_gpg_check: "{{ item.disable_gpg_check | default(no) }}"
+    disable_gpg_check: "{{ item.disable_gpg_check | default('no') }}"
   loop: "{{ uan_sles_repositories }}"
 
 # UAN repos are generated during the release distribution creation and

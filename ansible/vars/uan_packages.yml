@@ -22,14 +22,19 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Packages to install on a COS based UAN
-uan_sles_packages:
+uan_sles_packages_add:
   - "cray-uan-diagnostics"
-  - "cray-uan-goss"
   - "cray-uan-load-drivers-shasta-uan"
   - "sssd-tools"
   - "wget"
 
+# Packages to remove on a SLE based Application Node
+uan_sles_packages_remove: []
+
 # Packages to install on a SLE based Application Node
-uan_sle_hpc_packages:
-  - "cray-uan-diagnostics"
+uan_sle_hpc_packages_add:
   - "cray-uan-goss"
+
+# Packages to remove on a SLE based Application Node
+uan_sle_hpc_packages_remove:
+  - "hpe-csm-goss-package"

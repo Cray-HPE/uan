@@ -24,4 +24,4 @@
 uan_sles_repositories:
   - name: "uan-2.6-sle-15sp4"
     description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
-    repo: "https://packages.local/repository/uan-2.5-sle-15sp4"
+    repo: "https://packages.local/repository/uan-2.6-sle-15sp4"

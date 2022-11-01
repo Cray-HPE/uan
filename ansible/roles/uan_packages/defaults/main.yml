@@ -21,37 +21,5 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Defaults for uan_packages role
-
-# DO NOT SET VALUES IN THIS FILE.
-# Override these values in the Ansible inventory or in a playbook.
-
-# See the role README.md file for information about this variable.
----
-uan_disable_gpg_check: no
-
-uan_gpg_key_k8s_secret: "hpe-signing-key"
-uan_gpg_key_k8s_namespace: "services"
-uan_gpg_key_k8s_field: "gpg-pubkey"
-
-uan_sles15_repositories_add:
-  - name: "uan-2.5-sle-15sp4"
-    description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
-    repo: "https://packages.local/repository/uan-2.5-sle-15sp4"
-    priority: 2
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
-
-uan_sles15_packages_remove:
-  - cray-cos-release
-
-uan_sles15_packages_add:
-  - name: "cray-uan-diagnostics"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
-  - name: "cray-uan-goss"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
-  - name: "cray-uan-load-drivers-shasta-uan"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
-  - name: "sssd-tools"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
-  - name: "wget"
-    disable_gpg_check: "{{ uan_disable_gpg_check }}"
+uan_sles_repositories: {}
+uan_sles_packages_add: []

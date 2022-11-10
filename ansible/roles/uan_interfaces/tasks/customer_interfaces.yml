@@ -116,8 +116,8 @@
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  - name: Restart wicked to start interface config and routes
-    shell: "systemctl restart wicked"
+  - name: Reload wicked to start interface config and routes
+    shell: "systemctl reload wicked"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
@@ -126,6 +126,16 @@
   - name: Wait 10 seconds for the interfaces to come up
     wait_for:
       timeout: 10
+
+  - name: Restarting wicked-nanny for customer interfaces
+    shell: "systemctl restart wickedd-nanny"
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0
+    register: result
+
+  - name: Wait 5 seconds for wickedd-nanny to restart
+    wait_for:
+      timeout: 5
 
   - name: Check that the customer interfaces have the expected IPs
     shell: "ip addr show {{ item.name }} | grep -q {{ item.settings.ipaddr }}/{{ item.settings.prefixlen }}"

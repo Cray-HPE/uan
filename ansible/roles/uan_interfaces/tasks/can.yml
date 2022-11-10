@@ -298,9 +298,9 @@
   when: 
     - (uan_user_access_cfg | upper) == "CHN"
 
-- name: Restarting wicked to set new routes
+- name: Reloading wicked to set new routes
   when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  shell: "systemctl restart wicked;sleep 5"
+  shell: "systemctl reload wicked;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0
   register: result
@@ -319,9 +319,16 @@
   failed_when: result.rc != 0 and result.rc != 2
   register: result
 
-- name: Restart networks to update default route 
+- name: Reload networks to update default route 
   when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  shell: "systemctl restart wicked;sleep 5"
+  shell: "systemctl reload wicked;sleep 5"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+
+- name: Restarting wicked-nanny
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
+  shell: "systemctl restart wickedd-nanny;sleep 5"
   changed_when: result.rc == 0
   failed_when: result.rc != 0
   register: result

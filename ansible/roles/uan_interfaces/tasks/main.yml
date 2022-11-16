@@ -249,8 +249,8 @@
       regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
       line: DHCLIENT_SET_DEFAULT_ROUTE="no"
 
-  - name: Restart networks to update /etc/resolv.conf and set routes before removing default route
-    shell: "systemctl restart wicked;sleep 5"
+  - name: Reload networks to update /etc/resolv.conf and set routes before removing default route
+    shell: "systemctl reload wicked;sleep 5"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result

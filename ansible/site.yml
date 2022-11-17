@@ -52,9 +52,6 @@
     - localtime
     - ntp
     - limits
-    - role: kdump
-      kdump_target_uan: yes
-
 
     # Allow trust of CSM generated keys for elective passwordless SSH during image customization
     - { role: trust-csm-ssh-keys, when: cray_cfs_image|default(false)|bool}
@@ -78,6 +75,8 @@
     - { role: uan_hardening,      when: not cray_cfs_image|default(false)|bool }
 
     # Rebuild initrd for image customization
+    - role: kdump
+      kdump_target_uan: yes
     - { role: rebuild-initrd,     when: cray_cfs_image|default(false)|bool }
 
   tasks:

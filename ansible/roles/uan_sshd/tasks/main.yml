@@ -1,0 +1,34 @@
+- name: Creates directory for config for sshd_{{ item.name }}
+  file:
+    path: "{{ item.config_path | default('/etc/ssh/uan') }}"
+    state: directory
+    recurse: yes
+
+- name: Set variables necessary for generating SSHD config sshd_{{ item.name }}
+  set_fact:
+    sshd_name: "{{ item.name }}"
+    sshd_port: "{{ item.port }}"
+    sshd_config: "{{ item.config | default('') }}"
+
+- name: Generate SSHD config for sshd_{{ item.name }}
+  template:
+    src: roles/uan_sshd/templates/sshd_config.j2
+    dest: "{{ item.config_path | default('/etc/ssh/uan') }}/sshd_{{ item.name }}_config"
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+
+- name: Generate SSHD systemd unit file for sshd_{{ item.name }}
+  template:
+    src: roles/uan_sshd/templates/sshd.service.j2
+    dest: "/usr/lib/systemd/system/sshd_{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+
+- name: Start SSHD for sshd_{{ item.name }}
+  service:
+    name: sshd_{{ item.name }}
+    state: started

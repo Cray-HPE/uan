@@ -1,0 +1,16 @@
+apiVersion: {{ metallb_apiversion|default("metallb.io/v1beta1") }}
+kind: IPAddressPool
+metadata:
+  name: {{ metallb_ipaddresspool_name|default("ipaddresspool") }}
+spec:
+  addresses:
+  - {{ metallb_ipaddresspool_range_start }}-{{ metallb_ipaddresspool_range_end }}
+---
+apiVersion: {{ metallb_apiversion|default("metallb.io/v1beta1") }}
+kind: L2Advertisement
+metadata:
+  name: {{ metallb_l2advertisement_name|default("l2advertisement") }}
+spec:
+  ipAddressPools:
+  - {{ metallb_ipaddresspool_name|default("ipaddresspool") }}
+---

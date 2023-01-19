@@ -1,0 +1,47 @@
+#
+# MIT License
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+- name: Download helm assets
+  get_url:
+    url: "{{ third_party_url }}/{{ haproxy_chart }}.tgz"
+    dest: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
+
+- name: Set variables necessary for generating HAProxy values for {{ item.name }}
+  set_fact:
+    haproxy_kind: "{{ item.kind|default('DaemonSet') }}"
+    haproxy_service_type: "{{ item.service_type|default('LoadBalancer') }}"
+    haproxy_config: "{{ item.config | default('') }}"
+
+- name: Generate HAProxy values for {{ item.name }}
+  template:
+    src: roles/uan_haproxy/templates/haproxy-values.yml.j2
+    dest: "{{ helm_install_path }}/values/{{ item.name }}_values.yml"
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+
+- name: Install haproxy charts
+  command: "{{ helm_path }} install {{ item.name }} --namespace {{ item.namespace }} --create-namespace {{ item.chart_path }} --values {{ helm_install_path }}/values/{{item.name}}_values.yml {{ item.args | default('') }}"
+  register: haproxy_install_reg
+  failed_when: not '"re-use a name that is still in use" in haproxy_install_reg.stderr'

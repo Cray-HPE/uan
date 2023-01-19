@@ -21,14 +21,6 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Tasks for the uan_k3s_install role
-#
-# third_party_url: "https://packages.local/repository/uan-2.6-third-party"
-# helm_install_path: "/opt/cray/uan/helm/charts"
-# helm_offline_install: "true"
-# metallb_chart: "metallb-0.13.7"
-# haproxy_chart: "haproxy-1.17.3"
-#
 - name: Creates directory for helm charts
   file:
     path: "{{ helm_install_path }}/charts"

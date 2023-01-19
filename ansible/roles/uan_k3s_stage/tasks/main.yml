@@ -21,7 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-# Tasks for the uan_k3s_install role
+# Tasks for the uan_k3s_stage role
 
 - name: Creates directory for k3s assets
   file:

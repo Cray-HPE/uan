@@ -1,15 +1,8 @@
-uan_k3s
+uan_helm
 =========
 
-The `uan_k3s` role adds or removes additional repositories and RPMs on UANs
-using the Ansible `zypper_repository` and `zypper` module.
-
-Repositories and packages added to this role will be installed or removed during
-image customization. Installing RPMs during post-boot node configuration can
-cause high system loads on large systems so these tasks runs only during image
-customizations.
-
-This role will only run on SLES-based nodes.
+The `uan_helm` role will perform some basic tasks initialize an environment
+to install helm charts.
 
 Requirements
 ------------

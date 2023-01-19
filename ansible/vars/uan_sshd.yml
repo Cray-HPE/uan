@@ -26,12 +26,3 @@ uan_sshd_configs:
   - name: "uai"
     config_path: "/etc/ssh/uan"
     port: "9000"
-  - name: "uai-gpu"
-    port: "9001"
-    config: |
-      Match User alanm,vers
-        AcceptEnv DISPLAY
-        X11Forwarding yes
-        AllowTcpForwarding yes
-        PermitTTY yes
-        #ForceCommand podman run -it --hooks-dir=/etc/containers/oci/hooks.d --cgroup-manager=cgroupfs --userns=keep-id --network=host -v /var/run/munge:/var/run/munge -v /home/users:/home/users -v /lus/cls01092/:/lus/cls01092/ -e DISPLAY=$DISPLAY -e UAI_SSH_PORT="9000" -e UAI_NODE="`hostname`" -e UAI_IMAGE_NAME="registry.local/cray/uai" -e UAI_UUID="`uuidgen`" registry.local/cray/uai

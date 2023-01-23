@@ -1,76 +1,43 @@
-uan_k3s
+uan_k3s_stage
 =========
 
-The `uan_k3s` role adds or removes additional repositories and RPMs on UANs
-using the Ansible `zypper_repository` and `zypper` module.
-
-Repositories and packages added to this role will be installed or removed during
-image customization. Installing RPMs during post-boot node configuration can
-cause high system loads on large systems so these tasks runs only during image
-customizations.
-
-This role will only run on SLES-based nodes.
-
-Requirements
-------------
-
-Zypper must be installed.
-
-The `csm.gpg_keys` Ansible role must be installed if `uan_disable_gpg_check`
-is false.
-
-Role Variables
---------------
-
-Available variables are listed below, along with default values (see defaults/main.yml):
-
-```yaml
-uan_disable_gpg_check: no
-uan_sles15_repositories_add:[]
-uan_sles15_packages_add:[]
-uan_sles15_packages_remove:[]
-```
-
-This role uses the `zypper_repository` module. The `name`, `description`, `repo`,
-`disable_gpg_check`, and `priority` fields are supported.
-
-This role uses the `zypper` modules.  The `name` and `disable_gpg_check` fields are supported.
-
-`uan_disable_gpg_check` sets the `disable_gpg_check` field on zypper repos and
-packages listed in the `uan_sles15_repositories add` and `uan_sles15_packages_add`
-lists.  The `disable_gpg_check` field can be overridden for each repo or package.
-
-`uan_sles15_repositories_add` contains the list of repositories to add.
-`uan_sles15_packages_add` contains the list of RPM packages to add.
+The `uan_k3s_stage` role will download and stage k3s assets necessary to initialize
+and configure k3s on a node.
 
 Dependencies
 ------------
 
-None.
+A configured location for the k3s assets. By default, this will be configured to use
+a nexus repository installed by UAN on the Cray System Mangement Cluster. Some configuration
+options are available to change where the assets are download from.
 
-Example Playbook
-----------------
+Role Variables
+--------------
+
+Available variables are listed below, and are defined in vars/uan_k3s.yml:
 
 ```yaml
-- hosts: Application_UAN
-  roles:
-     - role: uan_packages
-       vars:
-         uan_sles15_packages_add:
-           - name: "foo"
-             disable_gpg_check: yes
-           - name: "bar"
-         uan_sles15_packages_remove:
-           - baz
-         uan_sles15_repositories_add:
-           - name: "uan-2.5.0-sle-15sp4"
-             description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
-             repo: "https://packages.local/repository/uan-2.5.0-sle-15sp4"
-             disable_gpg_check: no
-             priority: 2
+third_party_url: "https://packages.local/repository/uan-2.6-third-party"
+k3s_install_path: "/opt/k3s"
+k3s_config_path: "/root/.kube"
+k3s_config_file: "k3s.yml"
+k3s_config: "{{ k3s_config_path }}/{{ k3s_config_file }}"
+k3s_binary: "k3s"
+k3s_install: "k3s-install.sh"
+k3s_airgap: "k3s-airgap-images-amd64.tar"
+k3s_airgap_env: "true"
+k3s_install_env: "--disable servicelb --disable traefik --snapshotter fuse-overlayfs"
+
+kubectl_path: "/usr/local/bin/kubectl"
+kubectl_timeout: "60s"
 ```
 
-This role is included in the UAN `site.yml` play.
+Dependencies
+------------
+
+A location to download the k3s assets.
+
+This role is included in the UAN `k3s.yml` play.
 
 License
 -------

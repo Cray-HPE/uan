@@ -4,66 +4,30 @@ uan_helm
 The `uan_helm` role will perform some basic tasks initialize an environment
 to install helm charts.
 
-Requirements
+Dependencies
 ------------
 
-Zypper must be installed.
-
-The `csm.gpg_keys` Ansible role must be installed if `uan_disable_gpg_check`
-is false.
+Helm must be installed. The current version does not support the helm ansible module
+as that is not present in the Ansible Execution Environment used by CFS. This role
+will be updated in the future when AEE supports the helm module.
 
 Role Variables
 --------------
 
-Available variables are listed below, along with default values (see defaults/main.yml):
+Available variables are listed below, and are defined in vars/uan_helm.yml:
 
 ```yaml
-uan_disable_gpg_check: no
-uan_sles15_repositories_add:[]
-uan_sles15_packages_add:[]
-uan_sles15_packages_remove:[]
+third_party_url: "https://packages.local/repository/uan-2.6-third-party"
+helm_path: "/usr/bin/helm"
+helm_install_path: "/opt/cray/uan/helm"
 ```
-
-This role uses the `zypper_repository` module. The `name`, `description`, `repo`,
-`disable_gpg_check`, and `priority` fields are supported.
-
-This role uses the `zypper` modules.  The `name` and `disable_gpg_check` fields are supported.
-
-`uan_disable_gpg_check` sets the `disable_gpg_check` field on zypper repos and
-packages listed in the `uan_sles15_repositories add` and `uan_sles15_packages_add`
-lists.  The `disable_gpg_check` field can be overridden for each repo or package.
-
-`uan_sles15_repositories_add` contains the list of repositories to add.
-`uan_sles15_packages_add` contains the list of RPM packages to add.
 
 Dependencies
 ------------
 
 None.
 
-Example Playbook
-----------------
-
-```yaml
-- hosts: Application_UAN
-  roles:
-     - role: uan_packages
-       vars:
-         uan_sles15_packages_add:
-           - name: "foo"
-             disable_gpg_check: yes
-           - name: "bar"
-         uan_sles15_packages_remove:
-           - baz
-         uan_sles15_repositories_add:
-           - name: "uan-2.5.0-sle-15sp4"
-             description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
-             repo: "https://packages.local/repository/uan-2.5.0-sle-15sp4"
-             disable_gpg_check: no
-             priority: 2
-```
-
-This role is included in the UAN `site.yml` play.
+This role is included in the UAN `k3s.yml` play.
 
 License
 -------

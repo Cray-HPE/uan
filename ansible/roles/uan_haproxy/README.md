@@ -1,76 +1,97 @@
-uan_k3s
+uan_haproxy
 =========
 
-The `uan_k3s` role adds or removes additional repositories and RPMs on UANs
-using the Ansible `zypper_repository` and `zypper` module.
+The `uan_haproxy` role will deploy a list of HAProxy charts to a k3s cluster.
 
-Repositories and packages added to this role will be installed or removed during
-image customization. Installing RPMs during post-boot node configuration can
-cause high system loads on large systems so these tasks runs only during image
-customizations.
-
-This role will only run on SLES-based nodes.
-
-Requirements
-------------
-
-Zypper must be installed.
-
-The `csm.gpg_keys` Ansible role must be installed if `uan_disable_gpg_check`
-is false.
-
-Role Variables
---------------
-
-Available variables are listed below, along with default values (see defaults/main.yml):
-
-```yaml
-uan_disable_gpg_check: no
-uan_sles15_repositories_add:[]
-uan_sles15_packages_add:[]
-uan_sles15_packages_remove:[]
-```
-
-This role uses the `zypper_repository` module. The `name`, `description`, `repo`,
-`disable_gpg_check`, and `priority` fields are supported.
-
-This role uses the `zypper` modules.  The `name` and `disable_gpg_check` fields are supported.
-
-`uan_disable_gpg_check` sets the `disable_gpg_check` field on zypper repos and
-packages listed in the `uan_sles15_repositories add` and `uan_sles15_packages_add`
-lists.  The `disable_gpg_check` field can be overridden for each repo or package.
-
-`uan_sles15_repositories_add` contains the list of repositories to add.
-`uan_sles15_packages_add` contains the list of RPM packages to add.
+Each instance of HAProxy is to operate as an SSH load balancer to one or more
+nodes.
 
 Dependencies
 ------------
 
-None.
+Helm, K3s, MetalLB, and corresponding SSHD servers must all be configured and running
+for the full load balancer operating mode. See the README.mds for each component
+(`uan_helm`, `uan_k3s_*`, `uan_metallb`, and `uan_sshd`) for more information.
 
-Example Playbook
-----------------
+Role Variables
+--------------
+
+Available variables are listed below, and are defined in vars/uan_helm.yml:
 
 ```yaml
-- hosts: Application_UAN
-  roles:
-     - role: uan_packages
-       vars:
-         uan_sles15_packages_add:
-           - name: "foo"
-             disable_gpg_check: yes
-           - name: "bar"
-         uan_sles15_packages_remove:
-           - baz
-         uan_sles15_repositories_add:
-           - name: "uan-2.5.0-sle-15sp4"
-             description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
-             repo: "https://packages.local/repository/uan-2.5.0-sle-15sp4"
-             disable_gpg_check: no
-             priority: 2
+third_party_url: "https://packages.local/repository/uan-2.6-third-party"
+helm_path: "/usr/bin/helm"
+helm_install_path: "/opt/cray/uan/helm"
+haproxy_chart: "haproxy-1.17.3"
+
+uan_haproxy:
+  - name: "haproxy-uai"
+    namespace: "haproxy-uai"
+    chart: "{{ haproxy_chart }}"
+    chart_path: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
 ```
 
-This role is included in the UAN `site.yml` play.
+By default, a single HAProxy instance will be deployed listening on port
+22. If MetalLB has not been configured with a routeable IPAddressPool, the
+HAProxy instance will only be reachable on the internal K3s network.
+
+To check if MetalLB is configured with an IPAddressPool, check:
+```bash
+export KUBECONFIG=~/.kube/k3s.yml
+kubectl describe IPAddressPool -A
+...
+Spec:
+  Addresses:
+    x.x.x.x-y.y.y.y (IP addresses removed)
+...
+```
+
+To configure additional instances of HAProxy to operate in different modes,
+configure the `config` key or add additional HAProxy instances to the list.
+The `config` key will populate the jinja2 template in templates/haproxy-values.yml.j2
+and will be used when deploying the HAProxy chart with helm. Individual 
+arguments to the `helm install` command may also be defined by setting `args`.
+
+```yaml
+uan_haproxy:
+  - name: "haproxy-uai"
+    namespace: "haproxy-uai"
+    chart: "{{ haproxy_chart }}"
+    chart_path: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
+    args: "--set service.type=LoadBalancer"
+  - name: "haproxy-gpu"
+    namespace: "haproxy-gpu"
+    chart: "{{ haproxy_chart }}"
+    chart_path: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
+    args: "--set service.type=LoadBalancer"
+    config: |
+      global
+        log stdout format raw local0
+        maxconn 1024
+      defaults
+        log     global
+        mode    tcp
+        timeout connect 10s
+        timeout client 36h
+        timeout server 36h
+        option  dontlognull
+      listen ssh
+        bind *:22
+        balance leastconn
+        mode tcp
+        option tcp-check
+        tcp-check expect rstring SSH-2.0-OpenSSH.*
+        server host1 uan01:9001 check inter 10s fall 2 rise 1
+```
+
+
+
+Dependencies
+------------
+
+Configuration of `uan_k3s`, `uan_metallb`, `uan_helm`, and `uan_sshd`.
+
+This role is included in the UAN `k3s.yml` play.
 
 License
 -------

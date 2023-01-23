@@ -1,76 +1,49 @@
-uan_k3s
+uan_metallb
 =========
 
-The `uan_k3s` role adds or removes additional repositories and RPMs on UANs
-using the Ansible `zypper_repository` and `zypper` module.
+The `uan_metallb` role will deploy a list of HAProxy charts to a k3s cluster.
 
-Repositories and packages added to this role will be installed or removed during
-image customization. Installing RPMs during post-boot node configuration can
-cause high system loads on large systems so these tasks runs only during image
-customizations.
-
-This role will only run on SLES-based nodes.
-
-Requirements
-------------
-
-Zypper must be installed.
-
-The `csm.gpg_keys` Ansible role must be installed if `uan_disable_gpg_check`
-is false.
-
-Role Variables
---------------
-
-Available variables are listed below, along with default values (see defaults/main.yml):
-
-```yaml
-uan_disable_gpg_check: no
-uan_sles15_repositories_add:[]
-uan_sles15_packages_add:[]
-uan_sles15_packages_remove:[]
-```
-
-This role uses the `zypper_repository` module. The `name`, `description`, `repo`,
-`disable_gpg_check`, and `priority` fields are supported.
-
-This role uses the `zypper` modules.  The `name` and `disable_gpg_check` fields are supported.
-
-`uan_disable_gpg_check` sets the `disable_gpg_check` field on zypper repos and
-packages listed in the `uan_sles15_repositories add` and `uan_sles15_packages_add`
-lists.  The `disable_gpg_check` field can be overridden for each repo or package.
-
-`uan_sles15_repositories_add` contains the list of repositories to add.
-`uan_sles15_packages_add` contains the list of RPM packages to add.
+Each instance of HAProxy is to operate as an SSH load balancer to one or more
+nodes.
 
 Dependencies
 ------------
 
-None.
-
-Example Playbook
-----------------
-
+`uan_k3s_*` and `uan_helm` have run successfully. If MetalLB is to assign
+Load Balancer IPs to services running in K3s, an IP address range must be
+set in `vars/uan_helm.yml`:
 ```yaml
-- hosts: Application_UAN
-  roles:
-     - role: uan_packages
-       vars:
-         uan_sles15_packages_add:
-           - name: "foo"
-             disable_gpg_check: yes
-           - name: "bar"
-         uan_sles15_packages_remove:
-           - baz
-         uan_sles15_repositories_add:
-           - name: "uan-2.5.0-sle-15sp4"
-             description: "UAN SUSE Linux Enterprise 15 SP4 Packages"
-             repo: "https://packages.local/repository/uan-2.5.0-sle-15sp4"
-             disable_gpg_check: no
-             priority: 2
+metallb_ipaddresspool_range_start: "<start-of-range>"
+metallb_ipaddresspool_range_end: "<end-of-range>"
 ```
 
-This role is included in the UAN `site.yml` play.
+By default, these arguments are commented out or omitted. MetalLB will be
+able to start, but the Custom Resource Definition for IPAddressPool and
+L2AdvertisementAddress will not be created and no Load Balancer IP address
+will be allocated.
+
+Role Variables
+--------------
+
+Available variables are listed below, and are defined in vars/uan_helm.yml:
+
+```yaml
+metallb_chart: "metallb-0.13.7"
+uan_metallb:
+  name: "metallb"
+  namespace: "metallb-system"
+  chart: "{{ metallb_chart }}"
+  chart_path: "{{ helm_install_path }}/charts/{{ metallb_chart }}.tgz"
+#metallb_ipaddresspool_range_start: "<start-of-range>"
+#metallb_ipaddresspool_range_end: "<end-of-range>"
+```
+
+Dependencies
+------------
+
+Configuration of `uan_k3s` and `uan_helm`
+
+This role is included in the UAN `k3s.yml` play.
 
 License
 -------

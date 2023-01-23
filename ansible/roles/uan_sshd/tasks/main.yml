@@ -28,7 +28,7 @@
     mode: 0600
     backup: yes
 
-- name: Start SSHD for sshd_{{ item.name }}
+- name: Set state of SSHD for sshd_{{ item.name }} to {{ item.state | default('started') }}
   service:
     name: sshd_{{ item.name }}
-    state: started
+    state: "{{ item.state | default('started') }}"

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,22 +21,38 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-#   @***@ variables in this file are sed replaced using this repository's
-#   runBuildPrep-config-framework.sh script.
-#
+# Tasks for the uan_k3s_install role
 
-# For products that import Ansible configuration content
-cray-import-config:
-  config_image:
-    image:
-      repository: artifactory.algol60.net/uan-docker/stable/cray-uan-config
-      tag: 1.11.0
-  catalog:
-    image:
-      repository: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update
-      tag: 1.3.1
+- name: Copy k3s binary
+  copy:
+    src: "{{ k3s_install_path }}/{{ k3s_binary }}"
+    dest: "/usr/local/bin/k3s"
+    remote_src: yes
+    owner: "root"
+    group: "root"
+    mode: '0700'
 
-  import_job:
-    CF_IMPORT_GITEA_REPO: uan-config-management
-    CF_IMPORT_PRODUCT_NAME: uan
-    # CF_IMPORT_PRODUCT_VERSION: should be specified in the UAN manifest; see SCMS/uan-product-stream repository
+- name: Start k3s
+  command: "{{ k3s_install_path }}/{{ k3s_install }}"
+  environment:
+    INSTALL_K3S_SKIP_DOWNLOAD: "{{ k3s_airgap_env }}"
+    INSTALL_K3S_EXEC: "{{ k3s_install_env }}"
+
+- name: Verify k3s is enabled and running
+  service:
+    name=k3s
+    state=started
+    enabled=yes
+
+- name: Creates directory
+  file:
+    path: "{{ k3s_config_path }}"
+    state: directory
+    recurse: yes
+
+- name: Copy k3s config
+  copy:
+    src: "/etc/rancher/k3s/k3s.yaml"
+    dest: "{{ k3s_config }}"
+    remote_src: yes
+    mode: '0700'

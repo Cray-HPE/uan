@@ -25,6 +25,7 @@
 uan_sles_packages_add:
   - "cray-uan-diagnostics"
   - "cray-uan-load-drivers-shasta-uan"
+  - "fuse3"
   - "helm"
   - "podman"
   - "sssd-tools"
@@ -39,6 +40,7 @@ uan_sle_hpc_packages_add:
 
 # Packages to remove on a SLE based Application Node
 uan_sle_hpc_packages_remove:
+  - "fuse3"
   - "helm"
   - "hpe-csm-goss-package"
   - "podman"

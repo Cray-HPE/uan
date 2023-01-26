@@ -51,3 +51,7 @@
     name: "{{ packages_add }}"
     state: latest
     update_cache: yes
+  register: zypper_reg
+  failed_when:
+    - zypper_reg.rc != 107
+    - zypper_reg.rc != 0

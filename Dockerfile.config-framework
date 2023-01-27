@@ -60,7 +60,7 @@ RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_i
 ENTRYPOINT /bin/sh
 
 # Use the cf-gitea-import as a base image with UAN content copied in
-FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.7.0-20220927191958.b3a9817
+FROM artifactory.algol60.net/csm-docker/stable/cf-gitea-import:1.8.0
 
 WORKDIR /
 ENV CF_IMPORT_PRODUCT_NAME=uan

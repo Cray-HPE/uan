@@ -26,14 +26,12 @@
     path: "{{ helm_install_path }}/charts"
     state: directory
     recurse: yes
-  when: helm_offline_install | bool
 
 - name: Creates directory for helm values
   file:
     path: "{{ helm_install_path }}/values"
     state: directory
     recurse: yes
-  when: helm_offline_install | bool
 
 - name: Creates directory for helm resources
   file:
@@ -48,4 +46,3 @@
   loop:
     - "{{ metallb_chart }}"
     - "{{ haproxy_chart }}"
-  when: helm_offline_install | bool

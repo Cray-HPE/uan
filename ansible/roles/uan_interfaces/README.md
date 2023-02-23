@@ -45,7 +45,7 @@ will assume this MAC and the IP address of `nmn0` to preserve connectivity.
 
 The second interface is typically the first port of a different 25Gb NIC for resiliency.
 
-The default values of `uan_nmn_bond_slaves are shown here.  They may need to be changed to match the actual
+The default values of `uan_nmn_bond_slaves` are shown here.  They may need to be changed to match the actual
 node cabling and NIC configuration.
 
 ```yaml
@@ -83,7 +83,7 @@ slaves in the CAN `bond0` interface.
 
 The second interface is typically the second port of a different 25Gb NIC for resiliency.
 
-The default values of `uan_can_bond_slaves are shown here.  They may need to be changed to match the actual
+The default values of `uan_can_bond_slaves` are shown here.  They may need to be changed to match the actual
 node cabling and NIC configuration.
 
 ```yaml

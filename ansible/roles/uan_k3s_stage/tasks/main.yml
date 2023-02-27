@@ -38,6 +38,11 @@
     - "{{ k3s_install }}"
     - "{{ k3s_airgap }}"
 
+- name: Set permission on installer
+  file:
+    path: "{{ k3s_install_path }}/{{ k3s_install }}"
+    mode: '0744'
+
 - name: Copy k3s binary
   copy:
     src: "{{ k3s_install_path }}/{{ k3s_binary }}"
@@ -45,4 +50,4 @@
     remote_src: yes
     owner: root
     group: root
-    mode: '0755'
+    mode: '0744'

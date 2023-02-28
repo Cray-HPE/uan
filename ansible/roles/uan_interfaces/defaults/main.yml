@@ -29,10 +29,19 @@
 # See the role README.md file for information about these variables.
 
 ---
+# Node Management Network Setup
+uan_nmn_bond: no
+uan_nmn_bond_slaves: 
+  - "ens10f0"
+  - "ens1f0"
+
 # Customer Access Network Setup
 uan_can_setup: no
 uan_customer_default_route: no
 uan_user_access_cfg: 'CAN'
+uan_can_bond_slaves: 
+  - "ens10f1"
+  - "ens1f1"
 
 # SLS Network names
 sls_nmn_name: "NMN"

@@ -56,6 +56,8 @@
     - vars/uan_k3s.yml
     - vars/uan_helm.yml
     - vars/uan_sshd.yml
+  environment:
+    KUBECONFIG: "{{ k3s_config }}"
 
   tasks:
     - name: Application node personalization play
@@ -68,9 +70,6 @@
     - name: Configure Helm and MetalLB
       include_role:
         name: "{{ item }}"
-        apply:
-          environment:
-            KUBECONFIG: "{{ k3s_config }}"
       with_items:
         - uan_helm
         - uan_metallb

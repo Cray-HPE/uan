@@ -33,4 +33,4 @@ k3s_airgap_env: "true"
 k3s_install_env: "--disable servicelb --disable traefik --snapshotter fuse-overlayfs"
 
 kubectl_path: "/usr/local/bin/kubectl"
-kubectl_timeout: "60s"
+kubectl_timeout: "120s"

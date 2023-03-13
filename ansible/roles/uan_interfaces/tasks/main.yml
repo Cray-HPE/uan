@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -245,14 +245,14 @@
       mode: 0600
 
   - block: # Configure bonded NMN, if desired and hardware supports it
-    - name: Get nmn0 altname
-      shell: "ip a show nmn0 | grep altname | grep ens | cut -f 6 -d ' '"
+    - name: Get nmn0 altnames
+      shell: "ip a show nmn0 | grep altname | cut -f 6 -d ' '"
       register: nmn_dev_out
 
-    - name: FAIL if no nmn0 is not uan_nmn_bond_slaves[0]
+    - name: FAIL if nmn0 is not uan_nmn_bond_slaves
       fail:
-        msg: "ERROR: altname for nmn0 does not match uan_nmn_bond_slave1."
-      when: nmn_dev_out.stdout != uan_nmn_bond_slaves[0]
+        msg: "ERROR: altnames for nmn0 does not match uan_nmn_bond_slaves. {{ nmn_dev_out.stdout.split('\n') }}"
+      when: (uan_nmn_bond_slaves[0] not in nmn_dev_out.stdout.split('\n')) and (uan_nmn_bond_slaves[1] not in nmn_dev_out.stdout.split('\n'))
 
     - name: Get nmn0 IP
       shell: "ip a show nmn0 | grep inet | grep nmn0 | cut -f 6 -d ' '"
@@ -315,8 +315,8 @@
       regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
       line: DHCLIENT_SET_DEFAULT_ROUTE="no"
 
-  - name: Reload networks to update /etc/resolv.conf and set routes before removing default route
-    shell: "systemctl reload wicked;sleep 5"
+  - name: Restart networks to update /etc/resolv.conf and set routes before removing default route
+    shell: "systemctl restart wicked;sleep 5"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
@@ -342,4 +342,5 @@
       - "'Compute' not in group_names"
 
   when:
+    - not cray_cfs_image
     - ('Compute' not in group_names) or ('Compute' in group_names and uan_user_access_cfg == 'CHN')

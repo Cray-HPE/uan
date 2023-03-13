@@ -72,8 +72,7 @@ uan_can_setup: no
 
 ### `uan_can_bond_slaves`
 
-`uan_can_bond_slaves` is a list of the interfaces to use as the bond slave pair when `uan_can_setup` is true
-and the Customer Access Network (CAN) is configured on the system.
+`uan_can_bond_slaves` is a list of the interfaces to use as the bond slave pair when `uan_can_setup` is true, `uan_nmn_bond` is true, and the Customer Access Network (CAN) is configured on the system.  This variable is ignored if `uan_nmn_bond` is false.
 
 The interface names must be in a format which doesn't change between reboots of the node, such as `ens10f1`
 which is the second port of the NIC in slot 10.  

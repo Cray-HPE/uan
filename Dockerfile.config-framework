@@ -28,14 +28,9 @@ FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.83 as testing
 
 ARG ARTI ALGOL
 
-# Configure repos to simulate what nexus will provide
-RUN \
-    zypper ar --no-gpgcheck ${ALGOL}/uan-rpms/hpe/stable/sle-15sp3 uan-rpms && \
-    zypper refresh && \
-    zypper install -y iptables sysconfig vim
-
 COPY ansible/ /opt/cray/ansible
 COPY tests/uan-aee-test-helper.sh /
+COPY tests/test-runner.sh /
 
 # Install some fake versions of these ansible modules for testing
 COPY tests/csm_read_configmap.py /usr/share/ansible/plugins/modules/
@@ -47,14 +42,8 @@ RUN rm /usr/share/ansible/plugins/callback/cfs_aggregator.py
 # Prep the test environment
 RUN /uan-aee-test-helper.sh
 
-# Running ansible-playbook with --syntax-check
-RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local --syntax-check
-
-# Running ansible-playbook with --check and cray_cfs_image=true to simulate CFS image customization
-RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=true  --check
-
-# Running ansible-playbook with --check and cray_cfs_image=false to simulate CFS node personalization
-RUN ansible-playbook /opt/cray/ansible/site.yml --connection=local -e cray_cfs_image=false --check
+# Run the tests
+RUN /test-runner.sh
 
 # Use this entrypoint to allow for easy debugging
 ENTRYPOINT /bin/sh

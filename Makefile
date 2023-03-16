@@ -61,10 +61,10 @@ config_image: config_docker_image
 chart: chart_setup chart_package chart_test
 
 config_docker_image:
-	docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --tag '${NAME_CONFIG_IMAGE}:${VERSION}' .
+	DOCKER_BUILDKIT=1 docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --tag '${NAME_CONFIG_IMAGE}:${VERSION}' .
 
 test_docker_image:
-	docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --progress=plain --target testing .
+	DOCKER_BUILDKIT=1 docker build --pull ${DOCKER_ARGS} -f ${DOCKERFILE_CONFIG} --progress=plain --target testing .
 
 chart_setup:
 	mkdir -p ${CHART_PATH}/.packaged

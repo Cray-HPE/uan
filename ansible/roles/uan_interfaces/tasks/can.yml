@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -89,19 +89,98 @@
 - name: Configure CAN interfaces
   block:
 
-  - name: Get interface names for bond slave0
-    shell: "ip a show {{ uan_can_bond_slaves[0] }} | head -n 1 | cut -f 2 -d ':' | cut -f 2 -d ' '"
-    register: can_bond_slave0
+  - name: Configure CAN with Bonded NMN
+    block:
+    - name: Get interface names for bond slave0
+      shell: "ip a show {{ uan_can_bond_slaves[0] }} | head -n 1 | cut -f 2 -d ':' | cut -f 2 -d ' '"
+      register: can_bond_slave0
 
-  - name: Get interface names for bond slave1
-    shell: "ip a show {{ uan_can_bond_slaves[1] }} | head -n 1 | cut -f 2 -d ':' | cut -f 2 -d ' '"
-    register: can_bond_slave1
+    - name: Get interface names for bond slave1
+      shell: "ip a show {{ uan_can_bond_slaves[1] }} | head -n 1 | cut -f 2 -d ':' | cut -f 2 -d ' '"
+      register: can_bond_slave1
 
-  - name: Ensure list of possible CAN interfaces are UP
-    shell: "ip link set dev {{ item }} up"
-    register: cmd_out
-    failed_when: cmd_out.rc not in [0, 1]
-    loop: "{{ uan_can_bond_slaves }}"
+    - name: Set uan_can_devices when NMN bonding is set
+      set_fact:
+        uan_can_devices: [ "{{ can_bond_slave0.stdout }}", "{{ can_bond_slave1.stdout }}" ]
+
+    - name: Ensure list of possible CAN interfaces are UP
+      shell: "ip link set dev {{ item }} up"
+      register: cmd_out
+      failed_when: cmd_out.rc not in [0, 1]
+      loop: "{{ uan_can_devices }}"
+
+    when: uan_nmn_bond
+
+  - name: Configure CAN with non-bonded NMN
+    block:
+    - name: Initialize list of uan_can_devices
+      set_fact:
+        uan_can_devices: []
+        uan_25G_can_devices: []
+        uan_40G_can_devices: []
+
+    - name: Get list of possible CAN interfaces
+      shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep -v 'lo|hsn|bond|lan|nmn0'"
+      register: can_device_list
+  
+    - name: FAIL if no customer access interfaces are found
+      fail:
+        msg: "No Customer Access interfaces found"
+      when: (can_device_list.stdout_lines | length) < 1
+
+    - name: Ensure list of possible CAN interfaces are UP
+      shell: "ip link set dev {{ item }} up"
+      register: cmd_out
+      failed_when: cmd_out.rc not in [0, 1]
+      loop: "{{ can_device_list.stdout_lines }}"
+
+    - name: "List possible {{ uan_user_access_cfg | upper }} interfaces"
+      debug:
+        msg: "{{can_device_list.stdout_lines }}"
+
+    - name: Collect the ethernet device speeds of UAN devices
+      shell: "ethtool {{ item }} | grep Speed | tr -d ' '"
+      register: uan_device_speed
+      loop: "{{ can_device_list.stdout_lines }}"
+
+    - name: Build list of 25Gb uan_can_devices
+      set_fact:
+        uan_25G_can_devices: "{{ uan_25G_can_devices }} + ['{{ item.item }}']"
+      when: item.stdout | regex_search('Speed:25000Mb')
+      loop: "{{ uan_device_speed.results }}"
+
+    - name: Build list of 40Gb uan_can_devices
+      set_fact:
+        uan_40G_can_devices: "{{ uan_40G_can_devices }} + ['{{ item.item }}']"
+      when: item.stdout | regex_search('Speed:40000Mb')
+      loop: "{{ uan_device_speed.results }}"
+
+    - name: Set uan_can_devices if only 2 25Gb devices are found
+      set_fact:
+        uan_can_devices: [ "{{ uan_25G_can_devices[0] }}", "{{ uan_25G_can_devices[1] }}" ]
+      when: uan_25G_can_devices | length == 2
+
+    - name: Set uan_can_devices if more than 2 25Gb devices are found
+      set_fact:
+        uan_can_devices: [ "{{ uan_25G_can_devices[0] }}", "{{ uan_25G_can_devices[2] }}" ]
+      when: uan_25G_can_devices | length > 2
+
+    - name: Set uan_can_devices if one or more 40Gb devices are found
+      set_fact:
+        uan_can_devices: [ "{{ uan_40G_can_devices[0] }}", "{{ uan_40G_can_devices[1] }}" ]
+      when: uan_40G_can_devices | length >= 2
+
+    - name: FAIL if CAN interfaces are not connected
+      fail:
+        msg: "No connected Customer Access Network interfaces found, skipping CAN configuration."
+      when:
+        - uan_can_devices | length < 2
+
+    - name: List uan_can_devices
+      debug:
+        msg: "{{ uan_can_devices }}"
+
+    when: not uan_nmn_bond
 
   - name: Configure bond slaves
     copy:
@@ -110,9 +189,7 @@
       owner: root
       group: root
       mode: '0644'
-    loop: 
-      - "{{ can_bond_slave0.stdout }}"
-      - "{{ can_bond_slave1.stdout }}"
+    loop: "{{ uan_can_devices }}"
 
   - name: Configure bond0
     template:

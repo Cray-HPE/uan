@@ -30,11 +30,7 @@ cray-import-config:
   config_image:
     image:
       repository: artifactory.algol60.net/uan-docker/stable/cray-uan-config
-<<<<<<< HEAD
-      tag: 1.12.2
-=======
-      tag: 1.9.11
->>>>>>> 5200184 (Bonded NMN for uan-2.5)
+      tag: 1.12.4
   catalog:
     image:
       repository: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update

@@ -315,8 +315,8 @@
       regex: '^DHCLIENT_SET_DEFAULT_ROUTE='
       line: DHCLIENT_SET_DEFAULT_ROUTE="no"
 
-  - name: Restart networks to update /etc/resolv.conf and set routes before removing default route
-    shell: "systemctl restart wicked;sleep 5"
+  - name: Reload networks to update /etc/resolv.conf and set routes before removing default route
+    shell: "systemctl reload wicked;sleep 5"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
@@ -342,5 +342,4 @@
       - "'Compute' not in group_names"
 
   when:
-    - not cray_cfs_image
     - ('Compute' not in group_names) or ('Compute' in group_names and uan_user_access_cfg == 'CHN')

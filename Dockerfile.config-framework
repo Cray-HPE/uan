@@ -28,17 +28,15 @@ ARG COS_RELEASE_PREFIX=release
 ARG COS_RELEASE_VERSION=cos-2.4
 ARG COS_SLES_VERSION=sle15_sp3_ncn
 ARG COS_RPMS=cos-rpm-stable-local
-ARG CSM_SLES_VERSION=sle-15sp3
 
 # Dockerfile for importing UAN content into gitea instances on Shasta
 FROM artifactory.algol60.net/registry.suse.com/suse/sle15:15.3 as product-content-base
 WORKDIR /
 
-ARG ARTI ALGOL COS_RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION COS_RPMS CSM_SLES_VERSION
+ARG ARTI ALGOL COS_RELEASE_PREFIX COS_RELEASE_VERSION COS_SLES_VERSION COS_RPMS
 
 # Install dependencies as RPMs
 RUN \
-    zypper ar --no-gpgcheck ${ALGOL}/csm-rpms/hpe/stable/${CSM_SLES_VERSION}                                          shasta-scms && \
     zypper ar --no-gpgcheck ${ARTI}/${COS_RPMS}/${COS_RELEASE_PREFIX}/${COS_RELEASE_VERSION}/${COS_SLES_VERSION}          shasta-cos  && \
     zypper refresh && \
     zypper in -y \
@@ -46,10 +44,10 @@ RUN \
         cf-cme-overlay-preload-config-framework \
         lustre-cfs-config-framework \
         cray-dvs-helper-config-framework \
-        cray-lnet-helper-config-framework \
-        cf-ca-cert-config-framework \
-        csm-ssh-keys-1.3.79-1.noarch \
-        csm-ssh-keys-roles-1.3.79-1.noarch
+        cray-lnet-helper-config-framework
+
+COPY zypper-csm.sh /
+RUN --mount=type=secret,id=ARTIFACTORY_READONLY_USER --mount=type=secret,id=ARTIFACTORY_READONLY_TOKEN /zypper-csm.sh && rm /zypper-csm.sh
 
 FROM artifactory.algol60.net/csm-docker/stable/cray-aee:1.2.83 as testing
 

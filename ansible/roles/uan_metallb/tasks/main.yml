@@ -49,15 +49,13 @@
 
 - name: Wait for MetalLB CRDs to be available
   command: "{{ kubectl_path }} -n {{ uan_metallb.namespace }} wait --for condition=established --timeout={{ kubectl_timeout }} crd/{{ item }}.metallb.io"
-  command: "{{ kubectl_path }} wait pods -n {{ uan_metallb.namespace }} -l app.kubernetes.io/component=controller --for condition=Ready --timeout={{ kubectl_timeout }}"
-  register: kubectl_metallb_crd_reg
   loop:
     - "ipaddresspools"
     - "l2advertisements"
   when: apply_crd|default(false)
 
 - name: Wait for MetalLB Controller to be ready
-  command: "{{ kubectl_path }} wait pods -n metallb-system -l app.kubernetes.io/component=controller --for condition=Ready --timeout={{ kubectl_timeout }}"
+  command: "{{ kubectl_path }} wait pods -n {{ uan_metallb.namespace }} -l app.kubernetes.io/component=controller --for condition=Ready --timeout={{ kubectl_timeout }}"
   when: apply_crd|default(false)
 
 - name: Apply MetalLB CRD for IPAddressPool and L2Advertisements

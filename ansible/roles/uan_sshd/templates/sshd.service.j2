@@ -1,0 +1,18 @@
+[Unit]
+Description=OpenSSH Daemon Generated for {{ item.name }}
+After=network.target
+
+[Service]
+Type=notify
+EnvironmentFile=-/etc/sysconfig/ssh
+ExecStartPre=/usr/sbin/sshd-gen-keys-start
+ExecStartPre=/usr/sbin/sshd -t $SSHD_OPTS
+ExecStart=/usr/sbin/sshd -D $SSHD_OPTS -f {{ item.config_path | default("/etc/ssh/uan") }}/sshd_{{ item.name }}_config
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+TasksMax=infinity
+
+[Install]
+WantedBy=multi-user.target

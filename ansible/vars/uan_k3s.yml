@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,25 +21,16 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-apiVersion: v2
-name: cray-uan-install
-version: 1.9.12
-description: Kubernetes resources for installing UAN
-keywords:
-  - uan
-  - cfs
-home: https://github.com/Cray-HPE/uan
-dependencies:
-  - name: cray-import-config
-    version: 2.0.0
-    repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
-maintainers:
-  - name: keopp
-    email: keopp@hpe.com
-annotations:
-  artifacthub.io/images: |
-    - name: cray-uan-config
-      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.9.12
-    - name: cray-product-catalog-update
-      image: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update:1.3.1
-  artifacthub.io/license: MIT
+third_party_url: "https://packages.local/repository/uan-2.6-third-party"
+k3s_install_path: "/opt/k3s"
+k3s_config_path: "/root/.kube"
+k3s_config_file: "k3s.yml"
+k3s_config: "{{ k3s_config_path }}/{{ k3s_config_file }}"
+k3s_binary: "k3s"
+k3s_install: "k3s-install.sh"
+k3s_airgap: "k3s-airgap-images-amd64.tar"
+k3s_airgap_env: "true"
+k3s_install_env: "--disable servicelb --disable traefik --snapshotter fuse-overlayfs"
+
+kubectl_path: "/usr/local/bin/kubectl"
+kubectl_timeout: "120s"

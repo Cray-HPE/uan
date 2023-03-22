@@ -22,6 +22,7 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 third_party_url: "https://packages.local/repository/uan-2.5-third-party"
+third_party_registry: "registry.local/artifactory.algol60.net/csm-docker/stable"
 helm_path: "/usr/bin/helm"
 helm_install_path: "/opt/cray/uan/helm"
 metallb_chart: "metallb-0.13.7"

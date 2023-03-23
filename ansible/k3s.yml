@@ -1,0 +1,92 @@
+#
+# MIT License
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+#!/usr/bin/env ansible-playbook
+---
+- name: setup cfs_image host group
+  gather_facts: false
+  hosts: all
+  tasks:
+    - name: Add image customization hosts to the cfs_image host group.
+      add_host:
+        name: '{{ inventory_hostname }}'
+        groups: cfs_image
+      when: cray_cfs_image
+
+- hosts: Application:&cfs_image
+  gather_facts: true
+  any_errors_fatal: true
+  remote_user: root
+  vars_files:
+    - vars/uan_k3s.yml
+    - vars/uan_helm.yml
+
+  tasks:
+    - name: Application image customization play
+      include_role:
+        name: "{{ item }}"
+      with_items:
+        - uan_k3s_stage
+
+- hosts: Application:!cfs_image
+  gather_facts: true
+  any_errors_fatal: true
+  remote_user: root
+  vars_files:
+    - vars/uan_k3s.yml
+    - vars/uan_helm.yml
+    - vars/uan_sshd.yml
+  environment:
+    KUBECONFIG: "{{ k3s_config }}"
+
+  tasks:
+    - name: Application node personalization play
+      include_role:
+        name: "{{ item }}"
+      with_items:
+        #- uan_k3s_stage # Uncomment to stage K3s assets without Image Customization
+        - uan_k3s_install
+
+    - name: Configure Helm and MetalLB
+      include_role:
+        name: "{{ item }}"
+      with_items:
+        - uan_helm
+        - uan_metallb
+
+    - name: Install HAProxy charts
+      include_tasks: roles/uan_haproxy/tasks/main.yml
+      loop: "{{ uan_haproxy }}"
+
+    - set_fact:
+        uan_sshd_configs_dict: "{{ uan_sshd_configs | items2dict(key_name='name', value_name='port') }}"
+      when: uan_sshd_configs is defined
+
+    - name: "Fail if duplicate SSHD ports are detected"
+      fail:
+        msg: "Duplicate SSHD ports defined: {{ uan_sshd_configs_dict.values() | duplicates }}. Check uan_sshd_configs and fix."
+      when: uan_sshd_configs_dict.values() | duplicates | length > 0
+
+    - name: Application image customization play
+      include_tasks: roles/uan_sshd/tasks/main.yml
+      loop: "{{ uan_sshd_configs }}"

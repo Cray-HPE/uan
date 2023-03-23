@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2021-2023 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,25 +21,39 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-apiVersion: v2
-name: cray-uan-install
-version: 1.9.12
-description: Kubernetes resources for installing UAN
-keywords:
-  - uan
-  - cfs
-home: https://github.com/Cray-HPE/uan
-dependencies:
-  - name: cray-import-config
-    version: 2.0.0
-    repository: https://artifactory.algol60.net/artifactory/csm-helm-charts/
-maintainers:
-  - name: keopp
-    email: keopp@hpe.com
-annotations:
-  artifacthub.io/images: |
-    - name: cray-uan-config
-      image: artifactory.algol60.net/uan-docker/stable/cray-uan-config:1.9.12
-    - name: cray-product-catalog-update
-      image: artifactory.algol60.net/csm-docker/stable/cray-product-catalog-update:1.3.1
-  artifacthub.io/license: MIT
+kind: {{ haproxy_kind|default("DaemonSet") }}
+service:
+  type: {{ haproxy_service_type|default("LoadBalancer") }}
+image:
+  repository: {{ third_party_registry }}/docker.io/haproxytech/haproxy-alpine
+containerPorts:
+  ssh: 22
+  http: null
+  https: null
+  stat: null
+config: |
+{% if haproxy_config|length>0 %}
+{{ haproxy_config|indent(2, true) }}
+{% else %}
+  global
+    log stdout format raw local0
+    maxconn 1024
+
+  defaults
+    log     global
+    mode    tcp
+    timeout connect 10s
+    timeout client 36h
+    timeout server 36h
+    option  dontlognull
+
+  listen ssh
+    bind *:22
+    balance leastconn
+    mode tcp
+
+    option tcp-check
+    tcp-check expect rstring SSH-2.0-OpenSSH.*
+
+    server host1 uan01:9000 check inter 10s fall 2 rise 1
+{% endif %}

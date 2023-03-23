@@ -1,0 +1,64 @@
+#
+# MIT License
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+- name: Download MetalLB asset
+  get_url:
+    url: "{{ third_party_url }}/{{ metallb_chart }}.tgz"
+    dest: "{{ helm_install_path }}/charts/{{ metallb_chart }}.tgz"
+
+- name: Install MetalLB chart
+  command: "{{ helm_path }} install {{ uan_metallb.name }} --namespace {{ uan_metallb.namespace }} --create-namespace {{ uan_metallb.chart_path }} {{ uan_metallb.args | default('') }} --set controller.image.repository={{ third_party_registry }}/quay.io/metallb/controller --set speaker.image.repository={{ third_party_registry }}/quay.io/metallb/speaker"
+  register: metallb_install_reg
+  failed_when: not '"re-use a name that is still in use" in metallb_install_reg.stderr'
+
+- name: Determine if a MetalLB CRD will be applied
+  set_fact:
+    apply_crd: true
+  when: metallb_ipaddresspool_range_start is defined and
+        metallb_ipaddresspool_range_end is defined 
+
+- name: Create metallb-crd.yml
+  template:
+    src: metallb-crd.yml.j2
+    dest: "{{ helm_install_path }}/resources/metallb-crd.yml"
+    owner: root
+    group: root
+    mode: 0600
+    backup: yes
+  when: apply_crd|default(false)
+
+- name: Wait for MetalLB CRDs to be available
+  command: "{{ kubectl_path }} -n {{ uan_metallb.namespace }} wait --for condition=established --timeout={{ kubectl_timeout }} crd/{{ item }}.metallb.io"
+  loop:
+    - "ipaddresspools"
+    - "l2advertisements"
+  when: apply_crd|default(false)
+
+- name: Wait for MetalLB Controller to be ready
+  command: "{{ kubectl_path }} wait pods -n {{ uan_metallb.namespace }} -l app.kubernetes.io/component=controller --for condition=Ready --timeout={{ kubectl_timeout }}"
+  when: apply_crd|default(false)
+
+- name: Apply MetalLB CRD for IPAddressPool and L2Advertisements
+  command: "{{ kubectl_path }} apply -n {{ uan_metallb.namespace }} -f {{ helm_install_path}}/resources/metallb-crd.yml"
+  register: kubectl_metallb_crd_reg
+  when: apply_crd|default(false)

@@ -64,7 +64,7 @@
       include_role:
         name: "{{ item }}"
       with_items:
-        - uan_k3s_stage # Uncomment to stage K3s assets without Image Customization
+        #- uan_k3s_stage # Uncomment to stage K3s assets without Image Customization
         - uan_k3s_install
 
     - name: Configure Helm and MetalLB

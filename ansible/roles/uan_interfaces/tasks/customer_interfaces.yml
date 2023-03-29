@@ -104,6 +104,7 @@
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
+    when: (uan_customer_default_route | bool) or (customer_uan_interfaces | length)
 
   - name: Wait 5 seconds for wickedd-nanny to restart
     wait_for:
@@ -132,6 +133,7 @@
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
+    when: (uan_customer_default_route | bool) or (customer_uan_interfaces | length)
 
   - name: Wait 5 seconds for wickedd-nanny to restart
     wait_for:

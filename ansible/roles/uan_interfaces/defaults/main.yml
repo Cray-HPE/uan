@@ -42,6 +42,7 @@ uan_user_access_cfg: 'CAN'
 uan_can_bond_slaves: 
   - "ens10f1"
   - "ens1f1"
+uan_chn_device: "hsn0"
 
 # SLS Network names
 sls_nmn_name: "NMN"

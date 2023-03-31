@@ -91,6 +91,16 @@ uan_can_bond_slaves:
   - "ens1f1"
 ```
 
+### `uan_chn_device`
+
+`uan_chn_device` is a variable which can be used to override the default CHN device on the UAN nodes.
+
+The default value of `uan_chn_device` is shown here.
+
+```yaml
+uan_chn_device: "hsn0"
+```
+
 ### `uan_customer_default_route`
 
 `uan_customer_default_route` is a boolean variable that allows the default route

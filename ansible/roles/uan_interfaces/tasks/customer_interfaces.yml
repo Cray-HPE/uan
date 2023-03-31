@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -104,6 +104,7 @@
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result
+    when: (uan_customer_default_route | bool) or (customer_uan_interfaces | length)
 
   - name: Wait 5 seconds for wickedd-nanny to restart
     wait_for:
@@ -116,8 +117,8 @@
     failed_when: result.rc != 0 and result.rc != 2
     register: result
 
-  - name: Restart wicked to start interface config and routes
-    shell: "systemctl restart wicked"
+  - name: Reload wicked to reload interface config and routes
+    shell: "systemctl reload wicked"
     changed_when: result.rc == 0
     failed_when: result.rc != 0
     register: result

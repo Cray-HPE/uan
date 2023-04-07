@@ -230,37 +230,28 @@
 - name: Configure CHN interface
   block:
 
-  - name: Get list of possible CHN interfaces
-    shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | sort | egrep 'hsn'"
-    register: chn_device_list
-
-  - name: FAIL if no customer access interfaces are found
-    fail:
-      msg: "No Customer Access interfaces found"
-    when: chn_device_list.stdout_lines | length < 1
-
-  - name: Ensure list of possible CHN interfaces are UP
-    shell: "ip link set dev {{ chn_device_list.stdout_lines | first }} up"
+  - name: Ensure list of CHN interface is UP
+    shell: "ip link set dev {{ uan_chn_device }} up"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1]
 
-  - name: "List possible {{ uan_user_access_cfg | upper }} interfaces"
+  - name: "List CHN interface"
     debug:
-      msg: "{{chn_device_list.stdout_lines }}"
+      msg: "{{ uan_chn_device }}"
 
-  - name: "Determine if ifcfg-{{ chn_device_list.stdout_lines | first }} exists"
+  - name: "Determine if ifcfg-{{ uan_chn_device }} exists"
     stat:
-      path: "/etc/sysconfig/network/ifcfg-{{ chn_device_list.stdout_lines | first }}"
+      path: "/etc/sysconfig/network/ifcfg-{{ uan_chn_device }}"
     register: ifcfg_chn
 
-  - name: "Determine if ifroute-{{ chn_device_list.stdout_lines | first }} exists"
+  - name: "Determine if ifroute-{{ uan_chn_device }} exists"
     stat:
-      path: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
+      path: "/etc/sysconfig/network/ifroute-{{ uan_chn_device }}"
     register: ifroute_chn
     
-  - name: "Add CHN IP to {{ chn_device_list.stdout_lines | first }} if no ifcfg file exists"
+  - name: "Add CHN IP to {{ uan_chn_device }} if no ifcfg file exists"
     when: (can_ip is defined) and (not ifcfg_chn.stat.exists)
-    shell: "ip address add {{ can_ip }}/{{ can_prefix }} dev {{ chn_device_list.stdout_lines | first }}"
+    shell: "ip address add {{ can_ip }}/{{ can_prefix }} dev {{ uan_chn_device }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
@@ -268,7 +259,7 @@
     when:
       - can_ip is defined
       - not ifroute_chn.stat.exists
-    shell: "ip route add {{ customer_access_network }} dev {{ chn_device_list.stdout_lines | first }} src {{ can_ip }}"
+    shell: "ip route add {{ customer_access_network }} dev {{ uan_chn_device }} src {{ can_ip }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
@@ -276,7 +267,7 @@
     when:
       - can_ip is defined
       - not ifroute_chn.stat.exists
-    shell: "ip route add {{ customer_access_network_metallb }} via {{ customer_access_gateway }} dev {{ chn_device_list.stdout_lines | first }}"
+    shell: "ip route add {{ customer_access_network_metallb }} via {{ customer_access_gateway }} dev {{ uan_chn_device }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
@@ -284,7 +275,7 @@
     when:
       - can_ip is defined
       - not ifroute_chn.stat.exists
-    shell: "ip route add default via {{ customer_access_gateway }} dev {{ chn_device_list.stdout_lines | first }}"
+    shell: "ip route add default via {{ customer_access_gateway }} dev {{ uan_chn_device }}"
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
@@ -293,33 +284,33 @@
       - can_ip is defined
       - ifcfg_chn.stat.exists
     lineinfile:
-      dest: "/etc/sysconfig/network/ifcfg-{{ chn_device_list.stdout_lines | first }}"
+      dest: "/etc/sysconfig/network/ifcfg-{{ uan_chn_device }}"
       regex: '^IPADDR1=(.*)$'
       line: "IPADDR1={{ can_ip }}/{{ can_prefix }}"
 
-  - name: "Setup ifroute-{{ chn_device_list.stdout_lines | first }} default if ifroute file exists"
+  - name: "Setup ifroute-{{ uan_chn_device }} default if ifroute file exists"
     when:
       - can_ip is defined
       - ifroute_chn.stat.exists
     lineinfile:
-      dest: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
+      dest: "/etc/sysconfig/network/ifroute-{{ uan_chn_device }}"
       state: present
       regex: "default {{ customer_access_gateway }} - -"
       line: "default {{ customer_access_gateway }} - -"
 
-  - name: "Setup ifroute-{{ chn_device_list.stdout_lines | first }} for MetalLB services if ifroute exists"
+  - name: "Setup ifroute-{{ uan_chn_device }} for MetalLB services if ifroute exists"
     when:
       - can_ip is defined
       - ifroute_chn.stat.exists
     lineinfile:
-      dest: "/etc/sysconfig/network/ifroute-{{ chn_device_list.stdout_lines | first }}"
+      dest: "/etc/sysconfig/network/ifroute-{{ uan_chn_device }}"
       state: present
       regex: "{{ customer_access_network_metallb | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network_metallb | ipaddr('netmask') }} -"
       line: "{{ customer_access_network_metallb | ipaddr('network') }} {{ customer_access_gateway }} {{ customer_access_network_metallb | ipaddr('netmask') }} -"
 
   - name: Set list of interfaces to restart for CHN
     set_fact:
-      uan_interface: "{{ chn_device_list.stdout_lines | first }}"
+      uan_interface: "{{ uan_chn_device }}"
 
   when: 
     - (uan_user_access_cfg | upper) == "CHN"

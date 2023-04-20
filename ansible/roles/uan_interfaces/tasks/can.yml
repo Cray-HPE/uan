@@ -343,6 +343,13 @@
   failed_when: result.rc != 0
   register: result
 
+- name: Restarting wicked-nanny
+  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
+  shell: "systemctl restart wickedd-nanny;sleep 5"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+
 - name: Check that we have the default route we are expecting
   when: not uan_customer_default_route | bool
   shell: "ip route | grep default | grep -q '{{ customer_access_gateway }}'"

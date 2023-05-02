@@ -24,6 +24,8 @@
 kind: {{ haproxy_kind|default("DaemonSet") }}
 service:
   type: {{ haproxy_service_type|default("LoadBalancer") }}
+image:
+  repository: {{ third_party_registry }}/docker.io/haproxytech/haproxy-alpine
 containerPorts:
   ssh: 22
   http: null

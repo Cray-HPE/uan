@@ -27,7 +27,7 @@
     dest: "{{ helm_install_path }}/charts/{{ metallb_chart }}.tgz"
 
 - name: Install MetalLB chart
-  command: "{{ helm_path }} install {{ uan_metallb.name }} --namespace {{ uan_metallb.namespace }} --create-namespace {{ uan_metallb.chart_path }} {{ uan_metallb.args | default('') }}"
+  command: "{{ helm_path }} install {{ uan_metallb.name }} --namespace {{ uan_metallb.namespace }} --create-namespace {{ uan_metallb.chart_path }} {{ uan_metallb.args | default('') }} --set controller.image.repository={{ third_party_registry }}/quay.io/metallb/controller --set speaker.image.repository={{ third_party_registry }}/quay.io/metallb/speaker"
   register: metallb_install_reg
   failed_when: not '"re-use a name that is still in use" in metallb_install_reg.stderr'
 

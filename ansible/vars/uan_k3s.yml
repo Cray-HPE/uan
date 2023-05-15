@@ -23,6 +23,7 @@
 #
 third_party_url: "https://packages.local/repository/uan-2.6-third-party"
 k3s_install_path: "/opt/k3s"
+k3s_images_path: "/var/lib/rancher/k3s/agent/images"
 k3s_config_path: "/root/.kube"
 k3s_config_file: "k3s.yml"
 k3s_config: "{{ k3s_config_path }}/{{ k3s_config_file }}"
@@ -30,7 +31,7 @@ k3s_binary: "k3s"
 k3s_install: "k3s-install.sh"
 k3s_airgap: "k3s-airgap-images-amd64.tar"
 k3s_airgap_env: "true"
-k3s_install_env: "--disable servicelb --disable traefik --snapshotter fuse-overlayfs"
+k3s_install_env: "--disable 'servicelb,traefik' --snapshotter fuse-overlayfs"
 
 kubectl_path: "/usr/local/bin/kubectl"
 kubectl_timeout: "120s"

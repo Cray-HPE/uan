@@ -23,11 +23,14 @@
 #
 # Tasks for the uan_k3s_stage role
 
-- name: Creates directory for k3s assets
+- name: Create directories for k3s assets
   file:
-    path: "{{ k3s_install_path }}"
+    path: "{{ item }}"
     state: directory
     recurse: yes
+  loop:
+    - "{{ k3s_install_path }}"
+    - "{{ k3s_images_path }}"
 
 - name: Download k3s assets
   get_url:
@@ -36,7 +39,11 @@
   loop:
     - "{{ k3s_binary }}"
     - "{{ k3s_install }}"
-    - "{{ k3s_airgap }}"
+
+- name: Download k3s airgapped install images
+  get_url:
+    url: "{{ third_party_url }}/{{ k3s_airgap }}"
+    dest: "{{ k3s_images_path }}"
 
 - name: Set permission on installer
   file:

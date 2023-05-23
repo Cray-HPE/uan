@@ -38,12 +38,6 @@
     sls_can_metallb: "{{ uan_user_access_cfg | upper }} Dynamic MetalLB"
   run_once: true
 
-- name: "DBG: Getting Subnet info start time"
-  local_action:
-    module: shell
-    cmd: 'date "+%T"'
-  register: subnet_start
-
 - name: "Get {{ uan_user_access_cfg | upper }} Subnets"
   local_action:
     module: set_fact
@@ -60,12 +54,6 @@
     customer_access_vlan_id: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_fullname) | map(attribute='VlanID') | first }}"
   run_once: true
 
-- name: "DBG: Getting Subnet info stop time"
-  local_action:
-    module: shell
-    cmd: 'date "+%T"'
-  register: subnet_stop
-
 - name: "Setting {{ uan_user_access_cfg | upper }} name filter for Application"
   set_fact:
     customer_access_name: "{{ ansible_hostname }}"
@@ -76,19 +64,9 @@
     customer_access_name: "{{ inventory_hostname + 'h0' }}"
   when: "'Compute' in group_names"
 
-- name: "DBG: Getting can_ip start time"
-  shell:
-    cmd: 'date "+%T"'
-  register: can_ip_start
-
 - name: Get can_ip from customer_access_ips
   set_fact:
     can_ip: "{{ customer_access_ips | selectattr('Name', 'match', customer_access_name) | map(attribute='IPAddress') | first }}"
-
-- name: "DBG: Getting can_ip stop time"
-  shell:
-    cmd: 'date "+%T"'
-  register: can_ip_stop
 
 - name: "FAIL if {{ uan_user_access_cfg | upper }} IP is not defined"
   fail:

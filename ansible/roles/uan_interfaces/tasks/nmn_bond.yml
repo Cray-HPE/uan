@@ -43,17 +43,9 @@
     msg: "ERROR: nmn0 does not match uan_nmn_bond_slaves. ({{ nmn_bond_slaves }})"
   when: ("nmn0" not in nmn_bond_slave0.stdout) and ("nmn0" not in nmn_bond_slave1.stdout)
 
-- name: DBG
-  debug:
-    msg: "Looking up IP for {{ ansible_hostname }}"
-
 - name: Record nmn0 IP
   set_fact:
     nmn_ip: '{{ lookup("dig", "{{ ansible_hostname }}.") }}'
-
-- name: DBG
-  debug:
-    msg: "nmn_ip is {{ nmn_ip }}/{{ node_nmn_cidr | ipaddr('prefix') }}"
 
 - name: Ensure NMN bond slave interfaces are UP
   shell: "ip link set dev {{ item }} up"

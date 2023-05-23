@@ -23,16 +23,6 @@
 #
 # uan_interfaces tasks
 ---
-- name: "DBG: Get uan_interfaces starting time"
-  local_action:
-    module: shell
-    cmd: 'date "+%T"'
-  register: start_time
-
-- name: "DBG: uan_interfaces start time"
-  debug:
-    msg: "Start Time = {{ start_time.stdout }}"
-
 - name: "Get BICAN info from SLS"
   local_action:
     module: uri
@@ -344,7 +334,7 @@
     - block:
       - name: Gather any CAN/CHN bond slave devices for removal from ifcfg-bond0, if not configured for CAN/CHN
         slurp:
-          src: "/etc/sysconfig/network/ifcfg-bon0"
+          src: "/etc/sysconfig/network/ifcfg-bond0"
         register: bond0
 
       - name: Parse bond slaves from /etc/sysconfig/ifcfg-bond0
@@ -412,20 +402,3 @@
 
   when:
     - ('Compute' not in group_names) or ('Compute' in group_names and uan_user_access_cfg == 'CHN')
-
-- name: "DBG: Get uan_interfaces exit time"
-  local_action:
-    module: shell
-    cmd: 'date "+%T"'
-  register: end_time
-
-- name: "DBG: Performance times"
-  debug:
-    msg:
-      - "uan_interfaces Start Time = {{ start_time.stdout }}"
-      - "uan_interfaces End Time = {{ end_time.stdout }}"
-      - "subnet Start Time = {{ subnet_start.stdout }}"
-      - "subnet End Time = {{ subnet_stop.stdout }}"
-      - "can_ip Start Time = {{ can_ip_start.stdout }}"
-      - "can_ip End Time = {{ can_ip_stop.stdout }}"
-

@@ -24,9 +24,13 @@
 ---
 - set_fact:
     nmn_subnet_network_from_uan: "{{ ansible_nmn0['ipv4']['network'] }}" #get subnet cidr
+    nmn_subnet_mask_from_uan: "{{ ansible_nmn0['ipv4']['netmask'] }}"
+  when: ansible_nmn0['ipv4'] is defined
 
 - set_fact:
-    nmn_subnet_mask_from_uan: "{{ ansible_nmn0['ipv4']['netmask'] }}"
+    nmn_subnet_network_from_uan: "{{ ansible_nmnb0['ipv4']['network'] }}" #get subnet cidr
+    nmn_subnet_mask_from_uan: "{{ ansible_nmnb0['ipv4']['netmask'] }}"
+  when: ansible_nmnb0['ipv4'] is defined
 
 #Set variable nmn_network_cidr to the calculated CIDR of the NMN
 # network by getting subnet and subnet mask from ansible inventory

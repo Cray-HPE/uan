@@ -32,29 +32,27 @@
   run_once: true
 
 - name: "Construct {{ uan_user_access_cfg | upper }} full names"
-  set_fact:
+  local_action: 
+    module: set_fact
     sls_can_fullname: "{{ uan_user_access_cfg | upper }} Bootstrap DHCP Subnet"
     sls_can_metallb: "{{ uan_user_access_cfg | upper }} Dynamic MetalLB"
+  run_once: true
 
 - name: "Get {{ uan_user_access_cfg | upper }} Subnets"
-  set_fact:
-    can_subnets: "{{ item.ExtraProperties.Subnets }}"
-  loop: "{{ sls_can.json }}"
+  local_action:
+    module: set_fact
+    can_subnets: "{{ sls_can.json | selectattr('ExtraProperties.Subnets', 'defined') | map(attribute='ExtraProperties.Subnets') | list }}"
+  run_once: true
 
-- name: "Get {{ uan_user_access_cfg | upper }} CIDR from SLS, if network exists."
-  set_fact:
-    customer_access_ips: "{{ item.IPReservations }}"
-    customer_access_network: "{{ item.CIDR }}"
-    customer_access_gateway: "{{ item.Gateway }}"
-    customer_access_vlan_id: "{{ item.VlanID }}"
-  loop: "{{ can_subnets }}"
-  when: item.FullName == sls_can_fullname
-
-- name: "Get {{ uan_user_access_cfg | upper }} MetalLB CIDR from SLS, if network exists."
-  set_fact:
-    customer_access_network_metallb: "{{ item.CIDR }}"
-  loop: "{{ can_subnets }}"
-  when: item.FullName == sls_can_metallb
+- name: "Get {{ uan_user_access_cfg | upper }} Subnet Information"
+  local_action:
+    module: set_fact
+    customer_access_ips: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_fullname) | map(attribute='IPReservations') | first }}"
+    customer_access_network: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_fullname) | map(attribute='CIDR') | first }}"
+    customer_access_network_metallb: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_metallb) | map(attribute='CIDR') | first }}"
+    customer_access_gateway: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_fullname) | map(attribute='Gateway') | first }}"
+    customer_access_vlan_id: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_fullname) | map(attribute='VlanID') | first }}"
+  run_once: true
 
 - name: "Setting {{ uan_user_access_cfg | upper }} name filter for Application"
   set_fact:
@@ -66,11 +64,9 @@
     customer_access_name: "{{ inventory_hostname + 'h0' }}"
   when: "'Compute' in group_names"
 
-- name: "Get {{ uan_user_access_cfg | upper }} IP from SLS"
+- name: Get can_ip from customer_access_ips
   set_fact:
-    can_ip: "{{ item.IPAddress }}"
-  loop: "{{ customer_access_ips }}"
-  when: item.Name == customer_access_name
+    can_ip: "{{ customer_access_ips | selectattr('Name', 'match', customer_access_name) | map(attribute='IPAddress') | first }}"
 
 - name: "FAIL if {{ uan_user_access_cfg | upper }} IP is not defined"
   fail:
@@ -102,6 +98,12 @@
     - name: Set uan_can_devices when NMN bonding is set
       set_fact:
         uan_can_devices: [ "{{ can_bond_slave0.stdout }}", "{{ can_bond_slave1.stdout }}" ]
+
+    - name: Fail if any CAN device doesn't exist
+      fail:
+        msg: "At least one of the following interfaces doesn't exist: {{ uan_can_bond_slaves }}"
+      loop: "{{ uan_can_devices }}"
+      when: item == ""
 
     - name: Ensure list of possible CAN interfaces are UP
       shell: "ip link set dev {{ item }} up"
@@ -271,14 +273,6 @@
     register: cmd_out
     failed_when: cmd_out.rc not in [0, 1, 2]
 
-  - name: "Set default route for {{ customer_access_gateway }} if no ifroute file exists"
-    when:
-      - can_ip is defined
-      - not ifroute_chn.stat.exists
-    shell: "ip route add default via {{ customer_access_gateway }} dev {{ uan_chn_device }}"
-    register: cmd_out
-    failed_when: cmd_out.rc not in [0, 1, 2]
-
   - name: Set IPADDR1 entry for CHN if ifcfg file exists
     when:
       - can_ip is defined
@@ -314,50 +308,3 @@
 
   when: 
     - (uan_user_access_cfg | upper) == "CHN"
-
-- name: Reloading wicked to set new routes
-  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  shell: "systemctl reload wicked;sleep 5"
-  changed_when: result.rc == 0
-  failed_when: result.rc != 0
-  register: result
-
-- name: Restarting wicked-nanny
-  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  shell: "systemctl restart wickedd-nanny;sleep 5"
-  changed_when: result.rc == 0
-  failed_when: result.rc != 0
-  register: result
-
-- name: Remove existing default route
-  when: (((uan_user_access_cfg | upper) == "CHN") and ifroute_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  command: "ip route delete default"
-  changed_when: result.rc != 0 or result.rc == 2
-  failed_when: result.rc != 0 and result.rc != 2
-  register: result
-
-- name: Reload networks to update default route 
-  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  shell: "systemctl reload wicked;sleep 5"
-  changed_when: result.rc == 0
-  failed_when: result.rc != 0
-  register: result
-
-- name: Restarting wicked-nanny
-  when: (((uan_user_access_cfg | upper) == "CHN") and ifcfg_chn.stat.exists)  or (uan_user_access_cfg | upper) == "CAN"
-  shell: "systemctl restart wickedd-nanny;sleep 5"
-  changed_when: result.rc == 0
-  failed_when: result.rc != 0
-  register: result
-
-- name: Check that we have the default route we are expecting
-  when: not uan_customer_default_route | bool
-  shell: "ip route | grep default | grep -q '{{ customer_access_gateway }}'"
-  failed_when: result.rc != 0
-  register: result
-
-- name: "Check that the {{ uan_interface }} interface has the expected IP"
-  shell: "ip addr show {{ uan_interface }} | grep -q {{ can_ip }}/{{ can_prefix }}"
-  failed_when: result.rc != 0
-  register: result
-  when: can_ip is defined

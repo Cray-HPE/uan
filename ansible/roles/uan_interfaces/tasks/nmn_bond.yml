@@ -1,0 +1,85 @@
+#
+# MIT License
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# uan_interfaces tasks for bonding the NMN interfaces
+- name: Get interface names for bond slave0
+  shell: "ip a show {{ uan_nmn_bond_slaves[0] }} | head -n 1 | cut -f 2 -d ':' | cut -f 2 -d ' '"
+  register: nmn_bond_slave0
+
+- name: Get interface names for bond slave1
+  shell: "ip a show {{ uan_nmn_bond_slaves[1] }} | head -n 1 | cut -f 2 -d ':' | cut -f 2 -d ' '"
+  register: nmn_bond_slave1
+
+- name: Fail if NMN bond slaves are not valid
+  fail:
+    msg: "At least one of the NMN bonding interfaces do not exist: {{ uan_nmn_bond_slaves }}"
+  loop:
+    - "{{ nmn_bond_slave0.stdout }}"
+    - "{{ nmn_bond_slave1.stdout }}"
+  when: item == ""
+
+- name: FAIL if nmn0 is not one of the NMN bond slaves
+  fail:
+    msg: "ERROR: nmn0 does not match uan_nmn_bond_slaves. ({{ nmn_bond_slaves }})"
+  when: ("nmn0" not in nmn_bond_slave0.stdout) and ("nmn0" not in nmn_bond_slave1.stdout)
+
+- name: Record nmn0 IP
+  set_fact:
+    nmn_ip: '{{ lookup("dig", "{{ ansible_hostname }}.") }}'
+
+- name: Ensure NMN bond slave interfaces are UP
+  shell: "ip link set dev {{ item }} up"
+  register: cmd_out
+  failed_when: cmd_out.rc not in [0, 1]
+  loop: "{{ uan_nmn_bond_slaves }}"
+
+- name: Configure bond slaves
+  copy:
+    src: ifcfg-bond-slaves
+    dest: "/etc/sysconfig/network/ifcfg-{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: 
+    - "{{ nmn_bond_slave0.stdout }}"
+    - "{{ nmn_bond_slave1.stdout }}"
+
+- name: Configure nmnb0
+  template:
+    src: ifcfg-nmnb0.j2
+    dest: "/etc/sysconfig/network/ifcfg-nmnb0"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configure ifroute-nmnb0
+  template:
+    src: ifroute-nmnb0.j2
+    dest: /etc/sysconfig/network/ifroute-nmnb0
+    owner: root
+    mode: 0600
+
+- name: Remove existing ifroute-nmn0
+  file:
+    path: /etc/sysconfig/network/ifroute-nmn0
+    state: absent

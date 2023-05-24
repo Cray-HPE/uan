@@ -1,0 +1,71 @@
+#
+# MIT License
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+---
+- name: Reload networks to update default route 
+  shell: "systemctl reload wicked"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+
+- name: Restarting wicked-nanny
+  shell: "systemctl restart wickedd-nanny"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+
+- name: "Set default route for {{ customer_access_gateway }} if no ifroute file exists"
+  when:
+    - uan_can_setup
+    - (uan_user_access_cfg | upper) == "CHN"
+    - not uan_customer_default_route | bool
+    - can_ip is defined
+    - not ifroute_chn.stat.exists
+  shell: "ip route add default via {{ customer_access_gateway }} dev {{ uan_chn_device }}"
+  register: cmd_out
+  failed_when: cmd_out.rc not in [0, 1, 2]
+
+- name: Check that we have the default route we are expecting
+  when: 
+    - not uan_customer_default_route | bool
+    - uan_can_setup
+  shell: "ip route | grep default | grep -q '{{ customer_access_gateway }}'"
+  until: result.rc == 0
+  retries: 5
+  delay: 2
+  register: result
+
+- name: "Check that the {{ uan_interface }} interface has the expected IP"
+  shell: "ip addr show {{ uan_interface }} | grep -q {{ can_ip }}/{{ can_prefix }}"
+  failed_when: result.rc != 0
+  register: result
+  when: 
+    - can_ip is defined
+    - uan_can_setup
+
+- name: Check that the customer interfaces have the expected IPs
+  shell: "ip addr show {{ item.name }} | grep -q {{ item.settings.ipaddr }}/{{ item.settings.prefixlen }}"
+  failed_when: result.rc != 0
+  register: result
+  when: (item.name is defined) and (item.settings.ipaddr is defined)
+  loop: "{{ customer_uan_interfaces }}"

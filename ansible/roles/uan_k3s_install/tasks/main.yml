@@ -22,37 +22,144 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 # Tasks for the uan_k3s_install role
+#
+#
+- name: Set facts - Default join server
+  set_fact:
+    k3s_join_server: "{{ k3s_init_server }}"
 
-- name: Copy k3s binary
-  copy:
-    src: "{{ k3s_install_path }}/{{ k3s_binary }}"
-    dest: "/usr/local/bin/k3s"
-    remote_src: yes
-    owner: "root"
-    group: "root"
-    mode: '0700'
+- name: Set facts - k3s init server
+  set_fact:
+    k3s_node: "init"
+    k3s_install_env: "{{ k3s_install_init_env + ' ' + k3s_install_env }}"
+  when:
+    - inventory_hostname in groups['k3s_server']
+    - k3s_init_server in inventory_hostname
 
-- name: Start k3s
-  command: "{{ k3s_install_path }}/{{ k3s_install }}"
-  environment:
-    INSTALL_K3S_SKIP_DOWNLOAD: "{{ k3s_airgap_env }}"
-    INSTALL_K3S_EXEC: "{{ k3s_install_env }}"
+- name: Set facts - k3s server
+  set_fact:
+    k3s_node: "server"
+    k3s_url: "https://{{ k3s_init_server }}:{{ k3s_server_port }}"
+    k3s_install_env: "{{ k3s_install_server_env + ' ' + k3s_install_env }}"
+  when:
+    - inventory_hostname in groups['k3s_server']
+    - k3s_init_server not in inventory_hostname
 
-- name: Verify k3s is enabled and running
-  service:
-    name=k3s
-    state=started
-    enabled=yes
+- name: Set facts - k3s agent
+  set_fact:
+    k3s_node: "agent"
+    k3s_url: "https://{{ k3s_init_server }}:{{ k3s_server_port }}"
+    k3s_install_env: "{{ k3s_install_agent_env + ' ' + k3s_install_env }}"
+  when:
+    - inventory_hostname in groups['k3s_agent']
 
-- name: Creates directory
-  file:
-    path: "{{ k3s_config_path }}"
-    state: directory
-    recurse: yes
+# Run a scan of all the k3s_server nodes and pick an active
+# server to join if one is available
+- name: Derive the active k3s node(s) to get a token and url from
+  block:
+    - name: Scan k3s_server nodes for active cluster
+      wait_for:
+        host: "{{ item }}"
+        port: "{{ k3s_server_port }}"
+        timeout: "{{ k3s_server_query_timeout }}"
+      register: wait_for_reg
+      with_items: "{{ groups['k3s_server'] }}"
+      ignore_errors: true
 
-- name: Copy k3s config
-  copy:
-    src: "/etc/rancher/k3s/k3s.yaml"
-    dest: "{{ k3s_config }}"
-    remote_src: yes
-    mode: '0700'
+    - name: Set facts - List of active servers
+      set_fact:
+        server_list_results: "{{ wait_for_reg | json_query('results[?state==`started`].item') }}"
+
+    - name: If an active server is found inform all play_hosts
+      set_fact:
+        k3s_join_server: "{{ server_list_results | first }}"
+        k3s_url: "https://{{ server_list_results | first }}:{{ k3s_server_port }}"
+# Note there may be a way to have a single host run this task
+# and inform the other play_hosts of the results
+# The 'delegate_to' 
+#     delegate_to: "{{ item }}"
+#     with_items: "{{ play_hosts }}"
+      when:
+        - "{{ server_list_results | length }} > 0"
+
+# run_once: true
+
+
+##############################
+# k3s init server -
+# 
+# If no active k3s servers were detected, allow the init server 
+# to start 
+#
+- name: Tasks for k3s init server to start cluster
+  block:
+    - name: Change init to server if active cluster is found
+      set_fact:
+        k3s_node: "server"
+        k3s_install_env: "{{ k3s_install_server_env + ' ' + k3s_install_env }}"
+      when:
+        - "{{ server_list_results | length }} > 0"
+
+    # If k3s_node is changed to "server" this task won't run
+    # and it will prevent a "new" cluster from starting.
+    # Instead, the init node will be converted to a "server"
+    # node that will join the running cluster.
+    - name: Start k3s - init server
+      command: "{{ k3s_install_path }}/{{ k3s_install }}"
+      environment:
+        INSTALL_K3S_SKIP_DOWNLOAD: "{{ k3s_airgap_env }}"
+        INSTALL_K3S_EXEC: "{{ k3s_install_env }}"
+
+  when: k3s_node == "init"
+
+- name: Transfer token from active server
+  block:
+    - name: Transfer token from active server
+      fetch:
+        src: "{{ k3s_token_path }}/token"
+        dest: "/tmp/"
+        flat: true
+      delegate_to: "{{ k3s_join_server }}"
+  run_once: true
+
+- name: Tasks for k3s nodes to join a running cluster
+  block:
+    - name: Create token directory
+      file:
+        path: "{{ k3s_token_path }}"
+        state: directory
+        recurse: yes
+
+    - name: Transfer token from controller
+      copy:
+        src: "/tmp/token"
+        dest: "{{ k3s_token_path }}/token"
+
+    - name: Start k3s - agent or server
+      command: "{{ k3s_install_path }}/{{ k3s_install }}"
+      environment:
+        INSTALL_K3S_SKIP_DOWNLOAD: "{{ k3s_airgap_env }}"
+        INSTALL_K3S_EXEC: "{{ k3s_install_env }}"
+        K3S_TOKEN_FILE: "{{ k3s_token_path }}/token"
+        K3S_URL: "{{ k3s_url }}"
+  when:
+    - k3s_node == "server" or 
+      k3s_node == "agent"
+
+- name: Tasks for configuring kubectl on server nodes
+  block:
+    - name: Creates directory
+      file:
+        path: "{{ k3s_config_path }}"
+        state: directory
+        recurse: yes
+
+    - name: Copy k3s config
+      copy:
+        src: "/etc/rancher/k3s/k3s.yaml"
+        dest: "{{ k3s_config }}"
+        remote_src: yes
+        mode: '0700'
+  when:
+    - k3s_node == "init" or 
+      k3s_node == "server"

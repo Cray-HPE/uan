@@ -33,51 +33,71 @@
         groups: cfs_image
       when: cray_cfs_image
 
-- hosts: Application:&cfs_image
-  gather_facts: true
+# K3S Image Customization.
+# - Download K3S, K3S airgapped images, Helm charts
+# - Create directories and copy files
+#
+# To install artifacts without requiring an image build,
+# modify '&cfs_image' from the 'hosts' target (remove or
+# use !cfs_image)
+#
+- hosts: Application:Compute:&cfs_image
+  gather_facts: false
   any_errors_fatal: true
-  remote_user: root
   vars_files:
     - vars/uan_k3s.yml
     - vars/uan_helm.yml
 
   tasks:
-    - name: Application image customization play
+    - name: Install K3S and Helm artifacts
       include_role:
         name: "{{ item }}"
       with_items:
         - uan_k3s_stage
+        - uan_helm
 
-- hosts: Application:!cfs_image
-  gather_facts: true
+# K3S Server or Agent - Node Personalization
+- hosts: k3s_server:k3s_agent:!cfs_image
+  gather_facts: false
   any_errors_fatal: true
-  remote_user: root
   vars_files:
     - vars/uan_k3s.yml
-    - vars/uan_helm.yml
-    - vars/uan_sshd.yml
   environment:
     KUBECONFIG: "{{ k3s_config }}"
 
   tasks:
-    - name: Application node personalization play
+    - name: Roles for K3S nodes
       include_role:
-        name: "{{ item }}"
-      with_items:
-        #- uan_k3s_stage # Uncomment to stage K3s assets without Image Customization
-        - uan_k3s_install
+        name: uan_k3s_install
 
-    - name: Configure Helm and MetalLB
+# K3S Server - Deploy services
+- hosts: k3s_server:!cfs_image
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files:
+    - vars/uan_k3s.yml
+    - vars/uan_helm.yml
+  environment:
+    KUBECONFIG: "{{ k3s_config }}"
+
+  tasks:
+    - name: Configure MetalLB
       include_role:
-        name: "{{ item }}"
-      with_items:
-        - uan_helm
-        - uan_metallb
+        name: uan_metallb
+      run_once: true
 
-    - name: Install HAProxy charts
+    - name: Install HAProxy chart(s)
       include_tasks: roles/uan_haproxy/tasks/main.yml
       loop: "{{ uan_haproxy }}"
+      run_once: true
 
+# SSHD startup for use with HAProxy running in K3S
+- hosts: Application:!cfs_image
+  gather_facts: false
+  any_errors_fatal: true
+  vars_files:
+    - vars/uan_sshd.yml
+  tasks:
     - set_fact:
         uan_sshd_configs_dict: "{{ uan_sshd_configs | items2dict(key_name='name', value_name='port') }}"
       when: uan_sshd_configs is defined

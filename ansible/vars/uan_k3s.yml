@@ -24,6 +24,7 @@
 third_party_url: "https://packages.local/repository/uan-2.6-third-party"
 k3s_install_path: "/opt/k3s"
 k3s_images_path: "/var/lib/rancher/k3s/agent/images"
+k3s_token_path: "/var/lib/rancher/k3s/server"
 k3s_config_path: "/root/.kube"
 k3s_config_file: "k3s.yml"
 k3s_config: "{{ k3s_config_path }}/{{ k3s_config_file }}"
@@ -31,7 +32,21 @@ k3s_binary: "k3s"
 k3s_install: "k3s-install.sh"
 k3s_airgap: "k3s-airgap-images-amd64.tar"
 k3s_airgap_env: "true"
-k3s_install_env: "--disable 'servicelb,traefik' --snapshotter fuse-overlayfs"
+
+k3s_server_query_max: "{{ groups['k3s_server'] | length }}"
+k3s_server_query_timeout: 3
+k3s_server_port: 6443
+
+# The following options are fed into the K3S installer.
+# All node types are prepended with the appropriate init, server, agent options
+# and end with k3s_install_env.
+k3s_install_init_env:   "--cluster-init --disable 'servicelb,traefik'"
+k3s_install_server_env: "server --disable 'servicelb,traefik'"
+k3s_install_agent_env:  ""
+k3s_install_env: "--snapshotter fuse-overlayfs --flannel-iface=nmn0"
+
+# If k3s_init_server is changed, make sure it is still a member of k3s_server
+k3s_init_server: "{{ groups['k3s_server'][0] }}"
 
 kubectl_path: "/usr/local/bin/kubectl"
 kubectl_timeout: "120s"

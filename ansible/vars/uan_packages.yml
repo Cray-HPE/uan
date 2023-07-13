@@ -36,10 +36,10 @@ uan_sles_packages_remove: []
 # Packages to install on a SLE based Application Node
 uan_sle_hpc_packages_add:
   - "cray-uan-goss"
+  - "fuse3"
+  - "helm"
+  - "podman"
 
 # Packages to remove on a SLE based Application Node
 uan_sle_hpc_packages_remove:
-  - "fuse3"
-  - "helm"
   - "hpe-csm-goss-package"
-  - "podman"

@@ -48,6 +48,7 @@
       with_items:
         - uan_ca_cert
         - uan_gpg_keys
+        - uan_load_drivers
         - uan_shadow
     - name: Application image customization play for SLES
       include_role:

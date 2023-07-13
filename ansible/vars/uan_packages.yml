@@ -24,7 +24,6 @@
 # Packages to install on a COS based UAN
 uan_sles_packages_add:
   - "cray-uan-diagnostics"
-  - "cray-uan-load-drivers-shasta-uan"
   - "fuse3"
   - "helm"
   - "podman"

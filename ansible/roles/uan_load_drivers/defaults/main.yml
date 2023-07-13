@@ -1,7 +1,5 @@
 #
-# MIT License
-#
-# (C) Copyright 2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -21,4 +19,19 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-uan_sles_repositories: ''
+# Defaults for the uan_load_drivers role
+
+uan_modules_disk: |
+smartpqi
+scsi_transport_sas
+ahci
+libahci
+libata
+sd_mod
+scsi_mod
+
+uan_modules_qlogic: |
+qed
+qede
+crc8
+devlink

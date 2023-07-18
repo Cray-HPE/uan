@@ -28,9 +28,11 @@
     src: disk.conf.j2
     dest: /etc/modules-load.d/disk.conf
     mode: '0755'
+  when: uan_modules_disk | length > 0
 
 - name: Create /etc/modules-load.d/qlogic.conf
   template:
     src: qlogic.conf.j2
     dest: /etc/modules-load.d/qlogic.conf
     mode: '0755'
+  when: uan_modules_qlogic | length > 0

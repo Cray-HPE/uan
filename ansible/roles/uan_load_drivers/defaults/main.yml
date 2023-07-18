@@ -22,16 +22,16 @@
 # Defaults for the uan_load_drivers role
 
 uan_modules_disk: |
-smartpqi
-scsi_transport_sas
-ahci
-libahci
-libata
-sd_mod
-scsi_mod
+  smartpqi
+  scsi_transport_sas
+  ahci
+  libahci
+  libata
+  sd_mod
+  scsi_mod
 
 uan_modules_qlogic: |
-qed
-qede
-crc8
-devlink
+  qed
+  qede
+  crc8
+  devlink

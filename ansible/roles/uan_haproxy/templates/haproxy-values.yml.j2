@@ -55,5 +55,10 @@ config: |
     option tcp-check
     tcp-check expect rstring SSH-2.0-OpenSSH.*
 
-    server host1 uan01:9000 check inter 10s fall 2 rise 1
+{% for node in groups['k3s_server'] %}
+    server {{ node }} {{ node }}:{{ haproxy_sshd_port }} check inter 10s fall 2 rise 1
+{% endfor %}
+{% for node in groups['k3s_agent'] %}
+    server {{ node }} {{ node }}:{{ haproxy_sshd_port }} check inter 10s fall 2 rise 1
+{% endfor %}
 {% endif %}

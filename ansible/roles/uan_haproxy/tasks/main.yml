@@ -31,6 +31,7 @@
     haproxy_kind: "{{ item.kind|default('DaemonSet') }}"
     haproxy_service_type: "{{ item.service_type|default('LoadBalancer') }}"
     haproxy_config: "{{ item.config | default('') }}"
+    haproxy_sshd_port: "{{ item.sshd_port | default(9000) }}"
 
 - name: Generate HAProxy values for {{ item.name }}
   template:

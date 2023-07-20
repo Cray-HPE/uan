@@ -92,7 +92,7 @@
       run_once: true
 
 # SSHD startup for use with HAProxy running in K3S
-- hosts: Application:!cfs_image
+- hosts: k3s_server:k3s_agent:!cfs_image
   gather_facts: false
   any_errors_fatal: true
   vars_files:

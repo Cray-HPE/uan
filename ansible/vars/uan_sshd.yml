@@ -25,4 +25,4 @@
 uan_sshd_configs:
   - name: "uai"
     config_path: "/etc/ssh/uan"
-    port: "9000"
+    port: 9000

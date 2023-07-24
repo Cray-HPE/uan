@@ -1,0 +1,169 @@
+#
+# MIT License
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+# hsn bonding tasks
+
+### TODO: Get HSN Bonding data from SLS, or wherever it will be stored
+# - name: Get HSN Bonding data from SLS
+#   local_action:
+#     module: uri
+#     url: "http://cray-sls/v1/search/networks?name=HSN"
+#     method: GET
+#   register: sls_hsn
+#   failed_when: sls_hsn.status != 200
+#   run_once: true
+#
+# - name: Get HSN bonding Subnets
+#   local_action:
+#     module: set_fact
+#     hsn_subnets: "{{ sls_hsn.json | selectattr('ExtraProperties.Subnets', 'defined') | map(attribute='ExtraProperties.Subnets') | list }}"
+#   run_once: true
+#
+# - name: "Get HSN Subnet Information"
+#   local_action:
+#     module: set_fact
+#     uan_hsn_bond_ip: "{{ hsn_subnets[0] | selectattr('FullName', 'match', sls_hsn_fullname) | selectattr('IPReservations', 'defined') | map(attribute='IPReservations') | first }}"
+#     uan_hsn_bond_subnet: "{{ hsn_subnets[0] | selectattr('FullName', 'match', sls_hsn_fullname) | map(attribute='CIDR') | first }}"
+#     uan_hsn_gateway: "{{ hsn_subnets[0] | selectattr('FullName', 'match', sls_hsn_fullname) | map(attribute='Gateway') | first }}"
+#   run_once: true
+# 
+# - name: "Setting HSN name filter for Application"
+#   set_fact:
+#     uan_hsn_xname: "{{ ansible_hostname }}"
+#   when: "'Application' in group_names"
+# 
+# - name: "Setting HSN name filter for Compute"
+#   set_fact:
+#     uan_hsn_xname: "{{ inventory_hostname + 'h0' }}"
+#   when: "'Compute' in group_names"
+# 
+# - name: Get uan_hsn_bond_ip from uan_hsn_bond_ip
+#   set_fact:
+#     uan_hsn_bond_ip: "{{ uan_hsn_bond_ip | selectattr('Name', 'match', uan_hsn_xname) | map(attribute='IPAddress') | first }}"
+#     uan_hsn_bond_mac: "{{ uan_hsn_bond_ip | selectattr('Name', 'match', uan_hsn_xname) | map(attribute='MAC') | first }}"
+# 
+# - name: "FAIL if HSN IP is not defined"
+#   fail:
+#     msg: "HSN IP is not defined for {{ uan_hsn_xname }}"
+#   when: uan_hsn_bond_ip is not defined
+# 
+# - name: "FAIL if HSN is not defined"
+#   fail:
+#     msg: "HSN is not defined for the node, skipping HSN bonding configuration."
+#   when: (uan_bond_subnet is not defined) or (uan_hsn_gateway is not defined)
+# 
+# - name: "Get HSN Prefix"
+#   set_fact:
+#       uan_hsn_bond_prefix: "{{ uan_hsn_bond_subnet | ipaddr('prefix') }}"
+
+
+# Configure HSN Bonding macvlan interfaces
+
+- name: Get list of HSN interfaces
+  shell: "ip -o link list | cut -f 2 -d ':' | tr -d ' ' | egrep 'hsn'"
+  register: hsn_device_list
+
+- name: "Add {{ uan_hsn_rt_table_name }} to /etc/iproute2/rt_tables"
+  blockinfile:
+    path: /etc/iproute2/rt_tables
+    block: |
+      #
+      21{{ uan_hsn_bond_num }} {{ uan_hsn_rt_table_name }}
+      #
+
+- name: "Link HSN bond master {{ uan_hsn_bond_master}}"
+  shell: "ip link add {{ uan_hsn_bond_master }} type bond mode {{ uan_hsn_bond_mode }} {{ uan_hsn_bond_params }}" 
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+
+- name: "Configure HSN Bonding arp entries"
+  shell: "sysctl -w net.ipv4.conf.{{ uan_hsn_bond_master }}.{{ item }}"
+  loop: "{{ uan_hsn_sysctl_values }}"
+
+- name: "Configure macvlan HSN bond slaves"
+  shell: "ip link add link {{ item }} name {{ item }}{{ uan_hsn_bond_slave_suffix }} type macvlan"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+  loop: "{{ hsn_device_list }}"
+
+- name: "Configure macvlan HSN bond slaves MAC"
+  shell: "ip link set dev {{ item }}{{ uan_hsn_bond_slave_suffix }} address {{ uan_hsn_bond_mac }}"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+  loop: "{{ hsn_device_list }}"
+
+- name: "Configure macvlan HSN bond master"
+  shell: "ip link set master {{ uan_hsn_bond_master }} dev {{ item }}{{ uan_hsn_bond_slave_suffix }}"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+  loop: "{{ hsn_device_list }}"
+
+- name: "Bring up HSN bond slaves"
+  shell: "ip link set dev {{ item }}{{ uan_hsn_bond_slave_suffix }} up"
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0
+  register: result
+  loop: "{{ hsn_device_list }}"
+
+# Configure HSN macvlan bond routing
+
+- name: "Get current route cidr of {{ uan_hsn_bond_master }}, if it exists"
+  shell: "ip -4 route show dev {{ uan_hsn_bond_master }} | awk '{print $1}' | cut -d ' ' -f1"
+  ignore_errors: true
+  register: uan_hsn_bond_current_route_cidr
+
+- block:
+  - name: "Set routes of for {{ uan_hsn_bond_master }}, step 1"
+    shell: "ip -4 route add to unicast {{ uan_hsn_bond_subnet }} dev {{ uan_hsn_bond_master }} src {{ uan_hsn_bond_ip }} table {{ uan_hsn_rt_table_name }} proto kernel scope host"
+    changed_when: uan_hsn_bond_route.rc == 0
+    failed_when: uan_hsn_bond_route.rc != 0
+    register: uan_hsn_set_bond_route
+
+  - name: "Set routes of for {{ uan_hsn_bond_master }}, step 2"
+    shell: "ip -4 rule add type unicast from {{ uan_hsn_bond_ip }}/{{ uan_hsn_bond_prefix }} to {{ uan_hsn_bond_ip }}/{{ uan_hsn_bond_prefix }} priority 0 table local"
+    changed_when: uan_hsn_bond_route.rc == 0
+    failed_when: uan_hsn_bond_route.rc != 0
+    register: uan_hsn_bond_route
+
+  - name: "Set routes of for {{ uan_hsn_bond_master }}, step 3"
+    shell: "ip -4 rule add type unicast from {{ uan_hsn_bond_ip }}/{{ uan_hsn_bond_prefix }} priority 2 table {{ uan_hsn_rt_table_name }}"
+    changed_when: uan_hsn_bond_route.rc == 0
+    failed_when: uan_hsn_bond_route.rc != 0
+    register: uan_hsn_bond_route
+
+  when: 
+    - uan_hsn_bond_current_route_cidr.rc == 0
+    - uan_hsn_bond_current_route_cidr.stdout | ipaddr(network) != uan_hsn_bond_cidr
+    - uan_hsn_bond_current_route_cidr.stdout | ipaddr(prefix) != uan_hsn_bond_prefix
+
+- name: "Get current route cidr of bond interfaces, if they exist"
+  shell: "ip -4 br addr show dev {{ item }} | awk '{print $3;}'"
+  ignore_errors: true
+  register: uan_hsn_bond_current_route_cidr
+
+- block:
+  - name: "Apply route to bond interfaces"

@@ -291,6 +291,18 @@
     include_tasks: nmn_bond.yml
     when: uan_nmn_bond
 
+  # Cleanup any existing bonded NMN config, if no longer bonding NMN
+  ### TODO Fill out this block to remove HSN bonding if not configured.
+  - block:
+    - name: Remove HSN macvlan interfaces
+
+
+    when: not uan_hsn_bond
+
+  - name: Bond the HSN interfaces, if configured for bonding
+    include_tasks: hsn.yml
+    when: uan_hsn_bond
+
   - name: Tell DHCP client to not set default gateway
     lineinfile:
       path: /etc/sysconfig/network/dhcp
@@ -383,7 +395,7 @@
 
     when: not uan_can_setup
 
-  # "Configure Customer Access Network"
+  # Configure Customer Access Network
   - include_tasks: can.yml
     when: uan_can_setup
 

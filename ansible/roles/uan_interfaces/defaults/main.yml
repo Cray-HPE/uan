@@ -35,6 +35,29 @@ uan_nmn_bond_slaves:
   - "ens10f0"
   - "ens1f0"
 
+# HSN Bonding Setup
+sls_hsn_fullname: "HSN Base Subnet"
+uan_hsn_bond: no
+uan_hsn_bond_mode: "balance-rr"
+uan_hsn_bond_params: ""
+uan_hsn_bond_base_name: "bond"
+uan_hsn_bond_slave_suffix: "b{{ uan_hsn_bond_num }}s"
+uan_hsn_bond_master: "{{ uan_hsn_bond_base_name }}{{ uan_hsn_bond_num }}"
+uan_hsn_rt_table_name: "rt_{{ uan_hsn_bond_base_name }}{{ uan_hsn_bond_num }}"
+uan_hsn_sysctl_values: 
+  - "accept_local=1"
+  - "arp_filter=1"
+  - "arp_announce=2"
+  - "arp_ignore=1"
+  - "arp_notify=0"
+  - "arp_accept=1"
+  - "drop_gratuitous_arp=1"
+  - "rp_filter=0"
+uan_hsn_bond_current_route_cidr: ""
+uan_hsn_bond_subnet: ""
+uan_hsn_bond_prefix: ""
+uan_hsn_bond_ip: ""
+
 # Customer Access Network Setup
 uan_can_setup: no
 uan_customer_default_route: no

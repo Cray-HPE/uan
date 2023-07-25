@@ -45,6 +45,7 @@
   gather_facts: false
   any_errors_fatal: true
   vars_files:
+    - vars/uan_versions.yml
     - vars/uan_k3s.yml
     - vars/uan_helm.yml
 
@@ -75,6 +76,7 @@
   gather_facts: false
   any_errors_fatal: true
   vars_files:
+    - vars/uan_versions.yml
     - vars/uan_k3s.yml
     - vars/uan_helm.yml
   environment:

@@ -21,22 +21,10 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-third_party_url: "https://packages.local/repository/uan-{{ uan_release_version }}-third-party"
-third_party_registry: "registry.local/artifactory.algol60.net/csm-docker/stable"
-helm_path: "/usr/bin/helm"
-helm_install_path: "/opt/cray/uan/helm"
 
-uan_metallb:
-  name: "metallb"
-  namespace: "metallb-system"
-  chart: "metallb-{{ metallb_version }}"
-  chart_path: "{{ helm_install_path }}/charts/{{ metallb_chart }}.tgz"
-
-uan_haproxy:
-  - name: "haproxy-uai"
-    namespace: "haproxy-uai"
-    chart: "haproxy-{{ haproxy_version }}"
-    chart_path: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
-
-#metallb_ipaddresspool_range_start: "<start-of-range>"
-#metallb_ipaddresspool_range_end: "<end-of-range>"
+uan_release_version: "2.7"
+k3s_version: "1.27.3"
+metallb_version: "0.13.10"
+haproxy_version: "1.19.2"
+frr_version: "8.4.2"
+haproxy_container_version: "2.8.1"

@@ -21,6 +21,76 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
+- block:
+  - name: "Get BICAN info from SLS"
+    local_action:
+      module: uri
+      url: "http://cray-sls/v1/search/networks?name=BICAN"
+      method: GET
+    register: sls_bican
+    ignore_errors: yes
+    run_once: true
+
+  - name: "Get BICAN System Default Route Network Name"
+    local_action:
+      module: set_fact
+      uan_user_access_cfg: "{{ item.ExtraProperties.SystemDefaultRoute }}"
+    when: sls_bican.status == 200
+    loop: "{{ sls_bican.json | list }}"
+    run_once: true
+
+  - name: "Get CAN|CHN info from SLS"
+    local_action:
+      module: uri
+      url: "http://cray-sls/v1/search/networks?name={{ uan_user_access_cfg | upper }}"
+      method: GET
+    register: sls_can
+    ignore_errors: yes
+    when: uan_user_access_cfg is defined
+    run_once: true
+
+  - name: "Construct full name for Dynamic MetalLB K3s, if not provided"
+    local_action:
+      module: set_fact
+      sls_can_metallb_fullname: "{{ uan_user_access_cfg | upper }} Dynamic MetalLB K3s"
+    when: 
+      - uan_user_access_cfg is defined
+      - sls_can_metallb_fullname is not defined
+    run_once: true
+
+  - name: "Get CAN|CHN Subnets"
+    local_action:
+      module: set_fact
+      can_subnets: "{{ sls_can.json | selectattr('ExtraProperties.Subnets', 'defined') | map(attribute='ExtraProperties.Subnets') | list }}"
+    when: sls_can.status == 200
+    run_once: true
+
+  - name: "Get CAN|CHN K3s Subnet Information"
+    local_action:
+      module: set_fact
+      customer_access_k3s_metallb_info: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_metallb_fullname) | list }}"
+    when: can_subnets is defined
+    run_once: true
+
+  - name: "Get CAN|CHN K3s Subnet CIDR"
+    local_action:
+      module: set_fact
+      customer_access_k3s_metallb_cidr: "{{ can_subnets[0] | selectattr('FullName', 'match', sls_can_metallb_fullname) | map(attribute='CIDR') | first }}"
+    when: customer_access_k3s_metallb_info | length >= 1
+    run_once: true
+
+  - name: Get K3s start and end IPs from customer_access_metallb_ips
+    local_action:
+      module: set_fact
+      metallb_ipaddresspool_range_start: "{{ customer_access_k3s_metallb_cidr | ipaddr('net') | ipaddr('next_usable') }}"
+      metallb_ipaddresspool_range_end: "{{ customer_access_k3s_metallb_cidr | ipaddr('net') | ipaddr('last_usable') }}"
+    when: customer_access_k3s_metallb_cidr is defined
+    run_once: true
+
+when:
+  - metallb_ipaddresspool_range_start is undefined
+  - metallb_ipaddresspool_range_end is undefined
+
 - name: Download MetalLB asset
   get_url:
     url: "{{ third_party_url }}/{{ metallb_chart }}.tgz"

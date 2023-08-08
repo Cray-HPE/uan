@@ -45,6 +45,10 @@
     name: "{{ packages_remove }}"
     state: absent
     update_cache: yes
+  register: zypper_reg
+  failed_when:
+    - zypper_reg.rc != 6
+    - zypper_reg.rc != 0
 
 - name: Install RPMs (SLES-based)
   zypper:
@@ -54,4 +58,5 @@
   register: zypper_reg
   failed_when:
     - zypper_reg.rc != 107
+    - zypper_reg.rc != 6
     - zypper_reg.rc != 0

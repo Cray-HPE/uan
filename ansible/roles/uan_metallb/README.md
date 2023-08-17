@@ -11,10 +11,44 @@ Dependencies
 
 `uan_k3s_*` and `uan_helm` have run successfully. If MetalLB is to assign
 Load Balancer IPs to services running in K3s, an IP address range must be
-set in `vars/uan_helm.yml`:
+set in `vars/uan_helm.yml` or defined in SLS by divided the existing `[CAN|CHN]
+Dynamic MetalLB` subnet in half creating a new `[CAN|CHN] Dynamic MetalLB K3s`
+subnet:
+
+Example of defining the MetalLB IP pool range in `vars/uan_helm.yml`:
+
 ```yaml
 metallb_ipaddresspool_range_start: "<start-of-range>"
 metallb_ipaddresspool_range_end: "<end-of-range>"
+```
+
+Here's an xample of splitting the existing `[CAN|CHN] Dynamic MetalLB` subnet. By default, the `FullName` of the subnet used for K3s is `[CAN|CHN] Dynamic MetalLB K3s`, depending on whether `CAN` or `CHN` is being used for the customer access network.  This default `FullName` of `[CAN|CHN] Dynamic MetalLB K3s` used by the role may be overridden by setting the `sls_can_metallb_fullname` variable in CFS to the expected name.
+
+```bash
+### Existing [CAN|CHN] Dynamic MetalLB Subnet in SLS
+### Split this as shown below into two subnets
+        "CIDR": "x.x.x.192/26",
+        "FullName": "CAN Dynamic MetalLB",
+        "Gateway": "x.x.x.193",
+        "MetalLBPoolName": "customer-access",
+        "Name": "can_metallb_address_pool",
+        "VlanID": 6,
+
+### New [CAN|CHN] Dynamic MetalLB Subnet
+        "CIDR": "x.x.x.192/27",
+        "FullName": "CAN Dynamic MetalLB",
+        "Gateway": "x.x.x.193",
+        "MetalLBPoolName": "customer-access",
+        "Name": "can_metallb_address_pool",
+        "VlanID": 6,
+
+### New [CAN|CHN] Dynamic MetalLB K3s
+        "CIDR": "x.x.x.224/27",
+        "FullName": "CAN Dynamic MetalLB K3s",
+        "Gateway": "x.x.x.225",
+        "MetalLBPoolName": "customer-access-k3s",
+        "Name": "can_metallb_k3s_address_pool",
+        "VlanID": 6,
 ```
 
 By default, these arguments are commented out or omitted. MetalLB will be

@@ -117,12 +117,16 @@ when:
     backup: yes
   when: apply_crd|default(false)
 
+- name: Pause for 3 seconds before reading CRDs
+  pause:
+    seconds: 3
+
 - name: Wait for MetalLB CRDs to be available
   command: "{{ kubectl_path }} -n {{ uan_metallb.namespace }} wait --for condition=established --timeout={{ kubectl_timeout }} crd/{{ item }}.metallb.io"
   register: result
-  until: "result is not failed"
+  until: result is not failed
   retries: 10
-  delay: 10
+  delay: 3
   loop:
     - "ipaddresspools"
     - "l2advertisements"

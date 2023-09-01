@@ -24,6 +24,7 @@
 # Packages to install on a COS based UAN
 uan_sles_packages_add:
   - "fuse3"
+  - "evince"
   - "helm"
   - "podman"
   - "sssd-tools"
@@ -35,6 +36,7 @@ uan_sles_packages_remove: []
 # Packages to install on a SLE based Application Node
 uan_sle_hpc_packages_add:
   - "fuse3"
+  - "evince"
   - "helm"
   - "podman"
 

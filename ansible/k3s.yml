@@ -112,3 +112,7 @@
     - name: Application image customization play
       include_tasks: roles/uan_sshd/tasks/main.yml
       loop: "{{ uan_sshd_configs }}"
+
+    - name: Configure Podman
+      include_role:
+        name: uan_podman

@@ -1,0 +1,75 @@
+#
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+# OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+# ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+# OTHER DEALINGS IN THE SOFTWARE.
+#
+- name: Gather S3 credential for user
+  local_action:
+    module: shasta_s3_creds
+    k8s_secret: '{{ user_s3_cred }}'
+    k8s_namespace: '{{ user_s3_namespace }}'
+  register: s3_creds
+  no_log: false
+  run_once: true
+
+# This task is optional. As such, ignore_errors is set to true.
+# Additionally, ovewrite is set to 'never' to allow for alternate
+# methods of managing this file. If the files exist, they will not
+# be altered.
+- name: Download subuid and subgid files from S3
+  aws_s3:
+    aws_access_key: '{{ s3_creds.access_key }}'
+    aws_secret_key: '{{ s3_creds.secret_key }}'
+    s3_url: '{{ user_s3_url }}'
+    bucket: '{{ user_s3_bucket }}'
+    object: '{{ item }}'
+    dest: '/{{ item }}'
+    mode: get
+    validate_certs: '{{ s3_validate_certs }}'
+    overwrite: 'never'
+  ignore_errors: true
+  with_items:
+    - '{{ subuid_artifact }}'
+    - '{{ subgid_artifact }}'
+
+- name: Get output of mount command
+  shell: "/usr/bin/mount | grep {{ uan_podman_dir | dirname }}"
+  args:
+    warn: false
+  register: mount_result
+
+- name: Verify {{ uan_podman_dir }} is a location on disk
+  fail:
+    msg: "{{ uan_podman_dir | dirname }} was not found as a location backed by disk."
+  when: '"/dev/sd*" in mount_result.stdout or "/dev/nvme*" in mount_result.stdout'
+
+- name: Create {{ uan_podman_dir }}
+  file:
+    path: '{{ uan_podman_dir }}'
+    state: directory
+    mode: '0777'
+
+- name: Remove default mounts from /etc/containers/mounts.conf
+  lineinfile:
+    path: /etc/containers/mounts.conf
+    state: absent
+    regexp: '{{ item }}'
+  with_items:
+    - '/etc/SUSEConnect'
+    - '/etc/zypp/credentials.d/SCCcredentials'

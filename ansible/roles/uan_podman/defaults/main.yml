@@ -21,9 +21,9 @@
 #
 uan_podman_dir: '/scratch/containers'
 user_s3_url: 'http://rgw-vip.local'
-user_s3_cred: 'wlm-s3-credentials'
+user_s3_cred: 'user-s3-credentials'
 user_s3_namespace: 'services'
-user_s3_bucket: 'wlm'
+user_s3_bucket: 'user'
 subuid_artifact: 'etc/subuid'
 subgid_artifact: 'etc/subgid'
 s3_validate_certs: false

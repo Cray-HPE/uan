@@ -45,6 +45,7 @@
   gather_facts: false
   any_errors_fatal: true
   vars_files:
+    - vars/uan_versions.yml
     - vars/uan_k3s.yml
     - vars/uan_helm.yml
 
@@ -75,6 +76,7 @@
   gather_facts: false
   any_errors_fatal: true
   vars_files:
+    - vars/uan_versions.yml
     - vars/uan_k3s.yml
     - vars/uan_helm.yml
   environment:
@@ -110,3 +112,7 @@
     - name: Application image customization play
       include_tasks: roles/uan_sshd/tasks/main.yml
       loop: "{{ uan_sshd_configs }}"
+
+    - name: Configure Podman
+      include_role:
+        name: uan_podman

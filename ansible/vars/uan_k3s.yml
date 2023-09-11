@@ -21,7 +21,7 @@
 # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-third_party_url: "https://packages.local/repository/uan-2.6-third-party"
+third_party_url: "https://packages.local/repository/uan-{{ uan_release_version}}-third-party"
 k3s_install_path: "/opt/k3s"
 k3s_images_path: "/var/lib/rancher/k3s/agent/images"
 k3s_token_path: "/var/lib/rancher/k3s/server"

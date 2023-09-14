@@ -40,6 +40,15 @@
     mode: 0600
     backup: yes
 
+- name: Copy connect_to_uai.sh ForceCommand script to {{ item.config_path | default('/etc/ssh/uan') }}
+  copy:
+    src: connect_to_uai.sh
+    dest: "{{ item.config_path | default('/etc/ssh/uan') }}/connect_to_uai.sh"
+    owner: root
+    group: root
+    mode: '0600'
+    backup: yes
+
 - name: Generate SSHD systemd unit file for sshd_{{ item.name }}
   template:
     src: roles/uan_sshd/templates/sshd.service.j2

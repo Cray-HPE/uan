@@ -22,7 +22,20 @@
 # OTHER DEALINGS IN THE SOFTWARE.
 #
 
+# To increase the logging verbosity of the connect_to_uai.sh script, set
+# uai_verbose_logging to "-v".
+#
+# uai_verbose_logging: "-v"
+uai_verbose_logging: ""
+
 uan_sshd_configs:
   - name: "uai"
     config_path: "/etc/ssh/uan"
     port: 9000
+    config: |
+      Match User *
+        AcceptEnv DISPLAY
+        X11Forwarding yes
+        AllowTcpForwarding yes
+        PermitTTY yes
+        ForceCommand /etc/ssh/uan/connect_to_uai.sh {{ uai_verbose_logging }}

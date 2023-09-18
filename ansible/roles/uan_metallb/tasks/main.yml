@@ -87,9 +87,9 @@
     when: customer_access_k3s_metallb_cidr is defined
     run_once: true
 
-when:
-  - metallb_ipaddresspool_range_start is undefined
-  - metallb_ipaddresspool_range_end is undefined
+  when:
+    - metallb_ipaddresspool_range_start is undefined
+    - metallb_ipaddresspool_range_end is undefined
 
 - name: Download MetalLB asset
   get_url:

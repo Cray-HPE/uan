@@ -93,8 +93,8 @@ when:
 
 - name: Download MetalLB asset
   get_url:
-    url: "{{ third_party_url }}/{{ metallb_chart }}.tgz"
-    dest: "{{ helm_install_path }}/charts/{{ metallb_chart }}.tgz"
+    url: "{{ third_party_url }}/{{ uan_metallb.chart }}.tgz"
+    dest: "{{ uan_metallb.chart_path }}"
 
 - name: Install MetalLB chart
   command: "{{ helm_path }} install {{ uan_metallb.name }} --namespace {{ uan_metallb.namespace }} --create-namespace {{ uan_metallb.chart_path }} {{ uan_metallb.args | default('') }} --set controller.image.repository={{ third_party_registry }}/quay.io/metallb/controller --set speaker.image.repository={{ third_party_registry }}/quay.io/metallb/speaker --set speaker.frr.image.repository={{ third_party_registry }}/quay.io/frrouting/frr"

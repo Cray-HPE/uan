@@ -23,8 +23,8 @@
 #
 - name: Download helm assets
   get_url:
-    url: "{{ third_party_url }}/{{ haproxy_chart }}.tgz"
-    dest: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
+    url: "{{ third_party_url }}/{{ item.chart }}.tgz"
+    dest: "{{ item.chart_path }}"
 
 - name: Set variables necessary for generating HAProxy values for {{ item.name }}
   set_fact:

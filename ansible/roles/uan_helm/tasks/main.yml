@@ -41,8 +41,8 @@
 
 - name: Download helm assets
   get_url:
-    url: "{{ third_party_url }}/{{ item }}.tgz"
-    dest: "{{ helm_install_path }}/charts/{{ item }}.tgz"
+    url: "{{ third_party_url }}/{{ item.chart }}.tgz"
+    dest: "{{ item.chart_path }}"
   loop:
-    - "{{ metallb_chart }}"
-    - "{{ haproxy_chart }}"
+    - "{{ uan_metallb }}"
+    - "{{ uan_haproxy[0] }}"

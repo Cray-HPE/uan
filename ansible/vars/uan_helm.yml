@@ -30,13 +30,13 @@ uan_metallb:
   name: "metallb"
   namespace: "metallb-system"
   chart: "metallb-{{ metallb_version }}"
-  chart_path: "{{ helm_install_path }}/charts/{{ metallb_chart }}.tgz"
+  chart_path: "{{ helm_install_path }}/charts/metallb-{{ metallb_version }}.tgz"
 
 uan_haproxy:
   - name: "haproxy-uai"
     namespace: "haproxy-uai"
     chart: "haproxy-{{ haproxy_version }}"
-    chart_path: "{{ helm_install_path }}/charts/{{ haproxy_chart }}.tgz"
+    chart_path: "{{ helm_install_path }}/charts/haproxy-{{ haproxy_version }}.tgz"
 
 #metallb_ipaddresspool_range_start: "<start-of-range>"
 #metallb_ipaddresspool_range_end: "<end-of-range>"

@@ -49,7 +49,7 @@ config: |
 
   listen ssh
     bind *:22
-    balance leastconn
+    balance source
     mode tcp
 
     option tcp-check

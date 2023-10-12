@@ -46,7 +46,7 @@
     dest: "{{ item.config_path | default('/etc/ssh/uan') }}/connect_to_uai.sh"
     owner: root
     group: root
-    mode: '0600'
+    mode: '0755'
     backup: yes
 
 - name: Generate SSHD systemd unit file for sshd_{{ item.name }}

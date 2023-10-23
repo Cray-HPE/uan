@@ -28,10 +28,7 @@
   no_log: false
   run_once: true
 
-# This task is optional. As such, ignore_errors is set to true.
-# Additionally, ovewrite is set to 'never' to allow for alternate
-# methods of managing this file. If the files exist, they will not
-# be altered.
+# This task is best effort. As such, ignore_errors is set to true.
 - name: Download subuid and subgid files from S3
   aws_s3:
     aws_access_key: '{{ s3_creds.access_key }}'
@@ -42,7 +39,6 @@
     dest: '/{{ item }}'
     mode: get
     validate_certs: '{{ s3_validate_certs }}'
-    overwrite: 'never'
   ignore_errors: true
   with_items:
     - '{{ subuid_artifact }}'

@@ -111,8 +111,16 @@ def process_args(args):
 def get_hosts():
     """Get all the UAI Hosts to operate on"""
     all_hosts=[]
+    all_xnames=[]
     groups=['k3s_server', 'k3s_agent']
     if not len(cmd_options["uai_hosts"]):
+        """Get dictionary of xname:hostname"""
+        args = ['sat', 'status', '--filter', 'SubRole=UAN', '--no-heading',
+                '--no-border', '--fields', 'xname,Aliases', '--format', 'json']
+        uan_map = subprocess.run(args,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+        uan_map_json = json.loads(uan_map.stdout.decode('utf-8'))
         for group in groups:
             args = ['cray', 'hsm', 'groups', 'describe', group,
                     '--format', 'json']
@@ -120,7 +128,13 @@ def get_hosts():
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
             k3s_group_json = json.loads(k3s_group.stdout.decode('utf-8'))
-            all_hosts += k3s_group_json['members']['ids']
+            all_xnames += k3s_group_json['members']['ids']
+        for xname in all_xnames:
+            """Find hostname from xname"""
+            for uan in uan_map_json:
+                if xname == uan["xname"]:
+                  all_hosts.append(uan["Aliases"])
+                  break
     else:
         if cmd_options['verbose']:
             print(f"{cur_file}: ALL_HOSTS: {all_hosts}")

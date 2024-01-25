@@ -154,7 +154,7 @@ def list_uais():
     user_list = cmd_options['users']
     uai_list = cmd_options['uai_list']
     verbose = cmd_options['verbose']
-    remote_cmd = 'python - list -g ' + graphroot
+    remote_cmd = 'python3 - list -g ' + graphroot
     if len(user_list):
         users = ','.join([str(user) for user in user_list])
         remote_cmd += ' -u ' + users
@@ -167,10 +167,14 @@ def list_uais():
             remote_cmd += ' -v '
     for host in uai_hosts:
         p1 = subprocess.Popen(['cat', 'run_podman.py'], stdout=subprocess.PIPE)
-        uai_return = subprocess.run(['ssh', host, 'python3', remote_cmd], stdin=p1.stdout,
+        uai_return = subprocess.run(['ssh', host, remote_cmd], stdin=p1.stdout,
                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        uai_return_list.append(uai_return.stdout.decode('utf-8'))
-        uai_stderr_list.append(host + ": " + uai_return.stderr.decode('utf-8'))
+        uais = uai_return.stdout.decode('utf-8')
+        errs = uai_return.stderr.decode('utf-8')
+        if not (uais == "[]" or uais == ""):
+            uai_return_list.append(host + ": " + uais)
+        if errs != "":
+            uai_stderr_list.append(host + ": " + errs)
     return uai_return_list, uai_stderr_list
 
 

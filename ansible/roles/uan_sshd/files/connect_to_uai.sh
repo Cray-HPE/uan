@@ -6,6 +6,15 @@
 #
 
 UAI_IMAGE="registry.local/cray/uai:3.0"
+UAI_VOLUMES="-v /home/users:/home/users \
+             -v /var/run/slurm/conf/:/etc/slurm -v /var/run/munge:/var/run/munge \
+             -v /opt/cray/pe:/opt/cray/pe -v /lus:/lus \
+             -v /etc/ld.so.conf.d/cray-pe.conf:/etc/ld.so.conf.d/cray-pe.conf \
+             -v /etc/profile.d:/etc/profile.d -v /opt/modulefiles:/opt/modulefiles \
+             -v /etc/cray-pe.d:/etc/cray-pe.d \
+             -v /var/opt/cray/pe/pe_images:/var/opt/cray/pe/pe_images \
+             -v /etc/bash.bashrc.local:/etc/bash.bashrc.local"
+GRAPHROOT="/scratch/containers"
 
 # list of arguments expected in the input
 OPTSTRING="v"
@@ -24,16 +33,10 @@ done
 
 UAI_HOST=$(hostname)
 CONTAINER_NAME=$UAI_HOST-$(uuidgen | tr -d '-')
-UAI_LAUNCH_CMD="podman --root /scratch/containers/$USER run -it --rm -h $USER-uai \
+UAI_LAUNCH_CMD="podman --root $GRAPHROOT/$USER run -it --rm -h $USER-uai \
             --name $CONTAINER_NAME --label=uai=$USER \
-            --cgroup-manager=cgroupfs --userns=keep-id -v /home/users:/home/users \
-            -v /var/run/slurm/conf/:/etc/slurm -v /var/run/munge:/var/run/munge \
-            -v /opt/cray/pe:/opt/cray/pe -v /lus:/lus \
-            -v /etc/ld.so.conf.d/cray-pe.conf:/etc/ld.so.conf.d/cray-pe.conf \
-            -v /etc/profile.d:/etc/profile.d -v /opt/modulefiles:/opt/modulefiles \
-            -v /etc/cray-pe.d:/etc/cray-pe.d \
-            -v /var/opt/cray/pe/pe_images:/var/opt/cray/pe/pe_images \
-            -v /etc/bash.bashrc.local:/etc/bash.bashrc.local \
+            --cgroup-manager=cgroupfs --userns=keep-id \
+            $UAI_VOLUMES \
             --network=host -e DISPLAY=$DISPLAY $UAI_IMAGE"
 SCP_FLAGS=("-t" "-f")
 
@@ -52,7 +55,7 @@ function get_host_mounts() {
     if [[ $VERBOSE == 1 ]]; then
         log "get_host_mounts: uan: $1"
     fi
-    BINDS=$(podman --root /scratch/containers/$USER inspect $1 --format "{{ .HostConfig.Binds }}" | sed 's/\[//' | sed 's/\]//')
+    BINDS=$(podman --root $GRAPHROOT/$USER inspect $1 --format "{{ .HostConfig.Binds }}" | sed 's/\[//' | sed 's/\]//')
     IFS=' ' read -r -a mounts <<< "$BINDS"
     for i in ${mounts[@]}; do
         IFS=':' read -r -a mount_array <<< "$i"
@@ -71,7 +74,7 @@ log "--- STARTING UAI SESSION for $USER: $SSH_CONNECTION ---"
 IFS=' ' read -r -a cmd_array <<< "$SSH_ORIGINAL_COMMAND"
 
 # Gather a list of the USERs existing uais (podman containers)
-UAIS=$(podman --root /scratch/containers/$USER ps --format='{{ .Names }}' -f label=uai=$USER)
+UAIS=$(podman --root $GRAPHROOT/$USER ps --format='{{ .Names }}' -f label=uai=$USER)
 if [ ! -z $UAIS ]; then
     log "UAIs are:"
     log "  $UAIS"
@@ -91,7 +94,7 @@ if [ -z ${cmd_array[0]} ]; then
     else
         # If there are existing uais for the USER, then exec into the first one
         log "Logging $USER into existing uai: ${uai_array[0]}"
-        podman --root /scratch/containers/$USER exec -it ${uai_array[0]} /bin/bash
+        podman --root $GRAPHROOT/$USER exec -it ${uai_array[0]} /bin/bash
     fi
 else
     log "SSH_ORIGINAL_COMMAND is $SSH_ORIGINAL_COMMAND"
@@ -145,7 +148,7 @@ else
             ### SSH_ORIGINAL_COMMAND is not SCP of SFTP
             *)
                 log "SSH remote command: $SSH_ORIGINAL_COMMAND will be executed on ${uai_array[0]}"
-                podman --root /scratch/containers/$USER exec -it ${uai_array[0]} $SSH_ORIGINAL_COMMAND;;
+                podman --root $GRAPHROOT/$USER exec -it ${uai_array[0]} $SSH_ORIGINAL_COMMAND;;
         esac
     fi
 fi

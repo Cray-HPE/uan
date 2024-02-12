@@ -42,7 +42,7 @@
 
 - name: Copy connect_to_uai.sh ForceCommand script to {{ item.config_path | default('/etc/ssh/uan') }}
   copy:
-    src: connect_to_uai.sh
+    src: roles/uan_sshd/files/connect_to_uai.sh
     dest: "{{ item.config_path | default('/etc/ssh/uan') }}/connect_to_uai.sh"
     owner: root
     group: root

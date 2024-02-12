@@ -2,7 +2,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2020-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2020-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -53,20 +53,33 @@ options:
     device_name_filter:
         required: False
         type: string
+    device_name_exclude_filter:
+        required: False
+        type: string
     device_host_filter:
         required: False
-        type: string
+        type: list
+    device_host_exclude_filter:
+        required: False
+        type: list
     device_model_filter:
         required: False
-        type: string
+        type: list
+    device_model_exclude_filter:
+        required: False
+        type: list
     device_vendor_filter:
         required: False
-        type: string
+        type: list
+    device_vendor_exclude_filter:
+        required: False
+        type: list
     device_size_filter:
         required: False
         type: string
 author:
     - rbak
+    - keopp
 """
 
 
@@ -89,9 +102,13 @@ def run_module():
     module_args = dict(
         device_data=dict(type='dict', required=True),
         device_name_filter=dict(type='str', required=False, default=''),
-        device_host_filter=dict(type='str', required=False, default=''),
-        device_model_filter=dict(type='str', required=False, default=''),
-        device_vendor_filter=dict(type='str', required=False, default=''),
+        device_name_exclude_filter=dict(type='str', required=False, default=''),
+        device_host_filter=dict(type='list', required=False, default=[]),
+        device_host_exclude_filter=dict(type='list', required=False, default=[]),
+        device_model_filter=dict(type='list', required=False, default=[]),
+        device_model_exclude_filter=dict(type='list', required=False, default=[]),
+        device_vendor_filter=dict(type='list', required=False, default=[]),
+        device_vendor_exclude_filter=dict(type='list', required=False, default=[]),
         device_size_filter=dict(type='str', required=False, default=''),
     )
     result = dict(
@@ -105,9 +122,13 @@ def run_module():
     )
 
     device_name_filter = module.params['device_name_filter']
+    device_name_exclude_filter = module.params['device_name_exclude_filter']
     device_host_filter = module.params['device_host_filter']
+    device_host_exclude_filter = module.params['device_host_exclude_filter']
     device_model_filter = module.params['device_model_filter']
+    device_model_exclude_filter = module.params['device_model_exclude_filter']
     device_vendor_filter = module.params['device_vendor_filter']
+    device_vendor_exclude_filter = module.params['device_vendor_exclude_filter']
     device_size_filter = module.params['device_size_filter']
 
     try:
@@ -115,13 +136,26 @@ def run_module():
             print(key, device)
             if device_name_filter and not re.match(device_name_filter, key):
                 continue
-            if device_host_filter and not re.match(device_host_filter, device.get('host', '')):
+            if device_name_exclude_filter and re.match(device_name_exclude_filter, key):
                 continue
-            if device_model_filter and not re.match(device_model_filter, device.get('model', '')):
-                continue
-            if device_vendor_filter and not re.match(device_vendor_filter,
-                                                     device.get('vendor', '')):
-                continue
+            if len(device_host_filter):
+                if device.get('host', '') not in device_host_filter:
+                    continue
+            if len(device_host_exclude_filter):
+                if device.get('host', '') in device_host_exclude_filter:
+                    continue
+            if len(device_model_filter):
+                if device.get('model', '') not in device_model_filter:
+                    continue
+            if len(device_model_exclude_filter):
+                if device.get('model', '') in device_model_exclude_filter:
+                    continue
+            if len(device_vendor_filter):
+                if device.get('vendor', '') not in device_vendor_filter:
+                    continue
+            if len(device_vendor_exclude_filter):
+                if device.get('vendor', '') in device_vendor_exclude_filter:
+                    continue
             if device_size_filter and not compare_size(device_size_filter,
                                                        device.get('size', '00KB')):
                 continue

@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# (C) Copyright 2019-2022 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2019-2024 Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -31,9 +31,13 @@
 uan_require_disk: false
 
 uan_device_name_filter: "^sd[a-f]$"
-uan_device_host_filter: ""
-uan_device_model_filter: ""
-uan_device_vendor_filter: ""
+uan_device_name_exclude_filter: ""
+uan_device_host_filter: []
+uan_device_host_exclude_filter: []
+uan_device_model_filter: []
+uan_device_model_exclude_filter: []
+uan_device_vendor_filter: []
+uan_device_vendor_exclude_filter: ["LIO-ORG"]
 uan_device_size_filter: "<1TB"
 
 uan_swap: "/swap"

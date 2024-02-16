@@ -98,7 +98,7 @@ uan_device_vendor_filter: []
 
 List of disk vendors to exclude for this role.
 Default is `"LIO-ORG"` and  must be excluded
-if iSCSI Based Projection Service, SBPS, is used
+if Scalable Boot Projection Service, SBPS, is used
 for the image projection service.
 Input to the `device_filter` module.
 

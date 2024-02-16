@@ -138,24 +138,18 @@ def run_module():
                 continue
             if device_name_exclude_filter and re.match(device_name_exclude_filter, key):
                 continue
-            if len(device_host_filter):
-                if device.get('host', '') not in device_host_filter:
-                    continue
-            if len(device_host_exclude_filter):
-                if device.get('host', '') in device_host_exclude_filter:
-                    continue
-            if len(device_model_filter):
-                if device.get('model', '') not in device_model_filter:
-                    continue
-            if len(device_model_exclude_filter):
-                if device.get('model', '') in device_model_exclude_filter:
-                    continue
-            if len(device_vendor_filter):
-                if device.get('vendor', '') not in device_vendor_filter:
-                    continue
-            if len(device_vendor_exclude_filter):
-                if device.get('vendor', '') in device_vendor_exclude_filter:
-                    continue
+            if len(device_host_filter) and device.get('host', '') not in device_host_filter:
+                continue
+            if device.get('host', '') in device_host_exclude_filter:
+                continue
+            if len(device_model_filter) and device.get('model', '') not in device_model_filter:
+                continue
+            if device.get('model', '') in device_model_exclude_filter:
+                continue
+            if len(device_vendor_filter) and device.get('vendor', '') not in device_vendor_filter:
+                continue
+            if device.get('vendor', '') in device_vendor_exclude_filter:
+                continue
             if device_size_filter and not compare_size(device_size_filter,
                                                        device.get('size', '00KB')):
                 continue

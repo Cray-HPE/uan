@@ -37,7 +37,8 @@ uan_device_host_exclude_filter: []
 uan_device_model_filter: []
 uan_device_model_exclude_filter: []
 uan_device_vendor_filter: []
-uan_device_vendor_exclude_filter: ["LIO-ORG"]
+uan_device_vendor_exclude_filter:
+  - "LIO-ORG"
 uan_device_size_filter: "<1TB"
 
 uan_swap: "/swap"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # MIT License
 #
-# (C) Copyright [2023] Hewlett Packard Enterprise Development LP
+# (C) Copyright [2024] Hewlett Packard Enterprise Development LP
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -42,10 +42,10 @@ def parse_command_line():
     parser.add_argument("admin_action", type=str,
                         help="UAI action: list, delete")
     parser.add_argument("-u", "--users", type=str, default="",
-                        help="Comma separated list of UAI user names. Default is all.")
+                        help="Comma separated list of UAI user names to use. Default is all users.")
     parser.add_argument("-U", "--UAIS", type=str, default="",
-                        help="Comma separated list of UAI names.")
-    parser.add_argument("-g", "--graphroot", type=str,
+                        help="Comma separated list of UAI names. Default is all UAIs.")
+    parser.add_argument("-g", "--graphroot", type=str, default="/scratch/containers",
                         help="Podman graphroot.")
     parser.add_argument("-v", "--verbose", action="count", default=0,
                         help="Add more output verbosity")
@@ -91,7 +91,7 @@ def get_users():
     else:
         print(f"{cur_file}: ERROR: graphroot doesn't exist. ({cmd_options['graphroot']})")
         sys.exit(1)
-    if len(cmd_options["users"]):
+    if cmd_options["users"]:
         if cmd_options["verbose"]:
             print(f"{cur_file}: {len(cmd_options['users'])} users were specified")
         for user in cmd_options["users"]:

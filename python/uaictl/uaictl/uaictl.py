@@ -38,7 +38,7 @@ valid_formats=["json","yaml"]
 cmd_options={}
 
 
-def check_auth(args):
+def validate_user(args):
     """You must be root to run this command."""
     if args.verbose:
         print("{cur_file}: Checking user uid...")
@@ -52,11 +52,11 @@ def parse_command_line():
     parser.add_argument("admin_action", type=str,
                         help="UAI action: list, delete")
     parser.add_argument("-u", "--users", type=str, default="",
-                        help="Comma separated list of UAI user names. Default is all.")
+                        help="Comma separated list of UAI user names to use. Default is all users.")
     parser.add_argument("-H", "--Hosts", type=str,
-                        help="Comma separated list of UAI host names. Default is all.")
+                        help="Comma separated list of UAI host names to use. Default is all hosts.")
     parser.add_argument("-U", "--UAIS", type=str, default="",
-                        help="Comma separated list of UAI names.")
+                        help="Comma separated list of UAI names to use. Default is all UAIs.")
     parser.add_argument("-f", "--format", type=str,
                         help="Output format: json, yaml")
     parser.add_argument("-g", "--graphroot", type=str, default="/scratch/containers",
@@ -113,7 +113,7 @@ def get_hosts():
     all_hosts=[]
     all_xnames=[]
     groups=['k3s_server', 'k3s_agent']
-    if not len(cmd_options["uai_hosts"]):
+    if not cmd_options["uai_hosts"]:
         """Get dictionary of xname:hostname"""
         args = ['sat', 'status', '--filter', 'SubRole=UAN', '--no-heading',
                 '--no-border', '--fields', 'xname,Aliases', '--format', 'json']
@@ -144,7 +144,7 @@ def get_hosts():
 
 def list_uais():
     """List UAIs on the uai_hosts"""
-    """ssh to uai_hosts, run podman ps for the desired users"""
+    """ssh to uai_hosts, run podman ps for the desired users and UAIs"""
     uai_return_list=[]
     uai_stderr_list=[]
     user_list=[]
@@ -155,10 +155,10 @@ def list_uais():
     uai_list = cmd_options['uai_list']
     verbose = cmd_options['verbose']
     remote_cmd = 'python3 - list -g ' + graphroot
-    if len(user_list):
+    if user_list:
         users = ','.join([str(user) for user in user_list])
         remote_cmd += ' -u ' + users
-    if len(uai_list):
+    if uai_list:
         uais = ','.join([str(uai) for uai in uai_list])
         remote_cmd += ' -U ' + uais
     if cmd_options["verbose"]:
@@ -179,25 +179,44 @@ def list_uais():
 
 
 def delete_uais():
-    """Delete a list of UAIs"""
-    """ssh to uai_hosts, delete the users uais on those hosts"""
+    """Delete UAIs on the uai_hosts"""
+    """ssh to uai_hosts, run podman stop and podman rm for the desired users and UAIs"""
+    uai_return_list=[]
+    uai_stderr_list=[]
+    user_list=[]
+    uai_list=[]
     uai_hosts = get_hosts()
+    graphroot = cmd_options['graphroot']
+    user_list = cmd_options['users']
+    uai_list = cmd_options['uai_list']
+    verbose = cmd_options['verbose']
+    remote_cmd = 'python3 - delete -g ' + graphroot
+    if user_list:
+        users = ','.join([str(user) for user in user_list])
+        remote_cmd += ' -u ' + users
+    if uai_list:
+        uais = ','.join([str(uai) for uai in uai_list])
+        remote_cmd += ' -U ' + uais
     if cmd_options["verbose"]:
         print(f"{cur_file}: HOSTS: {uai_hosts}")
+        for x in range(0, cmd_options['verbose']):
+            remote_cmd += ' -v '
     for host in uai_hosts:
-        subprocess.run(['cat', 'run_podman.py', '|', 'ssh',
-                                        host, 'python', '-', 'delete',
-                                        '-g', cmd_options['graphroot'],
-                                        '-u', cmd_options['users'],
-                                        '-U', cmd_options['uai_list'],
-                                        '-v', cmd_options['verbose']],
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+        p1 = subprocess.Popen(['cat', 'run_podman.py'], stdout=subprocess.PIPE)
+        uai_return = subprocess.run(['ssh', host, remote_cmd], stdin=p1.stdout,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        uais = uai_return.stdout.decode('utf-8')
+        errs = uai_return.stderr.decode('utf-8')
+        if not (uais == "[]" or uais == ""):
+            uai_return_list.append(host + ": " + uais)
+        if errs != "":
+            uai_stderr_list.append(host + ": " + errs)
+    return uai_return_list, uai_stderr_list
 
 
 def main():
     """Main entry point of uaictl"""
-    """check_auth(args)"""
+    """validate_user(args)"""
     args = parse_command_line()
     cmd_options = process_args(args)
 
@@ -209,7 +228,7 @@ def main():
         for i in uai_info:
             if i != "":
                 print(f"{i}") 
-        if len(uai_errs):
+        if uai_errs:
             print(f"Errors:")
             for e in uai_errs:
                 print(f"{e}")

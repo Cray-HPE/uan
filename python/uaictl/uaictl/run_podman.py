@@ -32,8 +32,8 @@ import subprocess
 import sys
 
 
-cur_file = os.path.basename(__file__)
-valid_actions=["list","delete"]
+valid_actions=["list-users", "list-uais", "delete-uais"]
+default_graphroot="/scratch/containers"
 cmd_options={}
 
 
@@ -45,8 +45,8 @@ def parse_command_line():
                         help="Comma separated list of UAI user names to use. Default is all users.")
     parser.add_argument("-U", "--UAIS", type=str, default="",
                         help="Comma separated list of UAI names. Default is all UAIs.")
-    parser.add_argument("-g", "--graphroot", type=str, default="/scratch/containers",
-                        help="Podman graphroot.")
+    parser.add_argument("-g", "--graphroot", type=str, default=default_graphroot,
+                        help="Podman graphroot. Default=" + default_graphroot +".")
     parser.add_argument("-v", "--verbose", action="count", default=0,
                         help="Add more output verbosity")
     return parser.parse_args()
@@ -55,14 +55,14 @@ def parse_command_line():
 def process_args(args):
     """Check argument validity and process options"""
     if args.verbose >= 3:
-        print(f"{cur_file}: Command Line args: {args}")
+        print(f"Command Line args: {args}", file=sys.stderr)
 
     """Check action"""
     if args.admin_action in valid_actions:
         cmd_options["action"] = args.admin_action
     else:
-        print(f"{cur_file}: ERROR: Invalid action: {args.admin_action}")
-        print(f"{cur_file}: Valid actions are: {valid_actions}")
+        print(f"ERROR: Invalid action: {args.admin_action}", file=sys.stderr)
+        print(f"Valid actions are: {valid_actions}", file=sys.stderr)
         sys.exit(1)
 
     """Process command line options"""
@@ -71,12 +71,17 @@ def process_args(args):
     cmd_options["graphroot"] = args.graphroot
     cmd_options["verbose"] = args.verbose
     if args.verbose:
-        print(f'{cur_file}: Action: {cmd_options["action"]}')
-        print(f'{cur_file}: Graphroot: {cmd_options["graphroot"]}')
-        print(f'{cur_file}: Verbose: {cmd_options["verbose"]}')
-        print(f'{cur_file}: Users: {cmd_options["users"]} length: {len(cmd_options["users"])}')
-        print(f'{cur_file}: UAIs: {cmd_options["uai_list"]} length: {len(cmd_options["uai_list"])}')
-        print(f'{cur_file}: Graphroot: {cmd_options["graphroot"]}')
+        print(f'Action: {cmd_options["action"]}', file=sys.stderr)
+        print(f'Graphroot: {cmd_options["graphroot"]}',
+              file=sys.stderr)
+        print(f'Verbose: {cmd_options["verbose"]}',
+              file=sys.stderr)
+        print(f'Users: {cmd_options["users"]} length: {len(cmd_options["users"])}',
+              file=sys.stderr)
+        print(f'UAIs: {cmd_options["uai_list"]} length: {len(cmd_options["uai_list"])}',
+              file=sys.stderr)
+        print(f'Graphroot: {cmd_options["graphroot"]}',
+              file=sys.stderr)
     return cmd_options
 
 
@@ -87,22 +92,25 @@ def get_users():
         all_users = [ name for name in os.listdir(cmd_options["graphroot"])
                      if os.path.isdir(cmd_options["graphroot"]+"/"+name)]
         if cmd_options["verbose"]:
-            print(f"{cur_file}: All Users: {all_users}")
+            print(f"All Users: {all_users}", file=sys.stderr)
     else:
-        print(f"{cur_file}: ERROR: graphroot doesn't exist. ({cmd_options['graphroot']})")
+        print(f"ERROR: graphroot doesn't exist. ({cmd_options['graphroot']})",
+              file=sys.stderr)
         sys.exit(1)
     if cmd_options["users"]:
         if cmd_options["verbose"]:
-            print(f"{cur_file}: {len(cmd_options['users'])} users were specified")
+            print(f"{len(cmd_options['users'])} users were specified",
+                  file=sys.stderr)
         for user in cmd_options["users"]:
             if user in all_users:
                 valid_users.append(user)
     else:
         if cmd_options["verbose"]:
-            print(f"{cur_file}: {len(cmd_options['users'])} users were specified")
+            print(f"{len(cmd_options['users'])} users were specified",
+                  file=sys.stderr)
         valid_users = all_users
     if cmd_options["verbose"]:
-        print(f"{cur_file}: VALID_USERS: {valid_users}")
+        print(f"VALID_USERS: {valid_users}", file=sys.stderr)
     return valid_users
 
 
@@ -119,7 +127,7 @@ def list_uais():
     uai_json_list=[]
     uai_list=[]
     if cmd_options["verbose"]:
-        print(f"{cur_file}: UAIs for users: {users}")
+        print(f"UAIs for users: {users}", file=sys.stderr)
     for user in users:
         """Run podman --root cmd_options['graphroot']/user ps"""
         root_path = cmd_options['graphroot'] + "/" + user
@@ -128,7 +136,7 @@ def list_uais():
         user_uid = root_path_stat.st_uid
         user_gid = root_path_stat.st_gid
         if cmd_options["verbose"]:
-            print(f"UID: {user_uid}; GID: {user_gid}")
+            print(f"UID: {user_uid}; GID: {user_gid}", file=sys.stderr)
         uai_return = subprocess.run(args,
                                       preexec_fn=run_as_user(user_uid, user_gid,),
                                       stdout=subprocess.PIPE,
@@ -138,10 +146,13 @@ def list_uais():
             uai_json[idx]['Host'] = socket.gethostname()
             uai_json[idx]['User'] = user
         if cmd_options['verbose']:
-            print(f"{cur_file}: podman ps --root {root_path}")
-            print(f"{cur_file}: UAI_JSON: {json.dumps(uai_json, indent=2)}")
-            print(f"{cur_file}: UAI_NAME: {uai_json[0]['Names']}")
-            print(f"{cur_file}: UAI_STDERR: {uai_return.stderr.decode('utf-8')}")
+            print(f"podman ps --root {root_path}", file=sys.stderr)
+            print(f"UAI_JSON: {json.dumps(uai_json, indent=2)}",
+                  file=sys.stderr)
+            print(f"UAI_NAME: {uai_json[0]['Names']}",
+                  file=sys.stderr)
+            print(f"UAI_STDERR: {uai_return.stderr.decode('utf-8')}",
+                  file=sys.stderr)
         uai_json_list.append(uai_json)
     return uai_json_list
 
@@ -151,7 +162,7 @@ def delete_uais():
     """ssh to uai_hosts, delete the users uais on those hosts"""
     users = get_users()
     if cmd_options["verbose"]:
-        print(f"{cur_file}: USERS: {users}")
+        print(f"USERS: {users}", file=sys.stderr)
 
 
 def main():
@@ -161,17 +172,25 @@ def main():
     cmd_options = process_args(args)
 
     """Do the work now"""
-    if cmd_options["action"] == "list":
+    if cmd_options["action"] == "list-users":
         if args.verbose:
-            print(f"{cur_file}: Getting list of UAIs")
+            print(f"Getting list of UAI users", file=sys.stderr)
+        uai_users = {
+                "Host": socket.gethostname(),
+                "Users": get_users()
+                }
+        print(f"{json.dumps(uai_users)}", end="")
+    elif cmd_options["action"] == "list-uais":
+        if args.verbose:
+            print(f"Getting list of UAIs", file=sys.stderr)
         uai_info = list_uais()
         print(f"{json.dumps(uai_info)}", end="")
-    elif cmd_options["action"] == "delete":
+    elif cmd_options["action"] == "delete-uais":
         if args.verbose:
-            print(f"{cur_file}: Delete UAI")
+            print(f"Delete UAI", file=sys.stderr)
         return delete_uais()
     else:
-        print(f"{cur_file}: Unknown action")
+        print(f"Unknown action", file=sys.stderr)
         sys.exit(1)
 
     sys.exit(0)

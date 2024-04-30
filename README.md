@@ -1,5 +1,7 @@
 # User Access Nodes
 
+NOTE: User Access Nodes are now part of the User Services Software in USS-1.1.0. This repository is no longer maintained.
+
 This repository contains the following components for the Shasta User Access Nodes:
 
   1. Pre- and post-boot Ansible configuration (located in ansible/)

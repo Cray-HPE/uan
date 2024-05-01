@@ -1,6 +1,6 @@
 # User Access Nodes
 
-NOTE: User Access Nodes are now part of the User Services Software in USS-1.1.0. This repository is no longer maintained.
+NOTE: User Access Nodes are now part of HPE Cray User Services Software (USS) beginning with the 1.1.0 release. This repository is no longer maintained.
 
 This repository contains the following components for the Shasta User Access Nodes:
 

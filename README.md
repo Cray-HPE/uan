@@ -1,5 +1,7 @@
 # User Access Nodes
 
+NOTE: User Access Nodes are now part of HPE Cray User Services Software (USS) beginning with the 1.1.0 release. This repository is no longer maintained.
+
 This repository contains the following components for the Shasta User Access Nodes:
 
   1. Pre- and post-boot Ansible configuration (located in ansible/)
